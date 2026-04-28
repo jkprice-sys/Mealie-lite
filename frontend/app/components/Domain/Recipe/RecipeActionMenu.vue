@@ -22,7 +22,7 @@
     <div v-if="!open" class="custom-btn-group ma-1">
       <RecipeFavoriteBadge v-if="loggedIn" color="info" button-style :recipe-id="recipe.id!" show-always />
       <RecipeTimelineBadge
-        v-if="loggedIn"
+        v-if="loggedIn && !liteMode"
         class="ml-1"
         color="info"
         button-style
@@ -104,6 +104,7 @@ import RecipeContextMenu from "./RecipeContextMenu/RecipeContextMenu.vue";
 import RecipeFavoriteBadge from "./RecipeFavoriteBadge.vue";
 import RecipeTimelineBadge from "./RecipeTimelineBadge.vue";
 import type { Recipe } from "~/lib/api/types/recipe";
+import { useLiteMode } from "~/composables/use-lite-mode";
 
 const SAVE_EVENT = "save";
 const DELETE_EVENT = "delete";
@@ -132,20 +133,21 @@ const deleteDialog = ref(false);
 
 const i18n = useI18n();
 const { $globals } = useNuxtApp();
+const liteMode = useLiteMode();
 
-const editorButtons = [
+const editorButtons = computed(() => [
   {
     text: i18n.t("general.delete"),
     icon: $globals.icons.delete,
     event: DELETE_EVENT,
     color: "error",
   },
-  {
+  ...(!liteMode ? [{
     text: i18n.t("general.json"),
     icon: $globals.icons.codeBraces,
     event: JSON_EVENT,
     color: "accent",
-  },
+  }] : []),
   {
     text: i18n.t("general.close"),
     icon: $globals.icons.close,
@@ -158,7 +160,7 @@ const editorButtons = [
     event: SAVE_EVENT,
     color: "success",
   },
-];
+]);
 
 function emitHandler(event: string) {
   switch (event) {

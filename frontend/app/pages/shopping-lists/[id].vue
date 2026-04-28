@@ -335,6 +335,7 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ middleware: ["lite-mode"] });
 import { VueDraggable } from "vue-draggable-plus";
 import RecipeList from "~/components/Domain/Recipe/RecipeList.vue";
 import MultiPurposeLabelSection from "~/components/Domain/ShoppingList/MultiPurposeLabelSection.vue";

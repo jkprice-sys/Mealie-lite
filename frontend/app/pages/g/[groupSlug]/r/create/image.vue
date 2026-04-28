@@ -69,7 +69,7 @@
             :disabled="state.loading"
           />
           <v-checkbox
-            v-if="uploadedImages.length"
+            v-if="uploadedImages.length && !liteMode"
             v-model="parseRecipe"
             color="primary"
             hide-details
@@ -101,6 +101,9 @@ import { useUserApi } from "~/composables/api";
 import { alert } from "~/composables/use-toast";
 import { useNewRecipeOptions } from "~/composables/use-new-recipe-options";
 import type { VForm } from "~/types/auto-forms";
+import { useLiteMode } from "~/composables/use-lite-mode";
+
+const liteMode = useLiteMode();
 
 const state = reactive({
   loading: false,
@@ -117,7 +120,7 @@ const uploadedImageNames = ref<string[]>([]);
 const uploadedImagesPreviewUrls = ref<string[]>([]);
 const shouldTranslate = ref(true);
 
-const { parseRecipe, navigateToRecipe } = useNewRecipeOptions();
+const { parseRecipe, navigateToRecipe } = useNewRecipeOptions({ enableParseRecipe: !liteMode });
 
 function uploadImages(files: File[]) {
   uploadedImages.value = [...uploadedImages.value, ...files];

@@ -28,7 +28,7 @@
                 :class="attrs.searchFilter.colClass"
               >
                 <SearchFilter
-                  v-if="foods"
+                  v-if="foods && !liteMode"
                   v-model="selectedFoods"
                   :items="foods"
                   :class="attrs.searchFilter.filterClass"
@@ -39,7 +39,7 @@
                   {{ $t("general.foods") }}
                 </SearchFilter>
                 <SearchFilter
-                  v-if="tools"
+                  v-if="tools && !liteMode"
                   v-model="selectedTools"
                   :items="tools"
                   :class="attrs.searchFilter.filterClass"
@@ -144,6 +144,7 @@
                           :label="$t('recipe-finder.max-missing-ingredients')"
                         />
                         <v-number-input
+                          v-if="!liteMode"
                           v-model="state.settings.maxMissingTools"
                           :precision="null"
                           :min="0"
@@ -165,7 +166,7 @@
                           :label="$t('recipe-finder.include-ingredients-on-hand')"
                         />
                         <v-checkbox
-                          v-if="isOwnGroup"
+                          v-if="isOwnGroup && !liteMode"
                           v-model="state.settings.includeToolsOnHand"
                           density="compact"
                           size="small"
@@ -188,6 +189,7 @@
               </v-col>
             </v-row>
             <v-row
+              v-if="!liteMode"
               no-gutters
               class="mt-5"
             >
@@ -248,7 +250,7 @@
               </v-container>
             </v-row>
             <v-row
-              v-if="selectedTools.length"
+              v-if="selectedTools.length && !liteMode"
               no-gutters
               class="mt-5"
             >
@@ -425,6 +427,9 @@ import SearchFilter from "~/components/Domain/SearchFilter.vue";
 import type { QueryFilterJSON } from "~/lib/api/types/non-generated";
 import type { FieldDefinition } from "~/composables/use-query-filter-builder";
 import { useRecipeFinderPreferences } from "~/composables/use-users/preferences";
+import { useLiteMode } from "~/composables/use-lite-mode";
+
+const liteMode = useLiteMode();
 
 interface RecipeSuggestions {
   readyToMake: RecipeSuggestionResponseItem[];

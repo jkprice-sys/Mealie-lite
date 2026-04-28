@@ -99,6 +99,7 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ middleware: ["lite-mode"] });
 import { isSameDay, addDays, parseISO, format, isValid } from "date-fns";
 import RecipeDialogAddToShoppingList from "~/components/Domain/Recipe/RecipeDialogAddToShoppingList.vue";
 import { useHouseholdSelf } from "~/composables/use-households";

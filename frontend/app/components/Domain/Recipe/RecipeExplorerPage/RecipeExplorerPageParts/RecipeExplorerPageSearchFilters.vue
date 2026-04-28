@@ -27,7 +27,7 @@
 
   <!-- Tool Filter -->
   <SearchFilter
-    v-if="tools"
+    v-if="tools && !liteMode"
     v-model="selectedTools"
     v-model:require-all="state.requireAllTools"
     :items="tools"
@@ -40,7 +40,7 @@
 
   <!-- Food Filter -->
   <SearchFilter
-    v-if="foods"
+    v-if="foods && !liteMode"
     v-model="selectedFoods"
     v-model:require-all="state.requireAllFoods"
     :items="foods"
@@ -68,6 +68,7 @@
 <script setup lang="ts">
 import { useLoggedInState } from "~/composables/use-logged-in-state";
 import { useRecipeExplorerSearch } from "~/composables/use-recipe-explorer-search";
+import { useLiteMode } from "~/composables/use-lite-mode";
 import {
   useCategoryStore,
   usePublicCategoryStore,
@@ -84,6 +85,7 @@ import {
 const auth = useMealieAuth();
 const route = useRoute();
 
+const liteMode = useLiteMode();
 const { isOwnGroup } = useLoggedInState();
 const groupSlug = computed(() => route.params.groupSlug as string || auth.user.value?.groupSlug || "");
 

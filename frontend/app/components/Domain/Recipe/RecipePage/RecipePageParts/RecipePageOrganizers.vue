@@ -70,7 +70,7 @@
     </v-card>
 
     <RecipeNutrition
-      v-if="recipe.settings.showNutrition"
+      v-if="recipe.settings.showNutrition && !liteMode"
       v-model="recipe.nutrition"
       class="mt-4"
       :edit="isEditForm"
@@ -93,7 +93,9 @@ import RecipeOrganizerSelector from "@/components/Domain/Recipe/RecipeOrganizerS
 import RecipeNutrition from "~/components/Domain/Recipe/RecipeNutrition.vue";
 import RecipeChips from "@/components/Domain/Recipe/RecipeChips.vue";
 import RecipeAssets from "@/components/Domain/Recipe/RecipeAssets.vue";
+import { useLiteMode } from "~/composables/use-lite-mode";
 
 const recipe = defineModel<NoUndefinedField<Recipe>>({ required: true });
 const { isEditForm } = usePageState(recipe.value.slug);
+const liteMode = useLiteMode();
 </script>

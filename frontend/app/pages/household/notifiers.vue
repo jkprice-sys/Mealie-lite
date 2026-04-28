@@ -199,7 +199,7 @@ interface OptionSection {
 }
 
 definePageMeta({
-  middleware: ["advanced-only"],
+  middleware: ["advanced-only", "lite-mode"],
 });
 
 const api = useUserApi();

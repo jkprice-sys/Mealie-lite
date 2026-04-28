@@ -144,7 +144,7 @@ import type { CreateCookBook, ReadCookBook } from "~/lib/api/types/cookbook";
 import { useCookbookPreferences } from "~/composables/use-users/preferences";
 
 definePageMeta({
-  middleware: ["group-only"],
+  middleware: ["group-only", "lite-mode"],
 });
 
 const dialogStates = reactive({

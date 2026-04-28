@@ -153,6 +153,7 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ middleware: ["lite-mode"] });
 import type { LocaleObject } from "@nuxtjs/i18n";
 import RecipeDataAliasManagerDialog from "~/components/Domain/Recipe/RecipeDataAliasManagerDialog.vue";
 import { validators } from "~/composables/use-validators";

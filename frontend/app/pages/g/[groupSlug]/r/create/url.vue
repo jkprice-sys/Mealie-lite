@@ -15,7 +15,7 @@
               {{ $t('recipe.scrape-recipe-description-transcription') }}
             </p>
           </v-card-text>
-          <v-card-text class="px-0">
+          <v-card-text v-if="!liteMode" class="px-0">
             <p>
               {{ $t('recipe.scrape-recipe-have-a-lot-of-recipes') }}
               <router-link :to="bulkImporterTarget" class="text-primary">{{ $t('recipe.scrape-recipe-suggest-bulk-importer') }}</router-link>.
@@ -41,24 +41,28 @@
           />
         </v-card-text>
         <v-checkbox
+          v-if="!liteMode"
           v-model="importKeywordsAsTags"
           color="primary"
           hide-details
           :label="$t('recipe.import-original-keywords-as-tags')"
         />
         <v-checkbox
+          v-if="!liteMode"
           v-model="importCategories"
           color="primary"
           hide-details
           :label="$t('recipe.import-original-categories')"
         />
         <v-checkbox
+          v-if="!liteMode"
           v-model="stayInEditMode"
           color="primary"
           hide-details
           :label="$t('recipe.stay-in-edit-mode')"
         />
         <v-checkbox
+          v-if="!liteMode"
           v-model="parseRecipe"
           color="primary"
           hide-details
@@ -149,6 +153,9 @@ import { useTagStore } from "~/composables/store/use-tag-store";
 import { useNewRecipeOptions } from "~/composables/use-new-recipe-options";
 import { validators } from "~/composables/use-validators";
 import type { VForm } from "~/types/auto-forms";
+import { useLiteMode } from "~/composables/use-lite-mode";
+
+const liteMode = useLiteMode();
 
 definePageMeta({
   key: route => route.path,
@@ -172,7 +179,7 @@ const {
   stayInEditMode,
   parseRecipe,
   navigateToRecipe,
-} = useNewRecipeOptions();
+} = useNewRecipeOptions({ enableParseRecipe: !liteMode });
 
 const bulkImporterTarget = computed(() => `/g/${groupSlug.value}/r/create/bulk`);
 const htmlOrJsonImporterTarget = computed(() => `/g/${groupSlug.value}/r/create/html`);

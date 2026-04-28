@@ -4,7 +4,7 @@
       <h2 class="mb-4 text-h5 font-weight-medium opacity-80">
         {{ $t("recipe.ingredients") }}
       </h2>
-      <BannerWarning v-if="!hasFoodOrUnit">
+      <BannerWarning v-if="!hasFoodOrUnit && !liteMode">
         {{ $t("recipe.ingredients-not-parsed-description", { parse: $t('recipe.parse') }) }}
       </BannerWarning>
     </div>
@@ -48,6 +48,7 @@
     />
     <div class="d-flex flex-wrap justify-center justify-sm-end mt-3">
       <v-tooltip
+        v-if="!liteMode"
         location="top"
         color="accent"
       >
@@ -135,6 +136,7 @@ import RecipeIngredientEditor from "~/components/Domain/Recipe/RecipeIngredientE
 import RecipeDialogBulkAdd from "~/components/Domain/Recipe/RecipeDialogBulkAdd.vue";
 import { usePageState } from "~/composables/recipe-page/shared-state";
 import { uuid4 } from "~/composables/use-utils";
+import { useLiteMode } from "~/composables/use-lite-mode";
 
 const recipe = defineModel<NoUndefinedField<Recipe>>({ required: true });
 const ingredientsWithRecipe = new Map<string, boolean>();
@@ -143,6 +145,7 @@ const i18n = useI18n();
 const drag = ref(false);
 const domBulkAddDialog = ref<InstanceType<typeof RecipeDialogBulkAdd> | null>(null);
 const { toggleIsParsing } = usePageState(recipe.value.slug);
+const liteMode = useLiteMode();
 
 const hasFoodOrUnit = computed(() => {
   if (!recipe.value) {

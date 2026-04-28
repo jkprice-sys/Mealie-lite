@@ -29,14 +29,14 @@ export default defineNuxtConfig({
     baseURL: process.env.SUB_PATH || "/",
 
     head: {
-      title: "Mealie",
+      title: "ByteSized",
       meta: [
         { property: "og:type", content: "website" },
-        { property: "og:title", content: "Mealie" },
-        { property: "og:site_name", content: "Mealie" },
+        { property: "og:title", content: "ByteSized" },
+        { property: "og:site_name", content: "ByteSized" },
         {
           property: "og:description",
-          content: "Mealie is a recipe management app for your kitchen.",
+          content: "ByteSized is a simple recipe management app for your kitchen.",
         },
         {
           property: "og:image",
@@ -47,7 +47,7 @@ export default defineNuxtConfig({
         { name: "viewport", content: "width=device-width, initial-scale=1" },
         {
           name: "description",
-          content: "Mealie is a recipe management app for your kitchen.",
+          content: "ByteSized is a simple recipe management app for your kitchen.",
         },
       ],
       script: [
@@ -57,9 +57,9 @@ export default defineNuxtConfig({
         },
       ],
       link: [
-        { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
-        { rel: "shortcut icon", type: "image/png", href: "/icons/icon-x64.png" },
-        { rel: "apple-touch-icon", type: "image/png", href: "/icons/apple-touch-icon.png" },
+        { rel: "icon", type: "image/png", href: "/logo.png" },
+        { rel: "shortcut icon", type: "image/png", href: "/logo.png" },
+        { rel: "apple-touch-icon", type: "image/png", href: "/logo.png" },
         { rel: "mask-icon", href: "/icons/safari-pinned-tab.svg" },
         { rel: "manifest", href: "/manifest.webmanifest", crossorigin: "use-credentials" },
       ],
@@ -81,6 +81,7 @@ export default defineNuxtConfig({
       AUTH_TOKEN,
       GLOBAL_MIDDLEWARE: process.env.GLOBAL_MIDDLEWARE || undefined,
       SUB_PATH: process.env.SUB_PATH || "",
+      LITE_MODE: process.env.MEALIE_LITE_MODE === "true",   // ADD THIS LINE
       // ==============================================
       // Theme Runtime Config
       useDark: Boolean(process.env.THEME_USE_DARK) || false,

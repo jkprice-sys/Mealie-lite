@@ -172,6 +172,7 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ middleware: ["lite-mode"] });
 import { useUserApi } from "~/composables/api";
 import type { PlanRulesCreate, PlanRulesOut } from "~/lib/api/types/meal-plan";
 import GroupMealPlanRuleForm from "~/components/Domain/Household/GroupMealPlanRuleForm.vue";

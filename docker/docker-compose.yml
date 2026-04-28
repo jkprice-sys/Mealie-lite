@@ -1,37 +1,42 @@
 services:
   mealie:
-    container_name: mealie
-    image: mealie:dev
+    container_name: bytesized
+    image: bytesized:latest
     build:
       context: ../
       target: production
       dockerfile: ./docker/Dockerfile
+      args:
+        # IMPORTANT: This build arg bakes LITE_MODE into the static frontend at
+        # compile time (Nuxt SSR=false). Changing it here requires a full rebuild
+        # (`docker compose build`) — setting it only in `environment` has no effect.
+        MEALIE_LITE_MODE: "true"
     restart: always
     volumes:
+      # Persistent data volume: recipes, images, SQLite DB, backups
       - mealie-data:/app/data/
     ports:
-      - 9091:9000
+      # Host port 9000 → container port 9000. Change the left side to remap.
+      - 9000:9000
     environment:
+      # Disable public self-registration — admin creates all accounts manually
       ALLOW_SIGNUP: "false"
+
+      # Set to WARNING or ERROR in production to reduce log noise
       LOG_LEVEL: "DEBUG"
 
-      DB_ENGINE: sqlite # Optional: 'sqlite', 'postgres'
-      # =====================================
-      # Postgres Config
-      POSTGRES_USER: mealie
-      POSTGRES_PASSWORD: mealie
-      POSTGRES_SERVER: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: mealie
-      # =====================================
-      # Email Configuration
-      # SMTP_HOST=
-      # SMTP_PORT=587
-      # SMTP_FROM_NAME=Mealie
-      # SMTP_AUTH_STRATEGY=TLS # Options: 'TLS', 'SSL', 'NONE'
-      # SMTP_FROM_EMAIL=
-      # SMTP_USER=
-      # SMTP_PASSWORD=
+      # Default admin credentials — only applied on first run (fresh DB).
+      # If the DB already exists these are ignored. Change before first launch.
+      DEFAULT_EMAIL: "admin@example.com"
+      DEFAULT_PASSWORD: "changeme123"
+
+      # SQLite is the right choice for single-user / small household deployments.
+      # Switch to "postgres" and add POSTGRES_* vars if you need multi-user scale.
+      DB_ENGINE: sqlite
+
+      # Kept here for documentation parity with the build arg above.
+      # Has no functional effect on the compiled frontend — see build.args above.
+      MEALIE_LITE_MODE: "true"
 
 volumes:
   mealie-data:

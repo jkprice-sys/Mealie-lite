@@ -88,6 +88,7 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ middleware: ["lite-mode"] });
 import { validators } from "~/composables/use-validators";
 import { useUserApi } from "~/composables/api";
 import MultiPurposeLabel from "~/components/Domain/ShoppingList/MultiPurposeLabel.vue";

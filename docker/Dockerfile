@@ -3,6 +3,8 @@
 ###############################################
 FROM node:24@sha256:e9891237dfbb1de60ce19e9ff9fac5d73ad9c37da303ad72ff2a425ad1057e71 \
     AS frontend-builder
+ARG MEALIE_LITE_MODE=false
+ENV MEALIE_LITE_MODE=$MEALIE_LITE_MODE
 
 WORKDIR /frontend
 

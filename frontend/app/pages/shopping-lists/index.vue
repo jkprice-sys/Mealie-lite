@@ -126,6 +126,7 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ middleware: ["lite-mode"] });
 import type { ShoppingListOut } from "~/lib/api/types/household";
 import { useUserApi } from "~/composables/api";
 import { useAsyncKey } from "~/composables/use-utils";

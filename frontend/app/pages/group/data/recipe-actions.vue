@@ -21,6 +21,7 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ middleware: ["lite-mode"] });
 import { validators } from "~/composables/use-validators";
 import { useGroupRecipeActions } from "~/composables/use-group-recipe-actions";
 import type { GroupRecipeActionOut } from "~/lib/api/types/household";

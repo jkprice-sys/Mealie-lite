@@ -59,24 +59,28 @@
           rounded
         />
         <v-checkbox
+          v-if="!liteMode"
           v-model="importKeywordsAsTags"
           color="primary"
           hide-details
           :label="$t('recipe.import-original-keywords-as-tags')"
         />
         <v-checkbox
+          v-if="!liteMode"
           v-model="importCategories"
           color="primary"
           hide-details
           :label="$t('recipe.import-original-categories')"
         />
         <v-checkbox
+          v-if="!liteMode"
           v-model="stayInEditMode"
           color="primary"
           hide-details
           :label="$t('recipe.stay-in-edit-mode')"
         />
         <v-checkbox
+          v-if="!liteMode"
           v-model="parseRecipe"
           color="primary"
           hide-details
@@ -111,6 +115,9 @@ import { useUserApi } from "~/composables/api";
 import { useNewRecipeOptions } from "~/composables/use-new-recipe-options";
 import { validators } from "~/composables/use-validators";
 import type { VForm } from "~/types/auto-forms";
+import { useLiteMode } from "~/composables/use-lite-mode";
+
+const liteMode = useLiteMode();
 
 const state = reactive({
   error: false,
@@ -131,7 +138,7 @@ const {
   stayInEditMode,
   parseRecipe,
   navigateToRecipe,
-} = useNewRecipeOptions();
+} = useNewRecipeOptions({ enableParseRecipe: !liteMode });
 
 function handleResponse(response: AxiosResponse<string> | null, refreshTags = false) {
   if (response?.status !== 201) {

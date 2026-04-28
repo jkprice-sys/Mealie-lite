@@ -128,7 +128,7 @@ const MIGRATIONS = {
 };
 
 definePageMeta({
-  middleware: ["advanced-only"],
+  middleware: ["advanced-only", "lite-mode"],
 });
 
 const i18n = useI18n();

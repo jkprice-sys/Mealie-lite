@@ -99,12 +99,14 @@ import type { SideBarLink } from "~/types/application-types";
 import { useCookbookPreferences } from "~/composables/use-users/preferences";
 import { useCookbookStore, usePublicCookbookStore } from "~/composables/store/use-cookbook-store";
 import type { ReadCookBook } from "~/lib/api/types/cookbook";
+import { useLiteMode } from "~/composables/use-lite-mode";
 
 const i18n = useI18n();
 const { $appInfo, $globals } = useNuxtApp();
 const display = useDisplay();
 const auth = useMealieAuth();
 const { isOwnGroup } = useLoggedInState();
+const liteMode = useLiteMode();
 
 const route = useRoute();
 const groupSlug = computed(() => route.params.groupSlug as string || auth.user.value?.groupSlug || "");
@@ -150,6 +152,7 @@ function cookbookAsLink(cookbook: ReadCookBook): SideBarLink {
 
 const currentUserHouseholdId = computed(() => auth.user.value?.householdId);
 const cookbookLinks = computed<SideBarLink[]>(() => {
+  if (liteMode) return [];           // ADD THIS LINE
   if (!cookbooks.value?.length) {
     return [];
   }
@@ -221,67 +224,81 @@ const createLinks = computed(() => [
   },
 ]);
 
-const topLinks = computed<SideBarLink[]>(() => [
-  {
-    icon: $globals.icons.silverwareForkKnife,
-    to: `/g/${groupSlug.value}`,
-    title: i18n.t("general.recipes"),
-    restricted: false,
-  },
-  {
-    icon: $globals.icons.search,
-    to: `/g/${groupSlug.value}/recipes/finder`,
-    title: i18n.t("recipe-finder.recipe-finder"),
-    restricted: false,
-  },
-  {
-    icon: $globals.icons.calendarMultiselect,
-    title: i18n.t("meal-plan.meal-planner"),
-    to: "/household/mealplan/planner/view",
-    restricted: true,
-  },
-  {
-    icon: $globals.icons.formatListCheck,
-    title: i18n.t("shopping-list.shopping-lists"),
-    to: "/shopping-lists",
-    restricted: true,
-  },
-  {
-    icon: $globals.icons.timelineText,
-    title: i18n.t("recipe.timeline"),
-    to: `/g/${groupSlug.value}/recipes/timeline`,
-    restricted: true,
-  },
-  {
-    icon: $globals.icons.book,
-    to: `/g/${groupSlug.value}/cookbooks`,
-    title: i18n.t("cookbook.cookbooks"),
-    restricted: true,
-  },
-  {
-    icon: $globals.icons.organizers,
-    title: i18n.t("general.organizers"),
-    restricted: true,
-    children: [
-      {
-        icon: $globals.icons.categories,
-        to: `/g/${groupSlug.value}/recipes/categories`,
-        title: i18n.t("sidebar.categories"),
-        restricted: true,
-      },
-      {
-        icon: $globals.icons.tags,
-        to: `/g/${groupSlug.value}/recipes/tags`,
-        title: i18n.t("sidebar.tags"),
-        restricted: true,
-      },
-      {
-        icon: $globals.icons.potSteam,
-        to: `/g/${groupSlug.value}/recipes/tools`,
-        title: i18n.t("tool.tools"),
-        restricted: true,
-      },
-    ],
-  },
-]);
+const topLinks = computed<SideBarLink[]>(() => {
+  const all: SideBarLink[] = [
+    {
+      key: "recipes",
+      icon: $globals.icons.silverwareForkKnife,
+      to: `/g/${groupSlug.value}`,
+      title: i18n.t("general.recipes"),
+      restricted: false,
+    },
+    {
+      key: "recipe-finder",
+      icon: $globals.icons.search,
+      to: `/g/${groupSlug.value}/recipes/finder`,
+      title: i18n.t("recipe-finder.recipe-finder"),
+      restricted: false,
+    },
+    {
+      key: "mealplan",
+      icon: $globals.icons.calendarMultiselect,
+      title: i18n.t("meal-plan.meal-planner"),
+      to: "/household/mealplan/planner/view",
+      restricted: true,
+    },
+    {
+      key: "shopping",
+      icon: $globals.icons.formatListCheck,
+      title: i18n.t("shopping-list.shopping-lists"),
+      to: "/shopping-lists",
+      restricted: true,
+    },
+    {
+      key: "timeline",
+      icon: $globals.icons.timelineText,
+      title: i18n.t("recipe.timeline"),
+      to: `/g/${groupSlug.value}/recipes/timeline`,
+      restricted: true,
+    },
+    {
+      key: "cookbooks",
+      icon: $globals.icons.book,
+      to: `/g/${groupSlug.value}/cookbooks`,
+      title: i18n.t("cookbook.cookbooks"),
+      restricted: true,
+    },
+    {
+      key: "organizers",
+      icon: $globals.icons.organizers,
+      title: i18n.t("general.organizers"),
+      restricted: true,
+      children: [
+        {
+          icon: $globals.icons.categories,
+          to: `/g/${groupSlug.value}/recipes/categories`,
+          title: i18n.t("sidebar.categories"),
+          restricted: true,
+        },
+        {
+          icon: $globals.icons.tags,
+          to: `/g/${groupSlug.value}/recipes/tags`,
+          title: i18n.t("sidebar.tags"),
+          restricted: true,
+        },
+        ...(!liteMode ? [{
+          icon: $globals.icons.potSteam,
+          to: `/g/${groupSlug.value}/recipes/tools`,
+          title: i18n.t("tool.tools"),
+          restricted: true,
+        }] : []),
+      ],
+    },
+  ];
+
+  if (liteMode) {
+    return all.filter(l => ["recipes", "recipe-finder", "organizers"].includes(l.key as string));
+  }
+  return all;
+});
 </script>

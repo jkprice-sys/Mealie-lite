@@ -105,6 +105,9 @@ import RecipeDialogPrintPreferences from "~/components/Domain/Recipe/RecipeDialo
 import RecipeDialogShare from "~/components/Domain/Recipe/RecipeDialogShare.vue";
 import { useLoggedInState } from "~/composables/use-logged-in-state";
 import { useUserApi } from "~/composables/api";
+import { useLiteMode } from "~/composables/use-lite-mode";
+
+const liteMode = useLiteMode();
 import { useGroupRecipeActions } from "~/composables/use-group-recipe-actions";
 import { useHouseholdSelf } from "~/composables/use-households";
 import { alert } from "~/composables/use-toast";
@@ -306,11 +309,15 @@ const canDelete = computed(() => {
 });
 
 // Get Default Menu Items Specified in Props
+const liteHiddenItems = ["shoppingList", "mealplanner"];
 for (const [key, value] of Object.entries(props.useItems)) {
   if (!value) continue;
 
   // Skip delete if not allowed
   if (key === "delete" && !canDelete.value) continue;
+
+  // Hide shopping list and meal planner actions in lite mode
+  if (liteMode && liteHiddenItems.includes(key)) continue;
 
   const item = defaultItems[key];
   if (item && (item.isPublic || isOwnGroup.value)) {
