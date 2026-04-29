@@ -1,4 +1,6 @@
-@tailwind base;
+/* @tailwind base is intentionally omitted — Preflight is disabled in tailwind.config.ts
+   to avoid conflicts with Vuetify's own CSS reset during the Tailwind migration.
+   Our @layer base rules below still apply via the components/utilities layers. */
 @tailwind components;
 @tailwind utilities;
 
@@ -50,8 +52,8 @@ html.dark {
    Base layer overrides — applied globally, lower specificity
    than Vuetify component styles, so they won't clash.
    ============================================================= */
-@layer base {
-  /* Smooth focus rings for accessibility */
+@layer components {
+  /* Smooth focus rings for all ByteSized components */
   [data-bs-component]:focus-visible {
     @apply outline-none ring-2 ring-primary ring-offset-2;
   }

@@ -37,6 +37,13 @@ export default {
     },
   },
 
+  // Disable Preflight — Vuetify handles its own CSS reset.
+  // Without this, Tailwind's base reset strips button backgrounds and breaks
+  // all Vuetify components that coexist with Tailwind during the migration.
+  corePlugins: {
+    preflight: false,
+  },
+
   plugins: [
     require("@tailwindcss/forms")({ strategy: "class" }),
     require("@tailwindcss/typography"),
