@@ -230,7 +230,7 @@ const topLinks = computed<SideBarLink[]>(() => {
   ];
 
   if (liteMode) {
-    return all.filter(l => ["recipes", "recipe-finder", "organizers"].includes(l.key as string));
+    return all.filter(l => ["recipes", "organizers"].includes(l.key as string));
   }
   return all;
 });
