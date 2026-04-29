@@ -49,30 +49,35 @@ html.dark {
 }
 
 /* =============================================================
-   Base layer overrides — applied globally, lower specificity
-   than Vuetify component styles, so they won't clash.
-   ============================================================= */
-/* =============================================================
-   Minimal element resets — replaces only the parts of Tailwind Preflight
-   that we need. Safe because Vuetify's .v-btn / .v-* classes have
-   higher specificity and always override these base rules.
-   ============================================================= */
+   Base layer — minimal element resets replacing only the parts of
+   Tailwind Preflight we need.
 
-/* Reset <button> browser defaults (gray bg, system border, padding) */
-button {
-  background: transparent;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  appearance: none;
-  font: inherit;
-  color: inherit;
-}
+   IMPORTANT: These must be inside @layer base so that Tailwind
+   utilities (@layer utilities) can override them. Un-layered CSS
+   always beats layered CSS in the cascade, so putting resets outside
+   a layer would silently block bg-*, text-*, border-* utilities
+   applied directly to <button> and <a> elements.
 
-/* Reset <a> browser defaults for NuxtLink/RouterLink */
-a {
-  color: inherit;
-  text-decoration: none;
+   Vuetify's .v-btn / .v-* component classes have higher specificity
+   than these element selectors and always override them safely.
+   ============================================================= */
+@layer base {
+  /* Reset <button> browser defaults (gray bg, system border, padding) */
+  button {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    appearance: none;
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Reset <a> browser defaults for NuxtLink/RouterLink */
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
 @layer components {
