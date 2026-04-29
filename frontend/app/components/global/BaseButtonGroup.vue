@@ -97,7 +97,8 @@ const props = defineProps({
   stretch: { type: Boolean, default: false },
 });
 
-defineEmits<Record<string, () => void>>();
+// Dynamic event names from button configs — typed emits not feasible here
+defineEmits([]);
 
 const maxButtonWidth = computed(() => `${100 / props.buttons.length}%`);
 </script>
