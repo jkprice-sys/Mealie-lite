@@ -1,31 +1,18 @@
 <template>
-  <v-footer
-    color="primary"
-    padless
-    app
-  >
-    <v-row
-      justify="center"
-      align="center"
-      density="comfortable"
-      no-gutters
+  <!-- AppFooter — Tailwind replacement for v-footer / v-row / v-col -->
+  <footer class="bg-primary text-white py-2 text-center text-sm print:hidden">
+    <a
+      href="https://github.com/mealie-recipes/mealie"
+      target="_blank"
+      class="inline-flex items-center text-white hover:text-white/80 transition-colors mr-1"
+      aria-label="GitHub"
     >
-      <v-col
-        class="py-2 text-center white--text"
-        cols="12"
-      >
-        <v-btn
-          color="white"
-          icon
-          href="https://github.com/mealie-recipes/mealie"
-          target="_blank"
-        >
-          <v-icon>
-            {{ $globals.icons.github }}
-          </v-icon>
-        </v-btn>
-        {{ new Date().getFullYear() }} — <strong> Mealie </strong>
-      </v-col>
-    </v-row>
-  </v-footer>
+      <AppIcon :path="$globals.icons.github" size="md" />
+    </a>
+    {{ new Date().getFullYear() }} — <strong>Mealie</strong>
+  </footer>
 </template>
+
+<script setup lang="ts">
+const { $globals } = useNuxtApp();
+</script>

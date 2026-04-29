@@ -1,87 +1,77 @@
 <template>
-  <v-app-bar
-    clipped-left
-    density="compact"
-    app
-    color="primary"
-    dark
-    class="d-print-none"
+  <!--
+    AppHeader — Tailwind replacement for v-app-bar.
+    Fixed h-12 green bar. Slot receives the hamburger button from DefaultLayout.
+    Keeps z-[2010] to sit above Vuetify dialogs that haven't been migrated yet.
+  -->
+  <header
+    class="fixed top-0 left-0 right-0 h-12 bg-primary text-white
+           flex items-center gap-1 px-2 z-[2010] print:hidden"
   >
+    <!-- Hamburger button injected by DefaultLayout -->
     <slot />
-    <RouterLink :to="routerLink">
-      <v-btn
-        icon
-        color="white"
-      >
-        <v-icon size="40"> {{ $globals.icons.primary }} </v-icon>
-      </v-btn>
+
+    <!-- Logo -->
+    <RouterLink :to="routerLink" class="flex items-center text-white no-underline ml-1">
+      <AppIcon :path="$globals.icons.primary" size="lg" />
     </RouterLink>
 
-    <div
-      btn
-      class="pl-2"
+    <!-- App title -->
+    <span
+      class="pl-1 font-semibold text-base cursor-pointer select-none"
+      @click="$router.push(routerLink)"
     >
-      <v-toolbar-title
-        style="cursor: pointer"
-        @click="$router.push(routerLink)"
-      >
-        ByteSized
-      </v-toolbar-title>
-    </div>
+      ByteSized
+    </span>
+
+    <!-- Search dialog (opened programmatically) -->
     <RecipeDialogSearch ref="domSearchDialog" />
 
-    <v-spacer />
+    <div class="flex-1" />
 
-    <!-- Navigation Menu -->
     <template v-if="menu">
-      <v-responsive
-        v-if="!xs"
-        max-width="250"
+      <!-- Search: icon on xs, pill on sm+ -->
+      <button
+        v-if="xs"
+        type="button"
+        class="bs-btn bs-btn-sm text-white rounded-full hover:bg-white/20 transition-colors"
         @click="activateSearch"
       >
-        <v-text-field
-          readonly
-          class="mt-1"
-          rounded
-          variant="solo-filled"
-          density="compact"
-          flat
-          :prepend-inner-icon="$globals.icons.search"
-          bg-color="primary-darken-1"
-          :placeholder="$t('search.search-hint')"
-        />
-      </v-responsive>
-      <v-btn
+        <AppIcon :path="$globals.icons.search" size="md" />
+      </button>
+      <button
         v-else
-        icon
+        type="button"
+        class="flex items-center gap-2 bg-white/15 hover:bg-white/25
+               rounded-full px-3 py-1 text-sm text-white/90 transition-colors mr-1"
         @click="activateSearch"
       >
-        <v-icon> {{ $globals.icons.search }}</v-icon>
-      </v-btn>
-      <v-btn
+        <AppIcon :path="$globals.icons.search" size="sm" />
+        {{ $t('search.search-hint') }}
+      </button>
+
+      <!-- Logout -->
+      <button
         v-if="loggedIn"
-        :variant="smAndUp ? 'text' : undefined"
-        :icon="xs"
+        type="button"
+        class="bs-btn bs-btn-sm text-white rounded-full hover:bg-white/20 transition-colors"
         @click="logout()"
       >
-        <v-icon :start="smAndUp">
-          {{ $globals.icons.logout }}
-        </v-icon>
-        {{ smAndUp ? $t("user.logout") : "" }}
-      </v-btn>
-      <v-btn
+        <AppIcon :path="$globals.icons.logout" size="md" />
+        <span v-if="smAndUp" class="text-sm">{{ $t('user.logout') }}</span>
+      </button>
+
+      <!-- Login -->
+      <NuxtLink
         v-else
-        variant="text"
-        nuxt
         to="/login"
+        class="bs-btn bs-btn-sm text-white rounded-full hover:bg-white/20 transition-colors no-underline"
       >
-        <v-icon start>
-          {{ $globals.icons.user }}
-        </v-icon>
-        {{ $t("user.login") }}
-      </v-btn>
+        <AppIcon :path="$globals.icons.user" size="md" />
+        <span class="text-sm">{{ $t('user.login') }}</span>
+      </NuxtLink>
     </template>
-  </v-app-bar>
+  </header>
 </template>
 
 <script setup lang="ts">
@@ -89,15 +79,14 @@ import { useLoggedInState } from "~/composables/use-logged-in-state";
 import type RecipeDialogSearch from "~/components/Domain/Recipe/RecipeDialogSearch.vue";
 
 defineProps({
-  menu: {
-    type: Boolean,
-    default: true,
-  },
+  menu: { type: Boolean, default: true },
 });
+
+const { $globals } = useNuxtApp();
 const auth = useMealieAuth();
 const { loggedIn } = useLoggedInState();
 const route = useRoute();
-const groupSlug = computed(() => route.params.groupSlug as string || auth.user.value?.groupSlug || "");
+const groupSlug = computed(() => (route.params.groupSlug as string) || auth.user.value?.groupSlug || "");
 const { xs, smAndUp } = useDisplay();
 
 const routerLink = computed(() => groupSlug.value ? `/g/${groupSlug.value}` : "/");
@@ -108,20 +97,15 @@ function activateSearch() {
 }
 
 function handleKeyEvent(e: KeyboardEvent) {
-  const activeTag = document.activeElement?.tagName;
-  if (e.key === "/" && activeTag !== "INPUT" && activeTag !== "TEXTAREA") {
+  const tag = document.activeElement?.tagName;
+  if (e.key === "/" && tag !== "INPUT" && tag !== "TEXTAREA") {
     e.preventDefault();
     activateSearch();
   }
 }
 
-onMounted(() => {
-  document.addEventListener("keydown", handleKeyEvent);
-});
-
-onBeforeUnmount(() => {
-  document.removeEventListener("keydown", handleKeyEvent);
-});
+onMounted(() => document.addEventListener("keydown", handleKeyEvent));
+onBeforeUnmount(() => document.removeEventListener("keydown", handleKeyEvent));
 
 async function logout() {
   try {
@@ -132,9 +116,3 @@ async function logout() {
   }
 }
 </script>
-
-<style scoped>
-.v-toolbar {
-  z-index: 2010 !important;
-}
-</style>
