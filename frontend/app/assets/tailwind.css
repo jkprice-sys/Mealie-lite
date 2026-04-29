@@ -52,6 +52,15 @@ html.dark {
    Base layer overrides — applied globally, lower specificity
    than Vuetify component styles, so they won't clash.
    ============================================================= */
+/* =============================================================
+   Minimal element resets — only for elements ByteSized owns.
+   Does NOT use @tailwind base so Vuetify components are unaffected.
+   ============================================================= */
+.bs-btn,
+.bs-btn * {
+  box-sizing: border-box;
+}
+
 @layer components {
   /* Smooth focus rings for all ByteSized components */
   [data-bs-component]:focus-visible {
@@ -65,8 +74,11 @@ html.dark {
    ============================================================= */
 @layer components {
   /* --- Buttons --- */
+  /* Explicit browser-default resets (Preflight is disabled for Vuetify compat,
+     so <button> elements still carry gray background and system border) */
   .bs-btn {
     @apply inline-flex items-center justify-center gap-2 font-medium rounded-md
+           bg-transparent border-0 cursor-pointer appearance-none
            transition-colors duration-150 focus-visible:outline-none
            focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
            disabled:opacity-50 disabled:pointer-events-none select-none;
