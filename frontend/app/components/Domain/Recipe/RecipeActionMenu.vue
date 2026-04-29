@@ -20,24 +20,24 @@
 
     <v-spacer />
     <div v-if="!open" class="custom-btn-group ma-1">
-      <RecipeFavoriteBadge v-if="loggedIn" color="info" button-style :recipe-id="recipe.id!" show-always />
+      <RecipeFavoriteBadge v-if="loggedIn" color="primary" button-style :recipe-id="recipe.id!" show-always />
       <RecipeTimelineBadge
         v-if="loggedIn && !liteMode"
         class="ml-1"
-        color="info"
+        color="primary"
         button-style
         :slug="recipe.slug"
         :recipe-name="recipe.name!"
       />
       <div v-if="loggedIn">
-        <v-tooltip v-if="canEdit" location="bottom" color="info">
+        <v-tooltip v-if="canEdit" location="bottom" color="primary">
           <template #activator="{ props: tooltipProps }">
             <v-btn
               icon
               variant="flat"
               rounded="circle"
               size="small"
-              color="info"
+              color="primary"
               class="ml-1"
               v-bind="tooltipProps"
               @click="$emit('edit', true)"
@@ -58,7 +58,7 @@
         :slug="recipe.slug!"
         :menu-icon="$globals.icons.dotsVertical"
         fab
-        color="info"
+        color="primary"
         :card-menu="false"
         :recipe="recipe"
         :recipe-id="recipe.id!"

@@ -1,40 +1,24 @@
 <template>
+  <!-- BasePageTitle — replaces the Vuetify d-flex / text-h5 pattern -->
   <div class="mt-4">
-    <section class="d-flex flex-column align-center">
+    <section class="flex flex-col items-center">
       <slot name="header" />
-      <h2 class="text-h5">
-        <slot name="title">
-          👋 Here's a Title
-        </slot>
+      <h2 class="text-xl font-semibold text-on-surface">
+        <slot name="title">👋 Here's a Title</slot>
       </h2>
-
-      <h3 class="subtitle-1">
+      <p class="text-sm text-on-surface/70 mt-1">
         <slot />
-      </h3>
+      </p>
     </section>
-    <section class="d-flex">
+    <section class="flex">
       <slot name="content" />
     </section>
-    <v-divider
-      v-if="divider"
-      class="my-4"
-    />
+    <hr v-if="divider" class="my-4 border-t border-border" />
   </div>
 </template>
 
 <script setup lang="ts">
 defineProps({
-  divider: {
-    type: Boolean,
-    default: false,
-  },
+  divider: { type: Boolean, default: false },
 });
 </script>
-
-<style scoped>
-.subtitle-1 {
-  font-size: 1rem;
-  font-weight: normal;
-  color: var(--v-text-caption);
-}
-</style>

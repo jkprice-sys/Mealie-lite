@@ -10,6 +10,7 @@ export default defineNuxtConfig({
     "@vite-pwa/nuxt",
     "@nuxtjs/i18n",
     "@nuxt/fonts",
+    "@nuxtjs/tailwindcss",  // must come before vuetify-nuxt-module
     "vuetify-nuxt-module",
     "@nuxt/eslint",
   ],
@@ -72,7 +73,7 @@ export default defineNuxtConfig({
     viewTransition: true,
   },
 
-  css: ["~/assets/main.css", "~/assets/style-overrides.scss"],
+  css: ["~/assets/tailwind.css", "~/assets/main.css", "~/assets/style-overrides.scss"],
 
   runtimeConfig: {
     sessionPassword: process.env.SESSION_PASSWORD || "password-with-at-least-32-characters",

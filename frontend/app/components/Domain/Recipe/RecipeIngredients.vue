@@ -27,6 +27,7 @@
         <v-list-item
           density="compact"
           class="pa-0"
+          :style="checked[index] ? 'opacity: 0.45;' : ''"
           @click.stop="toggleChecked(index)"
         >
           <template #prepend>
@@ -34,8 +35,8 @@
               v-model="checked[index]"
               hide-details
               class="pt-0 my-auto py-auto"
-              color="secondary"
-              density="comfortable"
+              color="primary"
+              density="compact"
             />
           </template>
           <v-list-item-title>

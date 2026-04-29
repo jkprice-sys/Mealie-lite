@@ -1,106 +1,155 @@
 <template>
+  <!--
+    BaseDialog — Headless UI implementation.
+    Prop/slot API is identical to the old Vuetify version so all call sites
+    continue to work without changes.
+
+    Slots:
+      default              — body content (receives { submitEvent })
+      activator({ open })  — optional trigger element
+      card-actions         — replaces entire footer action row
+      custom-card-action   — inserted between Cancel and Confirm buttons
+  -->
   <div>
-    <slot
-      name="activator"
-      v-bind="{ open }"
-    />
-    <v-dialog
-      v-model="dialog"
-      :width="width"
-      :max-width="maxWidth ?? undefined"
-      :content-class="top ? 'top-dialog' : undefined"
-      :fullscreen="$vuetify.display.xs"
-      @keydown.enter="submitOnEnter"
-      @click:outside="emit('cancel')"
-      @keydown.esc="emit('cancel')"
-    >
-      <v-card height="100%" :loading="loading">
-        <template #loader="{ isActive }">
-          <v-progress-linear
-            :active="isActive"
-            indeterminate
-          />
-        </template>
-        <v-toolbar
-          dark
-          density="comfortable"
-          :color="color"
-          class="px-3 position-relative top-0 left-0 w-100"
+    <!-- Optional activator slot -->
+    <slot name="activator" v-bind="{ open: openDialog }" />
+
+    <!-- Teleport to body so z-index stacking is never a problem -->
+    <Teleport to="body">
+      <TransitionRoot :show="dialog" as="template">
+        <Dialog
+          as="div"
+          class="relative z-50"
+          @close="handleBackdropClose"
         >
-          <v-icon size="large">
-            {{ icon }}
-          </v-icon>
-          <v-toolbar-title class="headline">
-            {{ title }}
-          </v-toolbar-title>
-        </v-toolbar>
+          <!-- Backdrop -->
+          <TransitionChild
+            as="template"
+            enter="duration-200 ease-out"
+            enter-from="opacity-0"
+            enter-to="opacity-100"
+            leave="duration-150 ease-in"
+            leave-from="opacity-100"
+            leave-to="opacity-0"
+          >
+            <div class="bs-dialog-overlay" aria-hidden="true" />
+          </TransitionChild>
 
-        <div style="flex: 1 1 auto; min-height: 0; overflow: auto">
-          <slot v-bind="{ submitEvent }" />
-        </div>
-
-        <v-spacer />
-        <v-divider />
-
-        <v-card-actions :class="$vuetify.display.xs ? 'pb-4' : 'undefined'">
-          <slot name="card-actions">
-            <v-btn
-              variant="text"
-              color="grey"
-              @click="
-                dialog = false;
-                emit('cancel');
-              "
+          <!-- Centering wrapper -->
+          <div
+            class="fixed inset-0 z-50 flex items-center justify-center"
+            :class="isFullscreen ? 'p-0' : 'p-4'"
+          >
+            <TransitionChild
+              as="template"
+              enter="duration-200 ease-out"
+              enter-from="opacity-0 scale-95"
+              enter-to="opacity-100 scale-100"
+              leave="duration-150 ease-in"
+              leave-from="opacity-100 scale-100"
+              leave-to="opacity-0 scale-95"
             >
-              {{ cancelText }}
-            </v-btn>
-            <v-spacer />
-
-            <slot name="custom-card-action" />
-            <BaseButton
-              v-if="canDelete"
-              delete
-              @click="deleteEvent"
-            />
-            <BaseButton
-              v-if="canConfirm"
-              :color="color"
-              type="submit"
-              :disabled="submitDisabled"
-              @click="
-                emit('confirm');
-                dialog = false;
-              "
-            >
-              <template #icon>
-                {{ $globals.icons.check }}
-              </template>
-              {{ $t("general.confirm") }}
-            </BaseButton>
-            <BaseButton
-              v-if="canSubmit"
-              type="submit"
-              :disabled="submitDisabled || loading"
-              @click="submitEvent"
-            >
-              {{ submitText }}
-              <template
-                v-if="submitIcon"
-                #icon
+              <DialogPanel
+                :style="panelStyle"
+                :class="[
+                  'bs-dialog-panel',
+                  isFullscreen ? 'rounded-none max-h-screen h-screen' : '',
+                ]"
+                @keydown.enter.stop="submitOnEnter"
               >
-                {{ submitIcon }}
-              </template>
-            </BaseButton>
-          </slot>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+                <!-- Header bar -->
+                <div
+                  class="bs-dialog-header relative overflow-hidden"
+                  :style="{ backgroundColor: headerBgColor }"
+                >
+                  <AppIcon
+                    v-if="icon"
+                    :path="icon"
+                    size="lg"
+                    class="shrink-0"
+                  />
+                  <DialogTitle class="text-base font-semibold leading-tight">
+                    {{ title }}
+                  </DialogTitle>
+                  <!-- Loading progress bar -->
+                  <div
+                    v-if="loading"
+                    class="absolute bottom-0 left-0 right-0 h-0.5 overflow-hidden"
+                  >
+                    <div class="h-full w-1/2 bg-white/50 animate-[progress_1.5s_ease-in-out_infinite]" />
+                  </div>
+                </div>
+
+                <!-- Body -->
+                <div class="bs-dialog-body" style="flex: 1 1 auto; min-height: 0;">
+                  <slot v-bind="{ submitEvent }" />
+                </div>
+
+                <!-- Footer -->
+                <div class="bs-dialog-footer">
+                  <slot name="card-actions">
+                    <button
+                      type="button"
+                      class="bs-btn bs-btn-sm bs-btn-ghost"
+                      @click="cancelDialog"
+                    >
+                      {{ cancelText }}
+                    </button>
+
+                    <div class="flex items-center gap-2">
+                      <slot name="custom-card-action" />
+
+                      <BaseButton
+                        v-if="canDelete"
+                        delete
+                        @click="deleteEvent"
+                      />
+                      <BaseButton
+                        v-if="canConfirm"
+                        :color="color"
+                        type="submit"
+                        :disabled="submitDisabled"
+                        @click="confirmDialog"
+                      >
+                        <template #icon>
+                          {{ $globals.icons.check }}
+                        </template>
+                        {{ $t("general.confirm") }}
+                      </BaseButton>
+                      <BaseButton
+                        v-if="canSubmit"
+                        type="submit"
+                        :disabled="submitDisabled || loading"
+                        @click="submitEvent"
+                      >
+                        {{ submitText }}
+                        <template v-if="submitIcon" #icon>
+                          {{ submitIcon }}
+                        </template>
+                      </BaseButton>
+                    </div>
+                  </slot>
+                </div>
+              </DialogPanel>
+            </TransitionChild>
+          </div>
+        </Dialog>
+      </TransitionRoot>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useNuxtApp } from "#app";
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  TransitionChild,
+  TransitionRoot,
+} from "@headlessui/vue";
+import { useDisplay } from "vuetify";
 
+// ── Props ──────────────────────────────────────────────────────────────────
 interface DialogProps {
   modelValue: boolean;
   color?: string;
@@ -111,16 +160,10 @@ interface DialogProps {
   loading?: boolean;
   top?: boolean | null;
   keepOpen?: boolean;
-
-  // submit
   submitIcon?: string | null;
   submitText?: string;
   submitDisabled?: boolean;
-
-  // cancel
   cancelText?: string;
-
-  // actions
   canDelete?: boolean;
   canConfirm?: boolean;
   canSubmit?: boolean;
@@ -132,7 +175,8 @@ interface DialogEmits {
   (e: "submit" | "cancel" | "confirm" | "delete" | "close"): void;
 }
 
-// Using TypeScript interface with withDefaults for props
+const { $globals } = useNuxtApp();
+
 const props = withDefaults(defineProps<DialogProps>(), {
   color: "primary",
   title: "Modal Title",
@@ -142,33 +186,51 @@ const props = withDefaults(defineProps<DialogProps>(), {
   loading: false,
   top: null,
   keepOpen: false,
-
-  // submit
   submitIcon: null,
   submitText: () => useNuxtApp().$i18n.t("general.create"),
   submitDisabled: false,
-
-  // cancel
   cancelText: () => useNuxtApp().$i18n.t("general.cancel"),
-
-  // actions
   canDelete: false,
   canConfirm: false,
   canSubmit: false,
   disableSubmitOnEnter: false,
 });
+
 const emit = defineEmits<DialogEmits>();
 
+// ── Fullscreen on mobile (Vuetify still available during transition) ───────
+const display = useDisplay();
+const isFullscreen = computed(() => display.xs.value);
+
+// ── Dialog state ───────────────────────────────────────────────────────────
 const dialog = computed({
   get: () => props.modelValue,
   set: val => emit("update:modelValue", val),
 });
 
+function openDialog() {
+  dialog.value = true;
+}
+
+function cancelDialog() {
+  dialog.value = false;
+  emit("cancel");
+}
+
+function handleBackdropClose() {
+  emit("cancel");
+  dialog.value = false;
+}
+
+watch(dialog, (val) => {
+  if (val) submitted.value = false;
+  if (!val) emit("close");
+});
+
+// ── Submit / confirm ───────────────────────────────────────────────────────
 const submitted = ref(false);
 
-const determineClose = computed(() => {
-  return submitted.value && !props.loading && !props.keepOpen;
-});
+const determineClose = computed(() => submitted.value && !props.loading && !props.keepOpen);
 
 watch(determineClose, (shouldClose) => {
   if (shouldClose) {
@@ -177,30 +239,14 @@ watch(determineClose, (shouldClose) => {
   }
 });
 
-watch(dialog, (val) => {
-  if (val) submitted.value = false;
-  if (!val) emit("close");
-});
-
 function submitEvent() {
   emit("submit");
   submitted.value = true;
 }
 
-function submitOnEnter() {
-  if (props.disableSubmitOnEnter) {
-    return;
-  }
-
-  if (props.canConfirm) {
-    if (!props.submitDisabled) {
-      emit("confirm");
-      dialog.value = false;
-    }
-    return;
-  }
-
-  submitEvent();
+function confirmDialog() {
+  emit("confirm");
+  dialog.value = false;
 }
 
 function deleteEvent() {
@@ -208,26 +254,44 @@ function deleteEvent() {
   submitted.value = true;
 }
 
+function submitOnEnter() {
+  if (props.disableSubmitOnEnter) return;
+  if (props.canConfirm) {
+    if (!props.submitDisabled) confirmDialog();
+    return;
+  }
+  submitEvent();
+}
+
+// ── Color → CSS custom property ────────────────────────────────────────────
+const colorMap: Record<string, string> = {
+  primary: "var(--bs-primary)",
+  accent:  "var(--bs-accent)",
+  success: "var(--bs-success)",
+  info:    "var(--bs-info)",
+  warning: "var(--bs-warning)",
+  error:   "var(--bs-error)",
+};
+
+const headerBgColor = computed(() => colorMap[props.color] ?? props.color);
+
+const panelStyle = computed(() => {
+  const w = props.maxWidth ?? props.width;
+  return { width: "100%", maxWidth: typeof w === "number" ? `${w}px` : w };
+});
+
+// ── Backward compat: open() method ────────────────────────────────────────
 function open() {
   dialog.value = true;
-  logDeprecatedProp("open");
+  console.warn("[BaseDialog] The method 'open' is deprecated. Use v-model instead.");
 }
 
-/* function close() {
-  dialog.value = false;
-  logDeprecatedProp("close");
-} */
-
-function logDeprecatedProp(val: string) {
-  console.warn(
-    `[BaseDialog] The method '${val}' is deprecated. Please use v-model="value" to manage state instead.`,
-  );
-}
+defineExpose({ open });
 </script>
 
 <style>
-.top-dialog {
-  position: fixed;
-  top: 0;
+@keyframes progress {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
 }
 </style>

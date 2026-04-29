@@ -19,7 +19,7 @@
           :variant="fab ? 'flat' : undefined"
           :rounded="fab ? 'circle' : undefined"
           :size="fab ? 'small' : undefined"
-          :color="fab ? 'info' : 'secondary'"
+          :color="fab ? color : 'secondary'"
           :fab="fab"
           v-bind="activatorProps"
           @click.prevent

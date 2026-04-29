@@ -21,7 +21,7 @@
       @save="saveParsedIngredients"
     />
     <v-container v-show="!isCookMode" key="recipe-page" class="px-0" :class="{ 'pa-0': $vuetify.display.smAndDown }">
-      <v-card flat class="d-print-none">
+      <v-card flat class="d-print-none recipe-page-card">
         <RecipePageHeader
           :recipe="recipe"
           :recipe-scale="scale"
@@ -64,7 +64,7 @@
           <!--
             This section contains the 2 column layout for the recipe steps and other content.
           -->
-          <v-row>
+          <v-row align="start">
             <!--
               The left column is conditionally rendered based on cook mode.
             -->
@@ -75,8 +75,10 @@
               md="4"
               :class="$vuetify.display.mdAndUp ? 'border-e-thin' : null"
             >
-              <RecipePageIngredientToolsView v-if="!isEditForm" :recipe="recipe" :scale="scale" class="pr-2" />
-              <RecipePageOrganizers v-if="$vuetify.display.mdAndUp" v-model="recipe" class="pr-2" @item-selected="chipClicked" />
+              <div :style="$vuetify.display.mdAndUp && !isEditForm ? 'position: sticky; top: 48px; max-height: calc(100vh - 60px); overflow-y: auto;' : ''">
+                <RecipePageIngredientToolsView v-if="!isEditForm" :recipe="recipe" :scale="scale" class="pr-2" />
+                <RecipePageOrganizers v-if="$vuetify.display.mdAndUp" v-model="recipe" class="pr-2" @item-selected="chipClicked" />
+              </div>
             </v-col>
             <!--
               the right column is always rendered, but it's layout width is determined by where the left column is
@@ -441,6 +443,14 @@ const scale = ref(1);
 </script>
 
 <style lang="css">
+/* Allow sticky positioning inside v-card / v-card-text */
+.recipe-page-card {
+  overflow: visible !important;
+}
+.recipe-page-card > .v-card-text {
+  overflow: visible !important;
+}
+
 .flip-list-move {
   transition: transform 0.5s;
 }

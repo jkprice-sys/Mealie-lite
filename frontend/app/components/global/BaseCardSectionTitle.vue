@@ -1,47 +1,31 @@
 <template>
-  <v-card
-    color="background"
-    flat
+  <!-- BaseCardSectionTitle — section headings with optional icon + divider -->
+  <div
     class="pb-2"
-    :class="{
-      'mt-8': section,
-    }"
+    :class="{ 'mt-8': section }"
   >
-    <v-card-title class="text-h5 pl-0 py-0" style="font-weight: normal;">
-      <v-icon
+    <div class="flex items-center gap-2 py-0">
+      <AppIcon
         v-if="icon"
-        size="small"
-        start
-      >
-        {{ icon }}
-      </v-icon>
-      {{ title }}
-    </v-card-title>
-    <v-card-text
-      v-if="$slots.default"
-      class="pt-2 pl-0"
-    >
-      <p class="pb-0 mb-0">
-        <slot />
-      </p>
-    </v-card-text>
-    <v-divider class="mt-1 mb-3" />
-  </v-card>
+        :path="icon"
+        size="sm"
+        class="text-on-surface/60 shrink-0"
+      />
+      <h3 class="text-lg font-normal text-on-surface">
+        {{ title }}
+      </h3>
+    </div>
+    <p v-if="$slots.default" class="pt-1 text-sm text-on-surface/70">
+      <slot />
+    </p>
+    <hr class="mt-1 mb-3 border-t border-border" />
+  </div>
 </template>
 
 <script setup lang="ts">
 defineProps({
-  title: {
-    type: String,
-    required: true,
-  },
-  icon: {
-    type: String,
-    default: "",
-  },
-  section: {
-    type: Boolean,
-    default: false,
-  },
+  title:   { type: String,  required: true },
+  icon:    { type: String,  default: "" },
+  section: { type: Boolean, default: false },
 });
 </script>

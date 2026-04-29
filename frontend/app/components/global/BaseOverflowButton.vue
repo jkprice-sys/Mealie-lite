@@ -1,118 +1,97 @@
 <template>
-  <v-menu offset-y>
-    <template #activator="{ props: hoverProps }">
-      <v-btn
-        color="primary"
-        v-bind="{ ...hoverProps, ...$attrs }"
-        :class="btnClass"
-        :disabled="disabled"
+  <!--
+    BaseOverflowButton — Headless UI Menu implementation.
+    Three modes (model / link / event) with identical prop + v-model API as before.
+    The trigger button shows the active item's text and a chevron.
+  -->
+  <Menu as="div" class="relative inline-block text-left">
+    <MenuButton
+      :disabled="disabled"
+      :class="[
+        'bs-btn bs-btn-md bs-btn-primary gap-2',
+        btnClass,
+      ]"
+      v-bind="$attrs"
+    >
+      <AppIcon
+        v-if="activeObj.icon"
+        :path="activeObj.icon"
+        size="sm"
+      />
+      <span>{{ mode === MODES.model ? activeObj.text : btnText }}</span>
+      <AppIcon :path="$globals.icons.chevronDown" size="sm" class="ml-auto" />
+    </MenuButton>
+
+    <Transition
+      enter-active-class="transition duration-100 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-75 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <MenuItems
+        class="absolute left-0 z-20 mt-1 w-full min-w-[10rem] origin-top-left
+               bg-surface border border-border rounded-lg shadow-lg py-1
+               focus:outline-none"
       >
-        <v-icon
-          v-if="activeObj.icon"
-          start
-        >
-          {{ activeObj.icon }}
-        </v-icon>
-        {{ mode === MODES.model ? activeObj.text : btnText }}
-        <v-icon end>
-          {{ $globals.icons.chevronDown }}
-        </v-icon>
-      </v-btn>
-    </template>
-    <!-- Model -->
-    <v-list
-      v-if="mode === MODES.model"
-      v-model:selected="itemGroup"
-      density="compact"
-    >
-      <template v-for="(item, index) in items">
-        <div
-          v-if="!item.hide"
-          :key="index"
-        >
-          <v-list-item @click="setValue(item)">
-            <template
-              v-if="item.icon"
-              #prepend
+        <template v-for="(item, index) in items" :key="index">
+          <hr v-if="item.divider" class="my-1 border-t border-border" />
+
+          <!-- MODEL mode -->
+          <MenuItem v-else-if="!item.hide && mode === MODES.model" v-slot="{ active }">
+            <button
+              type="button"
+              :class="[
+                'flex w-full items-center gap-2 px-3 py-2 text-sm text-on-surface',
+                active ? 'bg-primary/10' : '',
+              ]"
+              @click="setValue(item)"
             >
-              <v-icon>{{ item.icon }}</v-icon>
-            </template>
-            <v-list-item-title>{{ item.text }}</v-list-item-title>
-          </v-list-item>
-          <v-divider
-            v-if="item.divider"
-            :key="`divider-${index}`"
-            class="my-1"
-          />
-        </div>
-      </template>
-    </v-list>
-    <!-- Links -->
-    <v-list
-      v-else-if="mode === MODES.link"
-      v-model:selected="itemGroup"
-      density="compact"
-    >
-      <template v-for="(item, index) in items">
-        <div
-          v-if="!item.hide"
-          :key="index"
-        >
-          <v-list-item :to="item.to">
-            <template
-              v-if="item.icon"
-              #prepend
+              <AppIcon v-if="item.icon" :path="item.icon" size="sm" />
+              {{ item.text }}
+            </button>
+          </MenuItem>
+
+          <!-- LINK mode -->
+          <MenuItem v-else-if="!item.hide && mode === MODES.link" v-slot="{ active }">
+            <NuxtLink
+              :to="item.to"
+              :class="[
+                'flex w-full items-center gap-2 px-3 py-2 text-sm text-on-surface no-underline',
+                active ? 'bg-primary/10' : '',
+              ]"
             >
-              <v-icon>{{ item.icon }}</v-icon>
-            </template>
-            <v-list-item-title>{{ item.text }}</v-list-item-title>
-          </v-list-item>
-          <v-divider
-            v-if="item.divider"
-            :key="`divider-${index}`"
-            class="my-1"
-          />
-        </div>
-      </template>
-    </v-list>
-    <!-- Event -->
-    <v-list
-      v-else-if="mode === MODES.event"
-      density="compact"
-    >
-      <template v-for="(item, index) in items">
-        <div
-          v-if="!item.hide"
-          :key="index"
-        >
-          <v-list-item @click="$emit(item.event)">
-            <template
-              v-if="item.icon"
-              #prepend
+              <AppIcon v-if="item.icon" :path="item.icon" size="sm" />
+              {{ item.text }}
+            </NuxtLink>
+          </MenuItem>
+
+          <!-- EVENT mode -->
+          <MenuItem v-else-if="!item.hide && mode === MODES.event" v-slot="{ active }">
+            <button
+              type="button"
+              :class="[
+                'flex w-full items-center gap-2 px-3 py-2 text-sm text-on-surface',
+                active ? 'bg-primary/10' : '',
+              ]"
+              @click="$emit(item.event ?? '')"
             >
-              <v-icon>{{ item.icon }}</v-icon>
-            </template>
-            <v-list-item-title>{{ item.text }}</v-list-item-title>
-          </v-list-item>
-          <v-divider
-            v-if="item.divider"
-            :key="`divider-${index}`"
-            class="my-1"
-          />
-        </div>
-      </template>
-    </v-list>
-  </v-menu>
+              <AppIcon v-if="item.icon" :path="item.icon" size="sm" />
+              {{ item.text }}
+            </button>
+          </MenuItem>
+        </template>
+      </MenuItems>
+    </Transition>
+  </Menu>
 </template>
 
 <script setup lang="ts">
-const MODES = {
-  model: "model",
-  link: "link",
-  event: "event",
-};
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/vue";
 
-type modes = "model" | "link" | "event";
+const MODES = { model: "model", link: "link", event: "event" } as const;
+type ModeKey = keyof typeof MODES;
 
 export interface MenuItem {
   text: string;
@@ -125,56 +104,34 @@ export interface MenuItem {
 }
 
 const props = defineProps({
-  mode: {
-    type: String as () => modes,
-    default: "model",
-  },
-  items: {
-    type: Array as () => MenuItem[],
-    required: true,
-  },
-  disabled: {
-    type: Boolean,
-    required: false,
-    default: false,
-  },
-  btnClass: {
+  mode:     { type: String as () => ModeKey, default: "model" },
+  items:    { type: Array as () => MenuItem[], required: true },
+  disabled: { type: Boolean, default: false },
+  btnClass: { type: String, default: "" },
+  btnText:  {
     type: String,
-    required: false,
-    default: "",
-  },
-  btnText: {
-    type: String,
-    required: false,
-    default: function () {
-      return useI18n().t("general.actions");
-    },
+    default: function () { return useI18n().t("general.actions"); },
   },
 });
 
-const modelValue = defineModel({
-  type: String,
-  required: false,
-  default: "",
-});
+const { $globals } = useNuxtApp();
 
-const activeObj = ref<MenuItem>({
-  text: "DEFAULT",
-  value: "",
-});
+const modelValue = defineModel({ type: String, required: false, default: "" });
 
+const activeObj = ref<MenuItem>({ text: "DEFAULT", value: "" });
+
+// Initialise to the item matching the current model value
 let startIndex = 0;
 props.items.forEach((item, index) => {
   if (item.value === modelValue.value) {
     startIndex = index;
-
     activeObj.value = item;
   }
 });
-const itemGroup = ref(startIndex);
+const _itemGroup = ref(startIndex); // kept for potential future use
 
 function setValue(v: MenuItem) {
-  modelValue.value = v.value || "";
+  modelValue.value = v.value ?? "";
   activeObj.value = v;
 }
 </script>

@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============================================================
+   ByteSized design tokens — CSS custom properties.
+   Tailwind utilities reference these vars via tailwind.config.ts,
+   so switching dark/light is just toggling the .dark class on <html>.
+   ============================================================= */
+:root {
+  /* Brand */
+  --bs-primary:         #4A7C59;
+  --bs-primary-content: #ffffff;
+  --bs-accent:          #C4622D;
+  --bs-accent-content:  #ffffff;
+  --bs-secondary:       #7A6E62;
+
+  /* Semantic */
+  --bs-success: #43A047;
+  --bs-info:    #1976d2;
+  --bs-warning: #FF6D00;
+  --bs-error:   #EF5350;
+
+  /* Surface */
+  --bs-background: #f5f5f5;
+  --bs-surface:    #ffffff;
+  --bs-on-surface: #1c1c1e;
+  --bs-border:     #e0e0e0;
+}
+
+html.dark {
+  --bs-primary:         #6BA082;
+  --bs-primary-content: #ffffff;
+  --bs-accent:          #E8845A;
+  --bs-accent-content:  #ffffff;
+  --bs-secondary:       #A09288;
+
+  --bs-success: #43A047;
+  --bs-info:    #1976d2;
+  --bs-warning: #FF6D00;
+  --bs-error:   #EF5350;
+
+  --bs-background: #1A2419;
+  --bs-surface:    #1A2419;
+  --bs-on-surface: #e8e8e8;
+  --bs-border:     #333d30;
+}
+
+/* =============================================================
+   Base layer overrides — applied globally, lower specificity
+   than Vuetify component styles, so they won't clash.
+   ============================================================= */
+@layer base {
+  /* Smooth focus rings for accessibility */
+  [data-bs-component]:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2;
+  }
+}
+
+/* =============================================================
+   Component layer — reusable multi-utility patterns used
+   by the ByteSized Base components.
+   ============================================================= */
+@layer components {
+  /* --- Buttons --- */
+  .bs-btn {
+    @apply inline-flex items-center justify-center gap-2 font-medium rounded-md
+           transition-colors duration-150 focus-visible:outline-none
+           focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
+           disabled:opacity-50 disabled:pointer-events-none select-none;
+  }
+  .bs-btn-sm  { @apply text-xs  px-2.5 py-1.5; }
+  .bs-btn-md  { @apply text-sm  px-4   py-2;   }
+  .bs-btn-lg  { @apply text-base px-5  py-2.5; }
+
+  /* Variants */
+  .bs-btn-primary  { @apply bg-primary  text-white hover:brightness-90  active:brightness-75; }
+  .bs-btn-error    { @apply bg-error    text-white hover:brightness-90  active:brightness-75; }
+  .bs-btn-success  { @apply bg-success  text-white hover:brightness-90  active:brightness-75; }
+  .bs-btn-outline  { @apply bg-transparent border border-primary text-primary
+                            hover:bg-primary hover:text-white active:brightness-90; }
+  .bs-btn-ghost    { @apply bg-transparent text-on-surface hover:bg-black/8
+                            dark:hover:bg-white/10; }
+  .bs-btn-error-outline { @apply bg-transparent border border-error text-error
+                                 hover:bg-error hover:text-white; }
+
+  /* --- Cards --- */
+  .bs-card {
+    @apply bg-surface rounded-lg shadow-sm border border-border;
+  }
+  .bs-card-header {
+    @apply px-4 py-3 border-b border-border font-semibold text-on-surface;
+  }
+  .bs-card-body {
+    @apply px-4 py-4 text-on-surface;
+  }
+
+  /* --- Dialog --- */
+  .bs-dialog-overlay {
+    @apply fixed inset-0 bg-black/40 backdrop-blur-sm z-40;
+  }
+  .bs-dialog-panel {
+    @apply relative bg-surface rounded-xl shadow-xl w-full z-50
+           flex flex-col max-h-[90vh] overflow-hidden;
+  }
+  .bs-dialog-header {
+    @apply flex items-center gap-3 px-5 py-4 text-white rounded-t-xl shrink-0;
+  }
+  .bs-dialog-body {
+    @apply flex-1 overflow-y-auto px-5 py-4 text-on-surface;
+  }
+  .bs-dialog-footer {
+    @apply flex items-center justify-between px-5 py-3 border-t border-border shrink-0;
+  }
+}
