@@ -9,19 +9,19 @@
       @confirm="confirmDiscard"
       @cancel="cancelDiscard"
     >
-      <v-card-text>
-        {{ $t("general.discard-changes-description") }}
-      </v-card-text>
+      {{ $t("general.discard-changes-description") }}
     </BaseDialog>
     <RecipePageParseDialog
       :model-value="isParsing"
       :ingredients="recipe.recipeIngredient"
-      :width="$vuetify.display.smAndDown ? '100%' : '80%'"
+      :width="smAndDown ? '100%' : '80%'"
       @update:model-value="toggleIsParsing"
       @save="saveParsedIngredients"
     />
-    <v-container v-show="!isCookMode" key="recipe-page" class="px-0" :class="{ 'pa-0': $vuetify.display.smAndDown }">
-      <v-card flat class="d-print-none recipe-page-card">
+
+    <!-- Normal view mode -->
+    <div v-show="!isCookMode" class="px-0">
+      <div class="print:hidden">
         <RecipePageHeader
           :recipe="recipe"
           :recipe-scale="scale"
@@ -37,7 +37,7 @@
           mode="text"
           :main-menu-bar="false"
         />
-        <v-card-text v-else>
+        <div v-else class="px-4 py-4">
           <!--
             This is where most of the main content is rendered. Some components include state for both Edit and View modes
             which is why some have explicit v-if statements and others use the composition API to determine and manage
@@ -45,8 +45,7 @@
 
             The global recipe object is shared down the tree of components and _is_ mutated by child components. This is
             some-what of a hack of the system and goes against the principles of Vue, but it _does_ seem to work and streamline
-            a significant amount of prop management. When we move to Vue 3 and have access to some of the newer API's the plan to update this
-            data management and mutation system we're using.
+            a significant amount of prop management.
           -->
           <div>
             <RecipePageInfoEditor v-if="isEditMode" v-model="recipe" />
@@ -62,70 +61,69 @@
           </div>
 
           <!--
-            This section contains the 2 column layout for the recipe steps and other content.
+            Two-column layout: ingredients on the left (sticky on desktop), instructions on the right.
           -->
-          <v-row align="start">
-            <!--
-              The left column is conditionally rendered based on cook mode.
-            -->
-            <v-col
+          <div class="flex flex-wrap items-start">
+            <!-- Left column: ingredients + organizers (hidden in cook mode unless editing) -->
+            <div
               v-if="!isCookMode || isEditForm"
-              cols="12"
-              sm="12"
-              md="4"
-              :class="$vuetify.display.mdAndUp ? 'border-e-thin' : null"
+              class="w-full md:w-1/3"
+              :class="mdAndUp ? 'md:border-r md:border-border' : ''"
             >
-              <div :style="$vuetify.display.mdAndUp && !isEditForm ? 'position: sticky; top: 48px; max-height: calc(100vh - 60px); overflow-y: auto;' : ''">
+              <div
+                :style="mdAndUp && !isEditForm
+                  ? 'position: sticky; top: 48px; max-height: calc(100vh - 60px); overflow-y: auto;'
+                  : ''"
+              >
                 <RecipePageIngredientToolsView v-if="!isEditForm" :recipe="recipe" :scale="scale" class="pr-2" />
-                <RecipePageOrganizers v-if="$vuetify.display.mdAndUp" v-model="recipe" class="pr-2" @item-selected="chipClicked" />
+                <RecipePageOrganizers v-if="mdAndUp" v-model="recipe" class="pr-2" @item-selected="chipClicked" />
               </div>
-            </v-col>
-            <!--
-              the right column is always rendered, but it's layout width is determined by where the left column is
-              rendered.
-            -->
-            <v-col cols="12" sm="12" :md="8 + (isCookMode ? 1 : 0) * 4">
+            </div>
+
+            <!-- Right column: instructions (full-width in cook mode) -->
+            <div :class="isCookMode ? 'w-full' : 'w-full md:w-2/3'">
               <RecipePageInstructions
                 v-model="recipe.recipeInstructions"
                 v-model:assets="recipe.assets"
                 :recipe="recipe"
                 :scale="scale"
               />
-              <div v-if="isEditForm" class="d-flex">
+              <div v-if="isEditForm" class="flex">
                 <RecipeDialogBulkAdd class="ml-auto my-2 mr-1" @bulk-data="addStep" />
                 <BaseButton class="my-2" @click="addStep()">
                   {{ $t("general.add") }}
                 </BaseButton>
               </div>
-              <div v-if="!$vuetify.display.mdAndUp">
+              <div v-if="!mdAndUp">
                 <RecipePageOrganizers v-model="recipe" />
               </div>
               <RecipeNotes v-model="recipe.notes" :edit="isEditForm" />
-            </v-col>
-          </v-row>
+            </div>
+          </div>
+
           <RecipePageFooter v-model="recipe" />
-        </v-card-text>
-      </v-card>
+        </div>
+      </div>
       <WakelockSwitch />
       <RecipePageComments
         v-if="!recipe.settings?.disableComments && !isEditForm && !isCookMode"
         v-model="recipe"
-        class="px-1 my-4 d-print-none"
+        class="px-1 my-4 print:hidden"
       />
       <RecipePrintContainer :recipe="recipe" :scale="scale" />
-    </v-container>
-    <!-- Cook mode displayes two columns with ingredients and instructions side by side, each being scrolled individually, allowing to view both at the same time -->
-    <!-- The calc is to account for the navabar height (48px) -->
-    <v-sheet
+    </div>
+
+    <!-- Cook mode: side-by-side scrollable columns (no linked ingredients) -->
+    <!-- Each column scrolls independently; height fills viewport minus navbar (48px) -->
+    <div
       v-show="isCookMode && !hasLinkedIngredients"
-      key="cookmode"
-      :height="$vuetify.display.smAndUp ? 'calc(100vh - 48px)' : 'auto'"
-      class-name="overflow-hidden"
+      :style="smAndUp ? 'height: calc(100vh - 48px)' : ''"
+      class="overflow-hidden"
     >
-      <!-- the calc is to account for the toolbar a more dynamic solution could be needed  -->
-      <v-row style="height: 100%" no-gutters class="overflow-hidden">
-        <v-col cols="12" sm="5" class="overflow-y-auto pl-4 pr-3 py-2" style="height: 100%">
-          <div class="d-flex align-center">
+      <div class="flex overflow-hidden h-full">
+        <!-- Ingredients column -->
+        <div class="w-full sm:w-5/12 overflow-y-auto pl-4 pr-3 py-2 h-full">
+          <div class="flex items-center">
             <RecipePageScale v-model="scale" :recipe="recipe" />
           </div>
           <RecipePageIngredientToolsView
@@ -134,16 +132,14 @@
             :scale="scale"
             :is-cook-mode="isCookMode"
           />
-          <v-divider />
-        </v-col>
-        <v-col
-          class="overflow-y-auto"
-          :class="$vuetify.display.smAndDown ? 'py-2': 'py-6'"
-          style="height: 100%"
-          cols="12"
-          sm="7"
+          <hr class="border-t border-border my-2" />
+        </div>
+        <!-- Instructions column -->
+        <div
+          class="overflow-y-auto w-full sm:w-7/12 h-full"
+          :class="smAndDown ? 'py-2' : 'py-6'"
         >
-          <h2 class="text-h5 px-4 font-weight-medium opacity-80">
+          <h2 class="text-xl px-4 font-medium opacity-80">
             {{ $t('recipe.instructions') }}
           </h2>
           <RecipePageInstructions
@@ -153,42 +149,47 @@
             :recipe="recipe"
             :scale="scale"
           />
-        </v-col>
-      </v-row>
-    </v-sheet>
-    <v-sheet v-show="isCookMode && hasLinkedIngredients">
-      <div class="mt-2 px-2 px-md-4">
+        </div>
+      </div>
+    </div>
+
+    <!-- Cook mode: linked ingredients mode (instructions with inline ingredient chips) -->
+    <div v-show="isCookMode && hasLinkedIngredients">
+      <div class="mt-2 px-2 md:px-4">
         <RecipePageScale v-model="scale" :recipe="recipe" />
       </div>
       <RecipePageInstructions
         v-model="recipe.recipeInstructions"
         v-model:assets="recipe.assets"
-        class="overflow-y-hidden mt-n5 px-2 px-md-4"
+        class="overflow-y-hidden -mt-5 px-2 md:px-4"
         :recipe="recipe"
         :scale="scale"
       />
 
-      <div v-if="notLinkedIngredients.length > 0" class="px-2 px-md-4 pb-4">
-        <v-divider />
-        <v-card flat>
-          <v-card-title>{{ $t("recipe.not-linked-ingredients") }}</v-card-title>
+      <div v-if="notLinkedIngredients.length > 0" class="px-2 md:px-4 pb-4">
+        <hr class="border-t border-border my-2" />
+        <div>
+          <h3 class="text-base font-semibold px-4 py-2">
+            {{ $t("recipe.not-linked-ingredients") }}
+          </h3>
           <RecipeIngredients
             :value="notLinkedIngredients"
             :scale="scale"
             :is-cook-mode="isCookMode"
           />
-        </v-card>
+        </div>
       </div>
-    </v-sheet>
-    <v-btn
+    </div>
+
+    <!-- Cook mode exit button (fixed top-right) -->
+    <button
       v-if="isCookMode"
-      icon
-      color="primary"
-      style="position: fixed; right: 12px; top: 60px"
+      type="button"
+      class="fixed right-3 top-[60px] bs-btn bs-btn-primary rounded-full p-2 z-50"
       @click="toggleCookMode()"
     >
-      <v-icon>{{ $globals.icons.close }}</v-icon>
-    </v-btn>
+      <AppIcon :path="$globals.icons.close" size="md" />
+    </button>
   </div>
 </template>
 
@@ -225,7 +226,7 @@ import { useNavigationWarning } from "~/composables/use-navigation-warning";
 
 const recipe = defineModel<NoUndefinedField<Recipe>>({ required: true });
 
-const display = useDisplay();
+const { mdAndUp, smAndDown, smAndUp } = useDisplay();
 const auth = useMealieAuth();
 const route = useRoute();
 const { isOwnGroup } = useLoggedInState();
@@ -237,6 +238,7 @@ const api = useUserApi();
 const { setMode, isEditForm, isEditJSON, isCookMode, isEditMode, isParsing, toggleCookMode, toggleIsParsing }
   = usePageState(recipe.value.slug);
 const { deactivateNavigationWarning } = useNavigationWarning();
+
 const notLinkedIngredients = computed(() => {
   return recipe.value.recipeIngredient.filter((ingredient) => {
     return !recipe.value.recipeInstructions.some(step =>
@@ -247,8 +249,7 @@ const notLinkedIngredients = computed(() => {
 
 /** =============================================================
  * Recipe Snapshot on Mount
- * this is used to determine if the recipe has been changed since the last save
- * and prompts the user to save if they have unsaved changes.
+ * Used to detect unsaved changes and prompt the user before leaving.
  */
 const originalRecipe = ref<Recipe | null>(null);
 const discardDialog = ref(false);
@@ -314,11 +315,13 @@ onUnmounted(() => {
   toggleCookMode();
   clearPageState(recipe.value.slug || "");
 });
+
 const hasLinkedIngredients = computed(() => {
   return recipe.value.recipeInstructions.some(
     step => step.ingredientReferences && step.ingredientReferences.length > 0,
   );
 });
+
 /** =============================================================
  * Set State onMounted
  */
@@ -351,7 +354,7 @@ watch(isParsing, () => {
 });
 
 /** =============================================================
- * Recipe Save Delete
+ * Recipe Save / Delete
  */
 
 async function saveRecipe() {
@@ -362,7 +365,6 @@ async function saveRecipe() {
   if (data?.slug) {
     router.push(`/g/${groupSlug.value}/r/` + data.slug);
     recipe.value = data as NoUndefinedField<Recipe>;
-    // Update the snapshot after successful save
     originalRecipe.value = deepCopy(recipe.value);
   }
 }
@@ -385,7 +387,7 @@ async function deleteRecipe() {
  */
 const landscape = computed(() => {
   const preferLandscape = recipe.value.settings?.landscapeView;
-  const smallScreen = !display.smAndUp.value;
+  const smallScreen = !smAndUp.value;
 
   if (preferLandscape) {
     return true;
@@ -399,7 +401,6 @@ const landscape = computed(() => {
 
 /** =============================================================
  * Bulk Step Editor
- * TODO: Move to RecipePageInstructions component
  */
 
 function addStep(steps: Array<string> | null = null) {
@@ -437,20 +438,10 @@ function chipClicked(item: RecipeTag | RecipeCategory | RecipeTool, itemType: st
 }
 
 const scale = ref(1);
-
-// expose to template
-// (all variables used in template are top-level in <script setup>)
 </script>
 
 <style lang="css">
-/* Allow sticky positioning inside v-card / v-card-text */
-.recipe-page-card {
-  overflow: visible !important;
-}
-.recipe-page-card > .v-card-text {
-  overflow: visible !important;
-}
-
+/* Drag-and-drop transition classes used by recipe step sortable lists */
 .flip-list-move {
   transition: transform 0.5s;
 }

@@ -5,7 +5,7 @@
       :recipe-scale="recipeScale"
       :landscape="landscape"
     />
-    <v-divider />
+    <hr class="border-t border-border" />
     <RecipeActionMenu
       :recipe="recipe"
       :slug="recipe.slug"

@@ -1,20 +1,24 @@
 <template>
   <div>
-    <div class="d-flex justify-end flex-wrap align-stretch">
+    <!-- Landscape: image spans full width above; portrait: image shares row at 50% beside card -->
+    <div class="flex justify-end flex-wrap items-stretch">
+      <!-- Landscape image (rendered above the card, full width) -->
       <RecipePageInfoCardImage
         v-if="landscape"
         :recipe="recipe"
       />
-      <v-card
-        :width="landscape ? '100%' : '50%'"
-        flat
-        class="d-flex flex-column justify-center align-center"
+
+      <!-- Info card: full-width in landscape, half-width in portrait -->
+      <div
+        class="flex flex-col justify-center items-center"
+        :class="landscape ? 'w-full' : 'w-full sm:w-1/2'"
       >
-        <v-card-text class="w-100">
-          <div class="d-flex flex-column align-center">
-            <v-card-title class="text-h5 font-weight-regular pa-0 text-wrap text-center opacity-80">
+        <div class="w-full px-4 py-4">
+          <!-- Title + rating -->
+          <div class="flex flex-col items-center">
+            <h2 class="text-2xl font-normal p-0 text-center opacity-80 break-words w-full">
               {{ recipe.name }}
-            </v-card-title>
+            </h2>
             <RecipeRating
               :key="recipe.slug"
               :model-value="recipe.rating"
@@ -22,50 +26,50 @@
               :slug="recipe.slug"
             />
           </div>
-          <v-divider class="my-2" />
+
+          <hr class="my-2 border-t border-border" />
+
           <SafeMarkdown :source="recipe.description" class="my-3" />
-          <v-divider v-if="recipe.description" />
-          <v-container class="d-flex flex-row flex-wrap justify-center">
+
+          <hr v-if="recipe.description" class="border-t border-border" />
+
+          <!-- Yield, last-made, and time cards -->
+          <div class="flex flex-row flex-wrap justify-center mt-2">
+            <!-- Yield + last made -->
             <div class="mx-6">
-              <v-row no-gutters>
-                <v-col
-                  v-if="recipe.recipeYieldQuantity || recipe.recipeYield"
-                  cols="12"
-                  class="d-flex flex-wrap justify-center"
-                >
-                  <RecipeYield
-                    :yield-quantity="recipe.recipeYieldQuantity"
-                    :yield-text="recipe.recipeYield"
-                    :scale="recipeScale"
-                    class="mb-4"
-                  />
-                </v-col>
-              </v-row>
-              <v-row no-gutters>
-                <v-col
-                  cols="12"
-                  class="d-flex flex-wrap justify-center"
-                >
-                  <RecipeLastMade
-                    v-if="isOwnGroup"
-                    :recipe="recipe"
-                    class="mb-4"
-                  />
-                </v-col>
-              </v-row>
+              <div
+                v-if="recipe.recipeYieldQuantity || recipe.recipeYield"
+                class="flex flex-wrap justify-center mb-4"
+              >
+                <RecipeYield
+                  :yield-quantity="recipe.recipeYieldQuantity"
+                  :yield-text="recipe.recipeYield"
+                  :scale="recipeScale"
+                />
+              </div>
+              <div class="flex flex-wrap justify-center mb-4">
+                <RecipeLastMade
+                  v-if="isOwnGroup"
+                  :recipe="recipe"
+                />
+              </div>
             </div>
+
+            <!-- Time card -->
             <div v-if="recipe.prepTime || recipe.totalTime || recipe.performTime" class="mx-6">
               <RecipeTimeCard
-                container-class="d-flex flex-wrap justify-center"
+                container-class="flex flex-wrap justify-center"
                 :prep-time="recipe.prepTime"
                 :total-time="recipe.totalTime"
                 :perform-time="recipe.performTime"
                 class="mb-4"
               />
             </div>
-          </v-container>
-        </v-card-text>
-      </v-card>
+          </div>
+        </div>
+      </div>
+
+      <!-- Portrait image (rendered beside the card, max half width) -->
       <RecipePageInfoCardImage
         v-if="!landscape"
         :recipe="recipe"
