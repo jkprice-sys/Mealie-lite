@@ -1,213 +1,202 @@
 <template>
-  <v-container
-    fluid
-    class="d-flex justify-center align-center flex-column fill-height"
-    :class="{
-      'bg-off-white': !$vuetify.theme.current.dark && !isDark,
-    }"
-  >
-    <v-alert
-      v-if="isFirstLogin"
-      class="my-4"
-      type="info"
-      :icon="$globals.icons.information"
-      :style="{ flex: 'none' }"
-    >
-      <div>
-        <p class="mb-3">
-          {{ $t('user.it-looks-like-this-is-your-first-time-logging-in') }}
-        </p>
-        <p class="mb-1">
-          <strong>{{ $t('user.username') }}: </strong>changeme@example.com
-          <AppButtonCopy
-            copy-text="changeme@example.com"
-            color="info"
-            btn-class="h-auto"
-          />
-        </p>
-        <p class="mb-3">
-          <strong>{{ $t('user.password') }}: </strong>MyPassword
-          <AppButtonCopy
-            copy-text="MyPassword"
-            color="info"
-            btn-class="h-auto"
-          />
-        </p>
-        <p>
-          {{ $t('user.dont-want-to-see-this-anymore-be-sure-to-change-your-email') }}
-        </p>
-      </div>
-    </v-alert>
-    <v-card
-      tag="section"
-      class="d-flex flex-column align-center w-100"
-      max-width="600"
-    >
-      <v-toolbar
-        color="primary"
-        class="d-flex justify-center mb-4"
-        dark
-      >
-        <v-toolbar-title class="text-h4 text-center">
-          Mealie
-        </v-toolbar-title>
-      </v-toolbar>
-      <AppLogo :size="100" />
-      <v-card-title class="text-h5 justify-center pb-3">
-        {{ $t('user.sign-in') }}
-      </v-card-title>
-      <v-card-text class="w-100">
-        <v-form @submit.prevent="authenticate">
-          <v-text-field
-            v-if="$appInfo.allowPasswordLogin"
-            id="username"
-            v-model="form.email"
-            :prepend-inner-icon="$globals.icons.email"
-            variant="solo-filled"
-            flat
-            width="100%"
-            autofocus
-            autocomplete="username"
-            name="username"
-            :label="$t('user.email-or-username')"
-            type="text"
-          />
-          <v-text-field
-            v-if="$appInfo.allowPasswordLogin"
-            id="password"
-            v-model="form.password"
-            :prepend-inner-icon="$globals.icons.lock"
-            :append-inner-icon="passwordIcon"
-            variant="solo-filled"
-            flat
-            autocomplete="current-password"
-            name="password"
-            :label="$t('user.password')"
-            :type="inputType"
-            @click:append-inner="togglePasswordShow"
-          />
-          <v-checkbox
-            v-if="$appInfo.allowPasswordLogin"
-            v-model="form.remember"
-            class="ml-2 mt-n2"
-            :label="$t('user.remember-me')"
-          />
-          <v-card-actions v-if="$appInfo.allowPasswordLogin" class="justify-center pt-0">
-            <div class="max-button">
-              <v-btn
-                :loading="loggingIn"
-                :disabled="oidcLoggingIn"
-                variant="elevated"
-                color="primary"
-                type="submit"
-                size="large"
-                rounded
-                class="rounded-xl"
-                block
-              >
-                {{ $t("user.login") }}
-              </v-btn>
-            </div>
-          </v-card-actions>
+  <div class="flex justify-center items-center flex-col min-h-screen bg-[#f5f8fa] dark:bg-background px-4 py-8">
 
+    <!-- First-login info banner -->
+    <div
+      v-if="isFirstLogin"
+      class="w-full max-w-[600px] mb-4 rounded-lg border border-info/30 bg-info/10 px-4 py-3 text-sm text-on-surface"
+      style="flex: none"
+    >
+      <div class="flex gap-2 items-start">
+        <AppIcon :path="$globals.icons.information" size="md" class="text-info shrink-0 mt-0.5" />
+        <div>
+          <p class="mb-3">
+            {{ $t('user.it-looks-like-this-is-your-first-time-logging-in') }}
+          </p>
+          <p class="mb-1">
+            <strong>{{ $t('user.username') }}: </strong>changeme@example.com
+            <AppButtonCopy copy-text="changeme@example.com" color="info" btn-class="h-auto" />
+          </p>
+          <p class="mb-3">
+            <strong>{{ $t('user.password') }}: </strong>MyPassword
+            <AppButtonCopy copy-text="MyPassword" color="info" btn-class="h-auto" />
+          </p>
+          <p>
+            {{ $t('user.dont-want-to-see-this-anymore-be-sure-to-change-your-email') }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login card -->
+    <section class="flex flex-col items-center w-full max-w-[600px] bg-surface rounded-xl shadow-md overflow-hidden">
+
+      <!-- Header bar -->
+      <div class="w-full bg-primary flex justify-center items-center py-4 mb-4">
+        <h1 class="text-3xl font-medium text-white text-center">ByteSized</h1>
+      </div>
+
+      <!-- Logo -->
+      <AppLogo :size="100" />
+
+      <!-- Sign in title -->
+      <h2 class="text-xl flex justify-center pb-3 pt-2 text-on-surface font-medium">
+        {{ $t('user.sign-in') }}
+      </h2>
+
+      <!-- Form -->
+      <div class="w-full px-6 pb-2">
+        <form @submit.prevent="authenticate">
+          <!-- Email / username -->
+          <div v-if="$appInfo.allowPasswordLogin" class="mb-3">
+            <label for="username" class="block text-sm font-medium text-on-surface/70 mb-1">
+              {{ $t('user.email-or-username') }}
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <AppIcon :path="$globals.icons.email" size="sm" class="text-on-surface/40" />
+              </div>
+              <input
+                id="username"
+                v-model="form.email"
+                type="text"
+                name="username"
+                autocomplete="username"
+                autofocus
+                class="w-full rounded-lg border border-border bg-surface pl-9 pr-3 py-2.5 text-sm
+                       text-on-surface placeholder-gray-400 focus:outline-none focus:ring-2
+                       focus:ring-primary focus:border-primary transition-colors"
+              />
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div v-if="$appInfo.allowPasswordLogin" class="mb-3">
+            <label for="password" class="block text-sm font-medium text-on-surface/70 mb-1">
+              {{ $t('user.password') }}
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <AppIcon :path="$globals.icons.lock" size="sm" class="text-on-surface/40" />
+              </div>
+              <input
+                id="password"
+                v-model="form.password"
+                :type="inputType"
+                name="password"
+                autocomplete="current-password"
+                class="w-full rounded-lg border border-border bg-surface pl-9 pr-10 py-2.5 text-sm
+                       text-on-surface placeholder-gray-400 focus:outline-none focus:ring-2
+                       focus:ring-primary focus:border-primary transition-colors"
+              />
+              <!-- Password visibility toggle -->
+              <button
+                type="button"
+                class="absolute inset-y-0 right-3 flex items-center text-on-surface/40 hover:text-on-surface/70 transition-colors"
+                @click="togglePasswordShow"
+              >
+                <AppIcon :path="passwordIcon" size="sm" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Remember me -->
+          <label v-if="$appInfo.allowPasswordLogin" class="flex items-center gap-2 ml-1 -mt-1 mb-3 cursor-pointer text-sm text-on-surface">
+            <input
+              v-model="form.remember"
+              type="checkbox"
+              class="w-4 h-4 rounded border-border accent-primary"
+            />
+            {{ $t('user.remember-me') }}
+          </label>
+
+          <!-- Login button -->
+          <div v-if="$appInfo.allowPasswordLogin" class="flex justify-center pt-0 mb-2">
+            <button
+              type="submit"
+              :disabled="loggingIn || oidcLoggingIn"
+              class="w-[300px] bs-btn bs-btn-md bs-btn-primary rounded-xl justify-center"
+            >
+              <svg v-if="loggingIn" class="animate-spin w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              {{ $t("user.login") }}
+            </button>
+          </div>
+
+          <!-- OR divider (shown only when both password login and OIDC are enabled) -->
           <div
             v-if="$appInfo.enableOidc && $appInfo.allowPasswordLogin"
-            class="d-flex my-4 justify-center align-center"
-            width="80%"
+            class="relative flex items-center my-4"
           >
-            <v-divider class="div-width" />
-            <span
-              class="absolute px-2"
-              :class="{
-                'bg-white': !$vuetify.theme.current.dark && !isDark,
-                'bg-grey-darken-4': $vuetify.theme.current.dark || isDark,
-              }"
-            >
-              {{ $t("user.or") }}
-            </span>
+            <div class="flex-1 border-t border-border" />
+            <span class="px-3 text-sm text-on-surface/50 bg-surface">{{ $t("user.or") }}</span>
+            <div class="flex-1 border-t border-border" />
           </div>
-          <v-card-actions
-            v-if="$appInfo.enableOidc"
-            class="justify-center"
-          >
-            <div class="max-button">
-              <v-btn
-                :loading="oidcLoggingIn"
-                color="primary"
-                size="large"
-                variant="elevated"
-                rounded
-                class="rounded-xl"
-                block
-                @click="() => oidcAuthenticate()"
-              >
-                {{ $t("user.login-oidc") }} {{ $appInfo.oidcProviderName }}
-              </v-btn>
-            </div>
-          </v-card-actions>
-        </v-form>
-      </v-card-text>
-      <v-card-actions class="d-flex justify-center flex-column flex-sm-row">
-        <v-btn
+
+          <!-- OIDC login button -->
+          <div v-if="$appInfo.enableOidc" class="flex justify-center mb-2">
+            <button
+              type="button"
+              :disabled="oidcLoggingIn"
+              class="w-[300px] bs-btn bs-btn-md bs-btn-primary rounded-xl justify-center"
+              @click="() => oidcAuthenticate()"
+            >
+              <svg v-if="oidcLoggingIn" class="animate-spin w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              {{ $t("user.login-oidc") }} {{ $appInfo.oidcProviderName }}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Register / forgot password links -->
+      <div class="flex justify-center flex-col sm:flex-row gap-1 py-2 px-4 border-t border-border w-full">
+        <NuxtLink
           v-if="$appInfo.allowSignup && $appInfo.allowPasswordLogin"
-          variant="text"
           to="/register"
+          class="bs-btn bs-btn-sm bs-btn-ghost text-on-surface/70"
         >
           {{ $t("user.register") }}
-        </v-btn>
-        <v-btn
+        </NuxtLink>
+        <button
           v-else
-          variant="text"
           disabled
+          class="bs-btn bs-btn-sm bs-btn-ghost opacity-50"
         >
           {{ $t("user.invite-only") }}
-        </v-btn>
-        <v-btn
+        </button>
+        <NuxtLink
           v-if="$appInfo.allowPasswordLogin"
-          class="mr-auto"
-          variant="text"
           to="/forgot-password"
+          class="bs-btn bs-btn-sm bs-btn-ghost text-on-surface/70"
         >
           {{ $t("user.reset-password") }}
-        </v-btn>
-      </v-card-actions>
+        </NuxtLink>
+      </div>
 
-      <v-card-text class="d-flex justify-center flex-column flex-sm-row">
-        <div
+      <!-- Footer links (sponsor / github / docs) -->
+      <div class="flex justify-center flex-col sm:flex-row py-3 px-4 w-full">
+        <a
           v-for="link in [
-            {
-              text: $t('about.sponsor'),
-              icon: $globals.icons.heart,
-              href: 'https://github.com/sponsors/hay-kot',
-            },
-            {
-              text: $t('about.github'),
-              icon: $globals.icons.github,
-              href: 'https://github.com/mealie-recipes/mealie',
-            },
-            {
-              text: $t('about.docs'),
-              icon: $globals.icons.folderOutline,
-              href: 'https://docs.mealie.io/',
-            },
+            { text: $t('about.sponsor'), icon: $globals.icons.heart,         href: 'https://github.com/sponsors/hay-kot' },
+            { text: $t('about.github'),  icon: $globals.icons.github,        href: 'https://github.com/mealie-recipes/mealie' },
+            { text: $t('about.docs'),    icon: $globals.icons.folderOutline,  href: 'https://docs.mealie.io/' },
           ]"
           :key="link.text"
-          class="text-center"
+          :href="link.href"
+          target="_blank"
+          class="bs-btn bs-btn-sm bs-btn-ghost text-on-surface/60 text-center justify-center"
         >
-          <v-btn
-            variant="text"
-            :href="link.href"
-            target="_blank"
-          >
-            <v-icon start>
-              {{ link.icon }}
-            </v-icon>
-            {{ link.text }}
-          </v-btn>
-        </div>
-      </v-card-text>
-    </v-card>
-  </v-container>
+          <AppIcon :path="link.icon" size="sm" />
+          {{ link.text }}
+        </a>
+      </div>
+    </section>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -222,12 +211,13 @@ import { useUserActivityPreferences } from "~/composables/use-users/preferences"
 definePageMeta({
   layout: "blank",
 });
+
 const isDark = useDark();
 
 const router = useRouter();
 const i18n = useI18n();
 const auth = useMealieAuth();
-const { $appInfo, $axios } = useNuxtApp();
+const { $appInfo, $axios, $globals } = useNuxtApp();
 const { loggedIn } = useLoggedInState();
 const groupSlug = computed(() => auth.user.value?.groupSlug);
 const isDemo = ref(false);
@@ -282,7 +272,7 @@ const oidcLoggingIn = ref(false);
 const { passwordIcon, inputType, togglePasswordShow } = usePasswordField();
 
 whenever(
-  () => $appInfo.enableOidc && $appInfo.oidcRedirect && !isCallback() && !isDirectLogin() /* && !auth.check().valid */,
+  () => $appInfo.enableOidc && $appInfo.oidcRedirect && !isCallback() && !isDirectLogin(),
   () => oidcAuthenticate(),
   { immediate: true },
 );
@@ -316,7 +306,7 @@ async function oidcAuthenticate(callback = false) {
     oidcLoggingIn.value = false;
   }
   else {
-    navigateTo("/api/auth/oauth", { external: true }); // start the redirect process
+    navigateTo("/api/auth/oauth", { external: true });
   }
 }
 
@@ -343,10 +333,6 @@ async function authenticate() {
 }
 
 function alertOnError(error: any) {
-  // TODO Check if error is an AxiosError, but isAxiosError is not working right now
-  // See https://github.com/nuxt-community/axios-module/issues/550
-  // Import $axios from useContext()
-  // if ($axios.isAxiosError(error) && error.response?.status === 401) {
   if (error.response?.status === 401) {
     alert.error(i18n.t("user.invalid-credentials"));
   }
@@ -358,55 +344,3 @@ function alertOnError(error: any) {
   }
 }
 </script>
-
-<style lang="css" scoped>
-/* Fix password manager autofill detection - Vuetify uses opacity:0 during animation */
-:deep(.v-field__input) {
-  opacity: 1 !important;
-}
-</style>
-
-<style lang="css">
-.max-button {
-  width: 300px;
-}
-
-.icon-white {
-  fill: white;
-}
-
-.icon-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  position: relative;
-  margin-top: 3.5rem;
-}
-
-.icon-divider {
-  width: 100%;
-  margin-bottom: -3.5rem;
-}
-
-.icon-avatar {
-  border-color: rgba(0, 0, 0, 0.12);
-  border: 2px;
-}
-
-.bg-off-white {
-  background: #f5f8fa;
-}
-
-.absolute {
-  position: absolute;
-}
-
-.div-width {
-  max-width: 75%;
-}
-
-.bg-white {
-  background-color: #fff;
-}
-</style>

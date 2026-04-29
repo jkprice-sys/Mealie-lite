@@ -1,100 +1,130 @@
 <template>
   <div>
-    <v-row
+    <!-- Toolbar: title, random, sort, view toggle -->
+    <div
       v-if="!disableToolbar"
-      class="align-center pb-2"
+      class="flex items-center gap-1 pb-2"
     >
-      <v-icon
+      <AppIcon
         v-if="title"
-        size="large"
-        start
-      >
-        {{ displayTitleIcon }}
-      </v-icon>
-      <span class="text-headline-small">{{ title }}</span>
-      <v-spacer />
-      <v-btn
-        :icon="$vuetify.display.xs"
-        variant="text"
+        :path="displayTitleIcon"
+        size="lg"
+        class="shrink-0 text-on-surface/70"
+      />
+      <span class="text-base font-medium text-on-surface">{{ title }}</span>
+      <div class="flex-1" />
+
+      <!-- Random recipe button -->
+      <button
+        type="button"
+        class="bs-btn bs-btn-sm bs-btn-ghost gap-1"
         :disabled="recipes.length === 0"
         @click="navigateRandom"
       >
-        <v-icon :start="!$vuetify.display.xs">
-          {{ $globals.icons.diceMultiple }}
-        </v-icon>
-        {{ $vuetify.display.xs ? null : $t("general.random") }}
-      </v-btn>
-      <v-menu
-        v-if="!disableSort"
-        offset-y
-        start
-      >
-        <template #activator="{ props: activatorProps }">
-          <v-btn
-            variant="text"
-            :icon="$vuetify.display.xs"
-            v-bind="activatorProps"
-            :loading="sortLoading"
+        <AppIcon :path="$globals.icons.diceMultiple" size="sm" />
+        <span v-if="!xs">{{ $t("general.random") }}</span>
+      </button>
+
+      <!-- Sort dropdown -->
+      <Menu v-if="!disableSort" as="div" class="relative">
+        <MenuButton
+          class="bs-btn bs-btn-sm bs-btn-ghost gap-1"
+          :disabled="sortLoading"
+        >
+          <AppIcon :path="preferences.sortIcon" size="sm" />
+          <span v-if="!xs">{{ $t("general.sort") }}</span>
+          <!-- Spinner while sort is loading -->
+          <svg
+            v-if="sortLoading"
+            class="animate-spin w-3 h-3 text-on-surface/60"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
           >
-            <v-icon :start="!$vuetify.display.xs">
-              {{ preferences.sortIcon }}
-            </v-icon>
-            {{ $vuetify.display.xs ? null : $t("general.sort") }}
-          </v-btn>
-        </template>
-        <v-list>
-          <v-list-item @click="sortRecipes(EVENTS.az)">
-            <div class="d-flex align-center flex-nowrap">
-              <v-icon class="mr-2" inline>
-                {{ $globals.icons.orderAlphabeticalAscending }}
-              </v-icon>
-              <v-list-item-title>{{ $t("general.sort-alphabetically") }}</v-list-item-title>
-            </div>
-          </v-list-item>
-          <v-list-item @click="sortRecipes(EVENTS.rating)">
-            <div class="d-flex align-center flex-nowrap">
-              <v-icon class="mr-2" inline>
-                {{ $globals.icons.star }}
-              </v-icon>
-              <v-list-item-title>{{ $t("general.rating") }}</v-list-item-title>
-            </div>
-          </v-list-item>
-          <v-list-item @click="sortRecipes(EVENTS.created)">
-            <div class="d-flex align-center flex-nowrap">
-              <v-icon class="mr-2" inline>
-                {{ $globals.icons.newBox }}
-              </v-icon>
-              <v-list-item-title>{{ $t("general.created") }}</v-list-item-title>
-            </div>
-          </v-list-item>
-          <v-list-item @click="sortRecipes(EVENTS.updated)">
-            <div class="d-flex align-center flex-nowrap">
-              <v-icon class="mr-2" inline>
-                {{ $globals.icons.update }}
-              </v-icon>
-              <v-list-item-title>{{ $t("general.updated") }}</v-list-item-title>
-            </div>
-          </v-list-item>
-          <v-list-item @click="sortRecipes(EVENTS.lastMade)">
-            <div class="d-flex align-center flex-nowrap">
-              <v-icon class="mr-2" inline>
-                {{ $globals.icons.chefHat }}
-              </v-icon>
-              <v-list-item-title>{{ $t("general.last-made") }}</v-list-item-title>
-            </div>
-          </v-list-item>
-          <v-list-item @click="sortRecipes(EVENTS.shuffle)">
-            <div class="d-flex align-center flex-nowrap">
-              <v-icon class="mr-2" inline>
-                {{ $globals.icons.diceMultiple }}
-              </v-icon>
-              <v-list-item-title>{{ $t("general.random") }}</v-list-item-title>
-            </div>
-          </v-list-item>
-        </v-list>
-      </v-menu>
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+          </svg>
+        </MenuButton>
+
+        <Transition
+          enter-active-class="transition duration-100 ease-out"
+          enter-from-class="opacity-0 scale-95"
+          enter-to-class="opacity-100 scale-100"
+          leave-active-class="transition duration-75 ease-in"
+          leave-from-class="opacity-100 scale-100"
+          leave-to-class="opacity-0 scale-95"
+        >
+          <MenuItems
+            class="absolute right-0 top-full mt-1 bg-surface border border-border rounded-lg
+                   shadow-lg py-1 z-50 min-w-44 focus:outline-none"
+          >
+            <MenuItem v-slot="{ active }">
+              <button
+                type="button"
+                :class="['flex items-center gap-2 w-full px-3 py-2 text-sm text-on-surface', active ? 'bg-gray-100 dark:bg-gray-700' : '']"
+                @click="sortRecipes(EVENTS.az)"
+              >
+                <AppIcon :path="$globals.icons.orderAlphabeticalAscending" size="sm" />
+                {{ $t("general.sort-alphabetically") }}
+              </button>
+            </MenuItem>
+            <MenuItem v-slot="{ active }">
+              <button
+                type="button"
+                :class="['flex items-center gap-2 w-full px-3 py-2 text-sm text-on-surface', active ? 'bg-gray-100 dark:bg-gray-700' : '']"
+                @click="sortRecipes(EVENTS.rating)"
+              >
+                <AppIcon :path="$globals.icons.star" size="sm" />
+                {{ $t("general.rating") }}
+              </button>
+            </MenuItem>
+            <MenuItem v-slot="{ active }">
+              <button
+                type="button"
+                :class="['flex items-center gap-2 w-full px-3 py-2 text-sm text-on-surface', active ? 'bg-gray-100 dark:bg-gray-700' : '']"
+                @click="sortRecipes(EVENTS.created)"
+              >
+                <AppIcon :path="$globals.icons.newBox" size="sm" />
+                {{ $t("general.created") }}
+              </button>
+            </MenuItem>
+            <MenuItem v-slot="{ active }">
+              <button
+                type="button"
+                :class="['flex items-center gap-2 w-full px-3 py-2 text-sm text-on-surface', active ? 'bg-gray-100 dark:bg-gray-700' : '']"
+                @click="sortRecipes(EVENTS.updated)"
+              >
+                <AppIcon :path="$globals.icons.update" size="sm" />
+                {{ $t("general.updated") }}
+              </button>
+            </MenuItem>
+            <MenuItem v-slot="{ active }">
+              <button
+                type="button"
+                :class="['flex items-center gap-2 w-full px-3 py-2 text-sm text-on-surface', active ? 'bg-gray-100 dark:bg-gray-700' : '']"
+                @click="sortRecipes(EVENTS.lastMade)"
+              >
+                <AppIcon :path="$globals.icons.chefHat" size="sm" />
+                {{ $t("general.last-made") }}
+              </button>
+            </MenuItem>
+            <MenuItem v-slot="{ active }">
+              <button
+                type="button"
+                :class="['flex items-center gap-2 w-full px-3 py-2 text-sm text-on-surface', active ? 'bg-gray-100 dark:bg-gray-700' : '']"
+                @click="sortRecipes(EVENTS.shuffle)"
+              >
+                <AppIcon :path="$globals.icons.diceMultiple" size="sm" />
+                {{ $t("general.random") }}
+              </button>
+            </MenuItem>
+          </MenuItems>
+        </Transition>
+      </Menu>
+
+      <!-- View toggle (desktop only) -->
       <ContextMenu
-        v-if="!$vuetify.display.smAndDown"
+        v-if="!smAndDown"
         :items="[
           {
             title: $t('general.toggle-view'),
@@ -104,68 +134,70 @@
         ]"
         @toggle-dense-view="toggleMobileCards()"
       />
-    </v-row>
-    <div v-if="recipes && ready">
-      <div class="mt-2">
-        <v-row v-if="!useMobileCards">
-          <v-col
-            v-for="recipe in recipes"
-            :key="recipe.id!"
-            :sm="6"
-            :md="6"
-            :lg="4"
-            :xl="3"
-          >
-            <RecipeCard
-              :name="recipe.name!"
-              :description="recipe.description!"
-              :slug="recipe.slug!"
-              :rating="recipe.rating!"
-              :image="recipe.image!"
-              :tags="recipe.tags!"
-              :recipe-id="recipe.id!"
-            />
-          </v-col>
-        </v-row>
-        <v-row
-          v-else
-          density="comfortable"
-        >
-          <v-col
-            v-for="recipe in recipes"
-            :key="recipe.id!"
-            cols="12"
-            :sm="singleColumn ? '12' : '12'"
-            :md="singleColumn ? '12' : '6'"
-            :lg="singleColumn ? '12' : '4'"
-            :xl="singleColumn ? '12' : '3'"
-          >
-            <RecipeCardMobile
-              :name="recipe.name!"
-              :description="recipe.description!"
-              :slug="recipe.slug!"
-              :rating="recipe.rating!"
-              :image="recipe.image!"
-              :tags="recipe.tags!"
-              :recipe-id="recipe.id!"
-            />
-          </v-col>
-        </v-row>
-      </div>
-      <v-card v-intersect="infiniteScroll" variant="flat" />
     </div>
-    <v-fade-transition>
-      <AppLoader
-        v-if="loading"
-        :loading="loading"
-      />
-    </v-fade-transition>
+
+    <!-- Recipe grid -->
+    <div v-if="recipes && ready" class="mt-2">
+      <!-- Desktop card grid -->
+      <div
+        v-if="!useMobileCards"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+      >
+        <RecipeCard
+          v-for="recipe in recipes"
+          :key="recipe.id!"
+          :name="recipe.name!"
+          :description="recipe.description!"
+          :slug="recipe.slug!"
+          :rating="recipe.rating!"
+          :image="recipe.image!"
+          :tags="recipe.tags!"
+          :recipe-id="recipe.id!"
+        />
+      </div>
+
+      <!-- Mobile / compact card grid -->
+      <div
+        v-else
+        class="grid gap-3"
+        :class="singleColumn
+          ? 'grid-cols-1'
+          : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'"
+      >
+        <RecipeCardMobile
+          v-for="recipe in recipes"
+          :key="recipe.id!"
+          :name="recipe.name!"
+          :description="recipe.description!"
+          :slug="recipe.slug!"
+          :rating="recipe.rating!"
+          :image="recipe.image!"
+          :tags="recipe.tags!"
+          :recipe-id="recipe.id!"
+        />
+      </div>
+
+      <!-- Infinite scroll sentinel (replaces v-intersect on v-card) -->
+      <div ref="scrollSentinel" class="h-1 w-full" aria-hidden="true" />
+    </div>
+
+    <!-- Loading overlay -->
+    <Transition
+      enter-active-class="transition-opacity duration-200"
+      enter-from-class="opacity-0"
+      leave-active-class="transition-opacity duration-150"
+      leave-to-class="opacity-0"
+    >
+      <AppLoader v-if="loading" :loading="loading" />
+    </Transition>
+
     <AppScrollToTop />
   </div>
 </template>
 
 <script setup lang="ts">
-import { useThrottleFn } from "@vueuse/core";
+import { useThrottleFn, useIntersectionObserver } from "@vueuse/core";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/vue";
 import RecipeCard from "./RecipeCard.vue";
 import RecipeCardMobile from "./RecipeCardMobile.vue";
 import { useLoggedInState } from "~/composables/use-logged-in-state";
@@ -201,7 +233,7 @@ const emit = defineEmits<{
   appendRecipes: [recipes: Recipe[]];
 }>();
 
-const display = useDisplay();
+const { xs, smAndDown } = useDisplay();
 const preferences = useUserSortPreferences();
 
 const EVENTS = {
@@ -217,7 +249,7 @@ const auth = useMealieAuth();
 const { $globals } = useNuxtApp();
 const { isOwnGroup } = useLoggedInState();
 const useMobileCards = computed(() => {
-  return display.smAndDown.value || preferences.value.useMobileCards;
+  return smAndDown.value || preferences.value.useMobileCards;
 });
 
 const displayTitleIcon = computed(() => {
@@ -240,21 +272,16 @@ const { fetchMore, getRandom } = useLazyRecipes(isOwnGroup.value ? null : groupS
 const { savePosition, getSavedPage, restorePosition } = useScrollPosition();
 const router = useRouter();
 
+// Infinite scroll via IntersectionObserver — replaces Vuetify's v-intersect directive
+const scrollSentinel = ref<HTMLElement | null>(null);
+useIntersectionObserver(scrollSentinel, ([{ isIntersecting }]) => {
+  if (isIntersecting) {
+    infiniteScroll();
+  }
+});
+
 const queryFilter = computed(() => {
   return props.query?.queryFilter || null;
-
-  // TODO: allow user to filter out null values when ordering by a value that may be null (such as lastMade)
-
-  // const orderBy = props.query?.orderBy || preferences.value.orderBy;
-  // const orderByFilter = preferences.value.filterNull && orderBy ? `${orderBy} IS NOT NULL` : null;
-
-  // if (props.query.queryFilter && orderByFilter) {
-  //   return `(${props.query.queryFilter}) AND ${orderByFilter}`;
-  // } else if (props.query.queryFilter) {
-  //   return props.query.queryFilter;
-  // } else {
-  //   return orderByFilter;
-  // }
 });
 
 async function fetchRecipes(pageCount = 1) {
@@ -272,7 +299,6 @@ async function fetchRecipes(pageCount = 1) {
     orderDir,
     orderByNullPosition,
     localQuery,
-    // we use a computed queryFilter to filter out recipes that have a null value for the property we're sorting by
     queryFilter.value,
   );
 }
@@ -324,16 +350,12 @@ async function initRecipes() {
   page.value = 1;
   hasMore.value = true;
 
-  // we double-up the first call to avoid a bug with large screens that render
-  // the entire first page without scrolling, preventing additional loading
   const newRecipes = await fetchRecipes(page.value + 1);
   if (newRecipes.length < perPage) {
     hasMore.value = false;
   }
 
-  // since we doubled the first call, we also need to advance the page
   page.value = page.value + 1;
-
   emit(REPLACE_RECIPES_EVENT, newRecipes);
 }
 
@@ -354,7 +376,6 @@ const infiniteScroll = useThrottleFn(async () => {
   }
 
   savePosition(route.path, page.value);
-
   loading.value = false;
 }, 500);
 
@@ -383,45 +404,22 @@ async function sortRecipes(sortType: string) {
 
   switch (sortType) {
     case EVENTS.az:
-      setter(
-        "name",
-        $globals.icons.sortAlphabeticalAscending,
-        $globals.icons.sortAlphabeticalDescending,
-        "asc",
-        false,
-      );
+      setter("name", $globals.icons.sortAlphabeticalAscending, $globals.icons.sortAlphabeticalDescending, "asc", false);
       break;
     case EVENTS.rating:
       setter("rating", $globals.icons.sortAscending, $globals.icons.sortDescending, "desc", true);
       break;
     case EVENTS.created:
-      setter(
-        "created_at",
-        $globals.icons.sortCalendarAscending,
-        $globals.icons.sortCalendarDescending,
-        "desc",
-        false,
-      );
+      setter("created_at", $globals.icons.sortCalendarAscending, $globals.icons.sortCalendarDescending, "desc", false);
       break;
     case EVENTS.updated:
       setter("updated_at", $globals.icons.sortClockAscending, $globals.icons.sortClockDescending, "desc", false);
       break;
     case EVENTS.lastMade:
-      setter(
-        "last_made",
-        $globals.icons.sortCalendarAscending,
-        $globals.icons.sortCalendarDescending,
-        "desc",
-        true,
-      );
+      setter("last_made", $globals.icons.sortCalendarAscending, $globals.icons.sortCalendarDescending, "desc", true);
       break;
     case EVENTS.shuffle:
-      setter(
-        "random",
-        $globals.icons.diceMultiple,
-        $globals.icons.diceMultiple, // icon in asc and desc is the same for random
-      );
-      // We update the seed value to have a different order
+      setter("random", $globals.icons.diceMultiple, $globals.icons.diceMultiple);
       randomSeed.value = Date.now().toString();
       break;
     default:
@@ -429,14 +427,11 @@ async function sortRecipes(sortType: string) {
       return;
   }
 
-  // reset pagination
   page.value = 1;
   hasMore.value = true;
-
   sortLoading.value = true;
   loading.value = true;
 
-  // fetch new recipes
   const newRecipes = await fetchRecipes();
   emit(REPLACE_RECIPES_EVENT, newRecipes);
 
@@ -449,7 +444,6 @@ async function navigateRandom() {
   if (!recipe?.slug) {
     return;
   }
-
   router.push(`/g/${groupSlug.value}/r/${recipe.slug}`);
 }
 
@@ -457,9 +451,3 @@ function toggleMobileCards() {
   preferences.value.useMobileCards = !preferences.value.useMobileCards;
 }
 </script>
-
-<style>
-.transparent {
-  opacity: 1;
-}
-</style>

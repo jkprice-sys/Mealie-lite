@@ -1,10 +1,12 @@
 <template>
   <div v-if="items">
+    <!-- Create organizer dialog -->
     <RecipeOrganizerDialog
       v-model="dialogs.organizer"
       :item-type="itemType"
     />
 
+    <!-- Delete confirmation dialog -->
     <BaseDialog
       v-if="deleteTarget"
       v-model="dialogs.delete"
@@ -14,14 +16,13 @@
       can-confirm
       @confirm="deleteOne()"
     >
-      <v-card-text>
+      <div class="px-1 py-2">
         <p>{{ $t("general.confirm-delete-generic-with-name", { name: $t(translationKey) }) }}</p>
-        <p class="mt-4 mb-0 ml-4">
-          {{ deleteTarget.name }}
-        </p>
-      </v-card-text>
+        <p class="mt-4 mb-0 ml-4 font-medium">{{ deleteTarget.name }}</p>
+      </div>
     </BaseDialog>
 
+    <!-- Update dialog -->
     <BaseDialog
       v-if="updateTarget"
       v-model="dialogs.update"
@@ -30,53 +31,72 @@
       can-confirm
       @confirm="updateOne()"
     >
-      <v-card-text>
-        <v-text-field
-          v-model="updateTarget.name"
-          :label="$t('general.name')"
-        />
-        <v-checkbox
+      <div class="px-1 py-3 flex flex-col gap-3">
+        <div>
+          <label class="block text-sm font-medium text-on-surface/70 mb-1">
+            {{ $t('general.name') }}
+          </label>
+          <input
+            v-model="updateTarget.name"
+            type="text"
+            class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm
+                   text-on-surface focus:outline-none focus:ring-2 focus:ring-primary
+                   focus:border-primary transition-colors"
+          />
+        </div>
+        <label
           v-if="itemType === Organizer.Tool"
-          v-model="updateTarget.onHand"
-          :label="$t('tool.on-hand')"
-        />
-      </v-card-text>
+          class="flex items-center gap-2 cursor-pointer text-sm text-on-surface"
+        >
+          <input
+            v-model="updateTarget.onHand"
+            type="checkbox"
+            class="w-4 h-4 rounded border-border accent-primary"
+          />
+          {{ $t('tool.on-hand') }}
+        </label>
+      </div>
     </BaseDialog>
 
-    <v-row density="comfortable">
-      <v-col>
-        <v-text-field
+    <!-- Search bar -->
+    <div class="mb-4">
+      <div class="relative">
+        <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+          <AppIcon :path="$globals.icons.search" size="sm" class="text-on-surface/40" />
+        </div>
+        <input
           v-model="searchString"
-          variant="outlined"
+          type="text"
           autofocus
-          color="primary accent-3"
           :placeholder="$t('search.search-placeholder')"
-          :prepend-inner-icon="$globals.icons.search"
-          clearable
+          class="w-full rounded-lg border border-border bg-surface pl-9 pr-9 py-2.5 text-sm
+                 text-on-surface placeholder-gray-400 focus:outline-none focus:ring-2
+                 focus:ring-primary focus:border-primary transition-colors"
         />
-      </v-col>
-    </v-row>
+        <!-- Clear button -->
+        <button
+          v-if="searchString"
+          type="button"
+          class="absolute inset-y-0 right-3 flex items-center text-on-surface/40
+                 hover:text-on-surface/70 transition-colors"
+          @click="searchString = ''"
+        >
+          <AppIcon :path="$globals.icons.close" size="sm" />
+        </button>
+      </div>
+    </div>
 
-    <v-row
-      color="transparent"
-      flat
-      class="mt-n1 rounded align-center position-relative w-100 left-0 top-0"
-    >
-      <v-icon
-        size="large"
-        start
-      >
-        {{ icon }}
-      </v-icon>
-      <v-toolbar-title class="headline">
+    <!-- Toolbar: title slot + create button -->
+    <div class="flex items-center gap-2 mb-2">
+      <AppIcon :path="icon" size="lg" class="text-on-surface/60 shrink-0" />
+      <span class="text-lg font-medium text-on-surface">
         <slot name="title" />
-      </v-toolbar-title>
-      <v-spacer />
-      <BaseButton
-        create
-        @click="dialogs.organizer = true"
-      />
-    </v-row>
+      </span>
+      <div class="flex-1" />
+      <BaseButton create @click="dialogs.organizer = true" />
+    </div>
+
+    <!-- Alphabetically grouped item grid -->
     <section
       v-for="(itms, key, idx) in itemsSorted"
       :key="'header' + idx"
@@ -86,38 +106,26 @@
         v-if="isTitle(key)"
         :title="key"
       />
-      <v-row>
-        <v-col
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mt-2">
+        <NuxtLink
           v-for="(item, index) in itms"
           :key="'cat' + index"
-          cols="12"
-          :sm="12"
-          :md="6"
-          :lg="4"
-          :xl="3"
+          v-if="item"
+          :to="`/g/${groupSlug}?${itemType}=${item.id}`"
+          class="bs-card border-l-4 border-l-primary flex items-center gap-2 px-3 py-2
+                 hover:shadow-md transition-shadow no-underline"
         >
-          <v-card
-            v-if="item"
-            class="left-border"
-            hover
-            :to="`/g/${groupSlug}?${itemType}=${item.id}`"
-          >
-            <v-card-actions>
-              <v-icon>
-                {{ icon }}
-              </v-icon>
-              <v-card-title class="py-1 text-truncate flex-shrink-1 flex-grow-1">
-                {{ item.name }}
-              </v-card-title>
-              <ContextMenu
-                :items="[presets.delete, presets.edit]"
-                @delete="confirmDelete(item)"
-                @edit="openUpdateDialog(item)"
-              />
-            </v-card-actions>
-          </v-card>
-        </v-col>
-      </v-row>
+          <AppIcon :path="icon" size="md" class="text-primary shrink-0" />
+          <span class="flex-1 truncate text-sm font-medium text-on-surface py-1">
+            {{ item.name }}
+          </span>
+          <ContextMenu
+            :items="[presets.delete, presets.edit]"
+            @delete="confirmDelete(item)"
+            @edit="openUpdateDialog(item)"
+          />
+        </NuxtLink>
+      </div>
     </section>
   </div>
 </template>
@@ -149,7 +157,6 @@ const emit = defineEmits<{
 }>();
 
 const state = reactive({
-  // Search Options
   options: {
     ignoreLocation: true,
     shouldSort: true,
@@ -201,7 +208,6 @@ function deleteOne() {
   if (!deleteTarget.value) {
     return;
   }
-
   emit("delete", deleteTarget.value.id);
 }
 
@@ -214,12 +220,11 @@ function updateOne() {
   if (!updateTarget.value) {
     return;
   }
-
   emit("update", updateTarget.value);
 }
 
 // ================================================================
-// Search Functions
+// Search
 
 const searchString = useRouteQuery("q", "");
 
