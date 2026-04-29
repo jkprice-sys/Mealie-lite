@@ -1,6 +1,6 @@
 <template>
   <section @keyup.ctrl.z="undoMerge">
-    <!-- Ingredient Link Editor -->
+    <!-- Ingredient Link Editor dialog -->
     <BaseDialog
       v-model="dialog"
       :title="$t('recipe.ingredient-linker')"
@@ -9,98 +9,89 @@
       max-width="600px"
       max-height="40%"
     >
-      <v-card-text class="pt-4">
-        <p>
-          {{ activeText }}
-        </p>
-        <v-divider class="my-4" />
+      <div class="pt-4">
+        <p class="text-on-surface">{{ activeText }}</p>
+        <hr class="my-4 border-t border-border" />
+
+        <!-- Unlinked ingredients -->
         <template v-if="Object.keys(groupedUnusedIngredients).length > 0">
-          <h4 class="ml-1">
+          <h4 class="ml-1 font-medium text-on-surface">
             {{ $t("recipe.unlinked") }}
           </h4>
           <template v-for="(ingredients, title) in groupedUnusedIngredients" :key="title">
-            <h4 v-if="title" class="py-3 ml-1 pl-4">
+            <h4 v-if="title" class="py-3 ml-1 pl-4 font-medium text-on-surface/70">
               {{ title }}
             </h4>
-            <v-checkbox-btn
+            <label
               v-for="ing in ingredients"
               :key="ing.referenceId"
-              v-model="activeRefs"
-              :value="ing.referenceId"
-              class="ml-4"
+              class="flex items-center gap-2 ml-4 py-1 cursor-pointer"
             >
-              <template #label>
-                <RecipeIngredientHtml :ingredient="ing" :scale="scale" />
-              </template>
-            </v-checkbox-btn>
+              <input
+                v-model="activeRefs"
+                type="checkbox"
+                :value="ing.referenceId"
+                class="w-4 h-4 rounded border-border accent-primary shrink-0"
+              />
+              <RecipeIngredientHtml :ingredient="ing" :scale="scale" />
+            </label>
           </template>
         </template>
 
+        <!-- Ingredients linked to other steps -->
         <template v-if="Object.keys(groupedUsedIngredients).length > 0">
-          <h4 class="py-3 ml-1">
+          <h4 class="py-3 ml-1 font-medium text-on-surface">
             {{ $t("recipe.linked-to-other-step") }}
           </h4>
           <template v-for="(ingredients, title) in groupedUsedIngredients" :key="title">
-            <h4 v-if="title" class="py-3 ml-1 pl-4">
+            <h4 v-if="title" class="py-3 ml-1 pl-4 font-medium text-on-surface/70">
               {{ title }}
             </h4>
-            <v-checkbox-btn
+            <label
               v-for="ing in ingredients"
               :key="ing.referenceId"
-              v-model="activeRefs"
-              :value="ing.referenceId"
-              class="ml-4"
+              class="flex items-center gap-2 ml-4 py-1 cursor-pointer"
             >
-              <template #label>
-                <RecipeIngredientHtml :ingredient="ing" :scale="scale" />
-              </template>
-            </v-checkbox-btn>
+              <input
+                v-model="activeRefs"
+                type="checkbox"
+                :value="ing.referenceId"
+                class="w-4 h-4 rounded border-border accent-primary shrink-0"
+              />
+              <RecipeIngredientHtml :ingredient="ing" :scale="scale" />
+            </label>
           </template>
         </template>
-      </v-card-text>
+      </div>
 
-      <v-divider />
+      <hr class="border-t border-border" />
 
       <template #card-actions>
-        <BaseButton
-          cancel
-          @click="dialog = false"
-        />
-        <v-spacer />
-        <div class="d-flex flex-wrap justify-end">
-          <BaseButton
-            class="my-1"
-            color="info"
-            @click="autoSetReferences"
-          >
-            <template #icon>
-              {{ $globals.icons.robot }}
-            </template>
+        <BaseButton cancel @click="dialog = false" />
+        <div class="flex-1" />
+        <div class="flex flex-wrap justify-end">
+          <BaseButton class="my-1" color="info" @click="autoSetReferences">
+            <template #icon>{{ $globals.icons.robot }}</template>
             {{ $t("recipe.auto") }}
           </BaseButton>
-          <BaseButton
-            class="ml-2 my-1"
-            save
-            @click="setIngredientIds"
-          />
+          <BaseButton class="ml-2 my-1" save @click="setIngredientIds" />
           <BaseButton
             v-if="availableNextStep"
             class="ml-2 my-1"
             @click="saveAndOpenNextLinkIngredients"
           >
-            <template #icon>
-              {{ $globals.icons.forward }}
-            </template>
+            <template #icon>{{ $globals.icons.forward }}</template>
             {{ $t("recipe.nextStep") }}
           </BaseButton>
         </div>
       </template>
     </BaseDialog>
 
-    <div class="d-flex justify-space-between justify-start">
+    <!-- Section header: instructions title + cook mode button -->
+    <div class="flex justify-between items-start">
       <h2
         v-if="!isCookMode"
-        class="mt-1 text-h5 font-weight-medium opacity-80"
+        class="mt-1 text-xl font-medium opacity-80 text-on-surface"
       >
         {{ $t("recipe.instructions") }}
       </h2>
@@ -111,12 +102,12 @@
         color="primary"
         @click="toggleCookMode()"
       >
-        <template #icon>
-          {{ $globals.icons.primary }}
-        </template>
+        <template #icon>{{ $globals.icons.primary }}</template>
         {{ $t("recipe.cook-mode") }}
       </BaseButton>
     </div>
+
+    <!-- Draggable instruction list -->
     <VueDraggable
       v-model="instructionList"
       :disabled="!isEditForm"
@@ -131,250 +122,228 @@
       @start="drag = true"
       @end="onDragEnd"
     >
-      <TransitionGroup
-        type="transition"
-      >
+      <TransitionGroup type="transition">
         <div
           v-for="(step, index) in instructionList"
           :key="step.id!"
           class="list-group-item"
         >
-          <v-sheet
+          <!-- Optional section title bar -->
+          <div
             v-if="step.id && showTitleEditor[step.id]"
-            color="primary"
-            class="mt-6 mb-2 d-flex align-center"
-            :class="isEditForm ? 'pa-2' : 'pa-3'"
-            style="border-radius: 6px; cursor: pointer; width: 100%;"
+            class="mt-6 mb-2 flex items-center bg-primary text-white rounded-md cursor-pointer w-full"
+            :class="isEditForm ? 'px-2 py-2' : 'px-3 py-3'"
             @click="toggleCollapseSection(index)"
           >
-            <template v-if="isEditForm">
-              <v-text-field
-                v-model="step.title"
-                class="pa-0"
-                density="compact"
-                variant="solo"
-                flat
-                :placeholder="$t('recipe.section-title')"
-                bg-color="primary"
-                hide-details
-              />
-            </template>
-            <template v-else>
-              <v-toolbar-title class="section-title-text">
-                {{ step.title }}
-              </v-toolbar-title>
-            </template>
-          </v-sheet>
-          <v-hover v-slot="{ isHovering }">
-            <v-card
-              class="my-3"
-              :class="[{ 'on-hover': isHovering }, { 'cursor-default': isEditForm }, isChecked(index)]"
-              :elevation="isHovering ? 12 : 2"
-              :ripple="false"
-              @click="toggleDisabled(index)"
+            <input
+              v-if="isEditForm"
+              v-model="step.title"
+              :placeholder="$t('recipe.section-title')"
+              class="bg-transparent text-white placeholder-white/60 text-base font-medium
+                     w-full border-none outline-none focus:outline-none"
+              @click.stop
+            />
+            <span v-else class="text-base font-medium">{{ step.title }}</span>
+          </div>
+
+          <!-- Step card -->
+          <div
+            class="bs-card my-3 transition-shadow duration-150 hover:shadow-md"
+            :class="[
+              isEditForm ? 'cursor-default' : 'cursor-pointer',
+              isChecked(index) ? 'opacity-60' : '',
+            ]"
+            @click="toggleDisabled(index)"
+          >
+            <!-- Step title / summary row -->
+            <div
+              class="whitespace-normal leading-snug break-words pt-3 px-4"
+              :class="!isChecked(index) ? 'pb-0' : 'pb-3'"
             >
-              <v-card-title class="recipe-step-title pt-3" :class="!isChecked(index) ? 'pb-0' : 'pb-3'">
-                <div class="d-flex align-center w-100">
-                  <v-text-field
-                    v-if="isEditForm"
-                    v-model="step.summary"
-                    class="headline"
-                    hide-details
-                    density="compact"
-                    variant="solo"
-                    flat
-                    :placeholder="$t('recipe.step-index', { step: index + 1 })"
-                  >
-                    <template #prepend>
-                      <v-icon size="26" class="handle">
-                        {{ $globals.icons.arrowUpDown }}
-                      </v-icon>
-                    </template>
-                  </v-text-field>
-                  <div
-                    v-else
-                    class="summary-wrapper"
-                  >
-                    <template v-if="step.summary">
-                      <SafeMarkdown
-                        class="pr-2"
-                        :source="step.summary"
-                      />
-                    </template>
-                    <template v-else>
-                      <span>
-                        {{ $t('recipe.step-index', { step: index + 1 }) }}
-                      </span>
-                    </template>
-                  </div>
-                  <template v-if="isEditForm">
-                    <div class="ml-auto">
-                      <BaseButtonGroup
-                        :large="false"
-                        :buttons="[
-                          {
-                            icon: $globals.icons.delete,
-                            text: $t('general.delete'),
-                            event: 'delete',
-                          },
-                          {
-                            icon: $globals.icons.dotsVertical,
-                            text: '',
-                            event: 'open',
-                            children: [
-                              {
-                                text: $t('recipe.toggle-section'),
-                                event: 'toggle-section',
-                              },
-                              {
-                                text: $t('recipe.link-ingredients'),
-                                event: 'link-ingredients',
-                              },
-                              {
-                                text: $t('recipe.upload-image'),
-                                event: 'upload-image',
-                              },
-                              {
-                                icon: previewStates[index] ? $globals.icons.edit : $globals.icons.eye,
-                                text: previewStates[index] ? $t('recipe.edit-markdown') : $t('markdown-editor.preview-markdown-button-label'),
-                                event: 'preview-step',
-                                divider: true,
-                              },
-                              {
-                                text: $t('recipe.merge-above'),
-                                event: 'merge-above',
-                              },
-                              {
-                                text: $t('recipe.move-to-top'),
-                                event: 'move-to-top',
-                              },
-                              {
-                                text: $t('recipe.move-to-bottom'),
-                                event: 'move-to-bottom',
-                              },
-                              {
-                                text: $t('recipe.insert-above'),
-                                event: 'insert-above',
-                              },
-                              {
-                                text: $t('recipe.insert-below'),
-                                event: 'insert-below',
-                              },
-                            ],
-                          },
-                        ]"
-                        @merge-above="mergeAbove(index - 1, index)"
-                        @move-to-top="moveTo('top', index)"
-                        @move-to-bottom="moveTo('bottom', index)"
-                        @insert-above="insert(index)"
-                        @insert-below="insert(index + 1)"
-                        @toggle-section="toggleShowTitle(step.id!)"
-                        @link-ingredients="openDialog(index, step.text, step.ingredientReferences)"
-                        @preview-step="togglePreviewState(index)"
-                        @upload-image="openImageUpload(index)"
-                        @delete="instructionList.splice(index, 1)"
-                      />
-                    </div>
-                  </template>
-                  <v-fade-transition>
-                    <v-icon
-                      v-show="isChecked(index)"
-                      size="24"
-                      class="ml-auto"
-                      color="success"
-                    >
-                      {{ $globals.icons.checkboxMarkedCircle }}
-                    </v-icon>
-                  </v-fade-transition>
-                </div>
-              </v-card-title>
-
-              <v-progress-linear
-                v-if="isEditForm && loadingStates[index]"
-                :active="true"
-                :indeterminate="true"
-              />
-
-              <!-- Content -->
-              <DropZone @drop="(f) => handleImageDrop(index, f)">
-                <v-card-text
-                  v-if="isEditForm"
-                  @click="$emit('click-instruction-field', `${index}.text`)"
-                >
-                  <MarkdownEditor
-                    v-model="instructionList[index]['text']"
-                    v-model:preview="previewStates[index]"
-                    class="mb-2"
-                    :display-preview="false"
-                    :textarea="{
-                      hint: $t('recipe.attach-images-hint'),
-                      persistentHint: true,
-                    }"
+              <div class="flex items-center w-full gap-2">
+                <!-- Edit mode: drag handle + summary input -->
+                <template v-if="isEditForm">
+                  <AppIcon
+                    :path="$globals.icons.arrowUpDown"
+                    size="lg"
+                    class="handle cursor-grab text-on-surface/40 shrink-0"
                   />
+                  <input
+                    v-model="step.summary"
+                    :placeholder="$t('recipe.step-index', { step: index + 1 })"
+                    class="flex-1 text-base bg-transparent border-none outline-none
+                           focus:outline-none text-on-surface placeholder-gray-400"
+                    @click.stop
+                  />
+                </template>
+
+                <!-- View mode: step number or summary text -->
+                <div v-else class="summary-wrapper">
+                  <template v-if="step.summary">
+                    <SafeMarkdown class="pr-2" :source="step.summary" />
+                  </template>
+                  <template v-else>
+                    <span>{{ $t('recipe.step-index', { step: index + 1 }) }}</span>
+                  </template>
+                </div>
+
+                <!-- Edit mode: action buttons -->
+                <div v-if="isEditForm" class="ml-auto shrink-0">
+                  <BaseButtonGroup
+                    :large="false"
+                    :buttons="[
+                      { icon: $globals.icons.delete, text: $t('general.delete'), event: 'delete' },
+                      {
+                        icon: $globals.icons.dotsVertical,
+                        text: '',
+                        event: 'open',
+                        children: [
+                          { text: $t('recipe.toggle-section'),  event: 'toggle-section' },
+                          { text: $t('recipe.link-ingredients'), event: 'link-ingredients' },
+                          { text: $t('recipe.upload-image'),    event: 'upload-image' },
+                          {
+                            icon: previewStates[index] ? $globals.icons.edit : $globals.icons.eye,
+                            text: previewStates[index]
+                              ? $t('recipe.edit-markdown')
+                              : $t('markdown-editor.preview-markdown-button-label'),
+                            event: 'preview-step',
+                            divider: true,
+                          },
+                          { text: $t('recipe.merge-above'),    event: 'merge-above' },
+                          { text: $t('recipe.move-to-top'),    event: 'move-to-top' },
+                          { text: $t('recipe.move-to-bottom'), event: 'move-to-bottom' },
+                          { text: $t('recipe.insert-above'),   event: 'insert-above' },
+                          { text: $t('recipe.insert-below'),   event: 'insert-below' },
+                        ],
+                      },
+                    ]"
+                    @merge-above="mergeAbove(index - 1, index)"
+                    @move-to-top="moveTo('top', index)"
+                    @move-to-bottom="moveTo('bottom', index)"
+                    @insert-above="insert(index)"
+                    @insert-below="insert(index + 1)"
+                    @toggle-section="toggleShowTitle(step.id!)"
+                    @link-ingredients="openDialog(index, step.text, step.ingredientReferences)"
+                    @preview-step="togglePreviewState(index)"
+                    @upload-image="openImageUpload(index)"
+                    @delete="instructionList.splice(index, 1)"
+                  />
+                </div>
+
+                <!-- View mode: step-done checkmark -->
+                <Transition
+                  enter-active-class="transition-opacity duration-200"
+                  enter-from-class="opacity-0"
+                  leave-active-class="transition-opacity duration-150"
+                  leave-to-class="opacity-0"
+                >
+                  <AppIcon
+                    v-if="isChecked(index)"
+                    :path="$globals.icons.checkboxMarkedCircle"
+                    size="md"
+                    class="ml-auto text-success shrink-0"
+                  />
+                </Transition>
+              </div>
+            </div>
+
+            <!-- Upload progress bar -->
+            <div
+              v-if="isEditForm && loadingStates[index]"
+              class="h-0.5 w-full overflow-hidden bg-primary/20"
+            >
+              <div class="h-full w-1/3 bg-primary animate-pulse" />
+            </div>
+
+            <!-- Edit mode: markdown editor -->
+            <DropZone @drop="(f) => handleImageDrop(index, f)">
+              <div
+                v-if="isEditForm"
+                class="px-4 py-3"
+                @click="$emit('click-instruction-field', `${index}.text`)"
+              >
+                <MarkdownEditor
+                  v-model="instructionList[index]['text']"
+                  v-model:preview="previewStates[index]"
+                  class="mb-2"
+                  :display-preview="false"
+                  :textarea="{
+                    hint: $t('recipe.attach-images-hint'),
+                    persistentHint: true,
+                  }"
+                />
+                <div
+                  v-if="step.ingredientReferences && step.ingredientReferences.length"
+                  class="linked-ingredients-editor"
+                >
                   <div
-                    v-if="step.ingredientReferences && step.ingredientReferences.length"
-                    class="linked-ingredients-editor"
+                    v-for="(linkRef, i) in step.ingredientReferences"
+                    :key="linkRef.referenceId ?? i"
+                    class="mb-1"
                   >
+                    <RecipeIngredientHtml
+                      v-if="linkRef.referenceId && ingredientLookup[linkRef.referenceId]"
+                      :ingredient="ingredientLookup[linkRef.referenceId]"
+                      :scale="scale"
+                    />
+                  </div>
+                </div>
+              </div>
+            </DropZone>
+
+            <!-- View mode: step text + optional side-by-side ingredients (cook mode) -->
+            <Transition
+              enter-active-class="transition-opacity duration-200"
+              enter-from-class="opacity-0"
+              enter-to-class="opacity-100"
+              leave-active-class="transition-opacity duration-150"
+              leave-from-class="opacity-100"
+              leave-to-class="opacity-0"
+            >
+              <div
+                v-if="!isChecked(index) && !isEditForm"
+                class="m-0 p-0"
+              >
+                <div class="px-4 py-3 markdown">
+                  <div class="flex flex-wrap gap-0">
+                    <!-- Cook mode: linked ingredients column -->
                     <div
-                      v-for="(linkRef, i) in step.ingredientReferences"
-                      :key="linkRef.referenceId ?? i"
-                      class="mb-1"
+                      v-if="isCookMode && step.ingredientReferences && step.ingredientReferences.length > 0"
+                      class="w-full sm:w-5/12"
                     >
-                      <RecipeIngredientHtml
-                        v-if="linkRef.referenceId && ingredientLookup[linkRef.referenceId]"
-                        :ingredient="ingredientLookup[linkRef.referenceId]"
-                        :scale="scale"
-                      />
+                      <div class="-ml-4">
+                        <RecipeIngredients
+                          :value="recipe.recipeIngredient.filter((ing) => {
+                            if (!step.ingredientReferences) return false;
+                            return step.ingredientReferences.map((ref) => ref.referenceId).includes(ing.referenceId || '');
+                          })"
+                          :scale="scale"
+                          :is-cook-mode="isCookMode"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- Vertical divider between ingredients and instructions in cook mode -->
+                    <div
+                      v-if="isCookMode && step.ingredientReferences && step.ingredientReferences.length > 0 && smAndUp"
+                      class="hidden sm:block self-stretch border-l border-border mx-2"
+                    />
+
+                    <!-- Instructions text column -->
+                    <div class="flex-1 min-w-0">
+                      <SafeMarkdown class="markdown" :source="step.text" />
                     </div>
                   </div>
-                </v-card-text>
-              </DropZone>
-              <v-expand-transition>
-                <div
-                  v-if="!isChecked(index) && !isEditForm"
-                  class="m-0 p-0"
-                >
-                  <v-card-text class="markdown">
-                    <v-row>
-                      <v-col
-                        v-if="isCookMode && step.ingredientReferences && step.ingredientReferences.length > 0"
-                        cols="12"
-                        sm="5"
-                      >
-                        <div class="ml-n4">
-                          <RecipeIngredients
-                            :value="recipe.recipeIngredient.filter((ing) => {
-                              if (!step.ingredientReferences) return false
-                              return step.ingredientReferences.map((ref) => ref.referenceId).includes(ing.referenceId || '')
-                            })"
-                            :scale="scale"
-                            :is-cook-mode="isCookMode"
-                          />
-                        </div>
-                      </v-col>
-                      <v-divider
-                        v-if="isCookMode && step.ingredientReferences && step.ingredientReferences.length > 0 && $vuetify.display.smAndUp"
-                        vertical
-                      />
-                      <v-col>
-                        <SafeMarkdown
-                          class="markdown"
-                          :source="step.text"
-                        />
-                      </v-col>
-                    </v-row>
-                  </v-card-text>
                 </div>
-              </v-expand-transition>
-            </v-card>
-          </v-hover>
+              </div>
+            </Transition>
+          </div>
         </div>
       </TransitionGroup>
     </VueDraggable>
-    <v-divider
-      v-if="!isCookMode"
-      class="mt-10 d-flex d-md-none"
-    />
+
+    <!-- Mobile-only bottom divider (hidden on md+) -->
+    <hr v-if="!isCookMode" class="mt-10 md:hidden border-t border-border" />
   </section>
 </template>
 
@@ -414,6 +383,7 @@ const props = defineProps({
 
 const emit = defineEmits(["click-instruction-field", "update:assets"]);
 
+const { smAndUp } = useDisplay();
 const { isCookMode, toggleCookMode, isEditForm } = usePageState(props.recipe.slug);
 const { extractIngredientReferences } = useExtractIngredientReferences();
 
@@ -539,12 +509,11 @@ function saveAndOpenNextLinkIngredients() {
   const currentStepIndex = activeIndex.value;
 
   if (!availableNextStep.value) {
-    return; // no next step, the button calling this function should not be shown
+    return;
   }
 
   setIngredientIds();
   const nextStep = instructionList.value[currentStepIndex + 1];
-  // close dialog before opening to reset the scroll position
   nextTick(() => openDialog(currentStepIndex + 1, nextStep.text, nextStep.ingredientReferences));
 }
 
@@ -559,7 +528,6 @@ function setUsedIngredients() {
   });
 
   usedIngredients.value = props.recipe.recipeIngredient.filter(ing => !!ing.referenceId && ing.referenceId in usedRefs);
-
   unusedIngredients.value = props.recipe.recipeIngredient.filter(ing => !!ing.referenceId && !(ing.referenceId in usedRefs));
 }
 
@@ -589,18 +557,15 @@ const ingredientSectionTitles = computed(() => {
   const titleMap: { [key: string]: string } = {};
   let currentTitle = "";
 
-  // Go through all ingredients in order
   props.recipe.recipeIngredient.forEach((ingredient) => {
     if (ingredient.referenceId === undefined) {
       return;
     }
 
-    // If this ingredient has a title, update the current title
     if (ingredient.title) {
       currentTitle = ingredient.title;
     }
 
-    // Assign the current title to this ingredient
     titleMap[ingredient.referenceId] = currentTitle;
   });
 
@@ -610,13 +575,11 @@ const ingredientSectionTitles = computed(() => {
 const groupedUnusedIngredients = computed((): Record<string, RecipeIngredient[]> => {
   const groups: Record<string, RecipeIngredient[]> = {};
 
-  // Group ingredients by section title
   unusedIngredients.value.forEach((ingredient) => {
     if (ingredient.referenceId === undefined) {
       return;
     }
 
-    // Use the section title from the mapping, or fallback to the ingredient's own title
     const title = ingredientSectionTitles.value[ingredient.referenceId] || ingredient.title || "";
     (groups[title] ||= []).push(ingredient);
   });
@@ -631,7 +594,6 @@ const groupedUsedIngredients = computed((): Record<string, RecipeIngredient[]> =
       return;
     }
 
-    // Use the section title from the mapping, or fallback to the ingredient's own title
     const title = ingredientSectionTitles.value[ingredient.referenceId] || ingredient.title || "";
     (groups[title] ||= []).push(ingredient);
   });
@@ -737,7 +699,6 @@ async function handleImageDrop(index: number, files: File[]) {
     return;
   }
 
-  // Check if the file is an image
   const file = files[0];
   if (!file || !file.type.startsWith("image/")) {
     return;
@@ -755,7 +716,7 @@ async function handleImageDrop(index: number, files: File[]) {
   loadingStates.value[index] = false;
 
   if (!data) {
-    return; // TODO: Handle error
+    return;
   }
 
   emit("update:assets", [...assets.value, data]);
@@ -779,17 +740,12 @@ function openImageUpload(index: number) {
 </script>
 
 <style lang="css" scoped>
-.v-card--link:before {
-  background: none;
-}
-
 /** Select all li under .markdown class */
 .markdown :deep(ul > li) {
   display: list-item;
   list-style-type: disc !important;
 }
 
-/** Select all li under .markdown class */
 .markdown :deep(ol > li) {
   display: list-item;
 }
@@ -831,23 +787,9 @@ function openImageUpload(index: number) {
   z-index: 1;
 }
 
-.v-text-field :deep(input) {
-  font-size: 1.5rem;
-}
-
-.v-card-text {
-  font-size: 1rem;
-}
-
-.recipe-step-title {
-  /* Multiline display */
-  white-space: normal;
-  line-height: 1.25;
-  word-break: break-word;
-}
 .summary-wrapper {
   flex: 1 1 auto;
-  min-width: 0; /* wrapping in flex container */
+  min-width: 0;
   white-space: normal;
   overflow-wrap: anywhere;
   cursor: pointer;

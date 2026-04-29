@@ -1,6 +1,8 @@
-/* @tailwind base is intentionally omitted — Preflight is disabled in tailwind.config.ts
-   to avoid conflicts with Vuetify's own CSS reset during the Tailwind migration.
-   Our @layer base rules below still apply via the components/utilities layers. */
+/* @tailwind base is required for @layer base to be valid in PostCSS.
+   Preflight is disabled in tailwind.config.ts (corePlugins: { preflight: false }),
+   so this directive outputs ONLY our custom @layer base rules below — no browser
+   resets that would conflict with Vuetify's own CSS reset. */
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
