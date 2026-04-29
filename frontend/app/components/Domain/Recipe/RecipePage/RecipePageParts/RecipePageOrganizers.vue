@@ -1,15 +1,16 @@
 <template>
   <div>
     <!-- Recipe Categories -->
-    <v-card
+    <div
       v-if="recipe.recipeCategory.length > 0 || isEditForm"
+      class="bs-card"
       :class="{ 'mt-10': !isEditForm }"
     >
-      <v-card-title class="py-2">
+      <h3 class="px-4 py-2 font-semibold text-on-surface">
         {{ $t("recipe.categories") }}
-      </v-card-title>
-      <v-divider class="mx-2" />
-      <v-card-text>
+      </h3>
+      <hr class="mx-2 border-t border-border" />
+      <div class="px-4 py-3">
         <RecipeOrganizerSelector
           v-if="isEditForm"
           v-model="recipe.recipeCategory"
@@ -22,19 +23,19 @@
           :items="recipe.recipeCategory"
           v-bind="$attrs"
         />
-      </v-card-text>
-    </v-card>
+      </div>
+    </div>
 
     <!-- Recipe Tags -->
-    <v-card
+    <div
       v-if="recipe.tags.length > 0 || isEditForm"
-      class="mt-4"
+      class="bs-card mt-4"
     >
-      <v-card-title class="py-2">
+      <h3 class="px-4 py-2 font-semibold text-on-surface">
         {{ $t("tag.tags") }}
-      </v-card-title>
-      <v-divider class="mx-2" />
-      <v-card-text>
+      </h3>
+      <hr class="mx-2 border-t border-border" />
+      <div class="px-4 py-3">
         <RecipeOrganizerSelector
           v-if="isEditForm"
           v-model="recipe.tags"
@@ -48,27 +49,28 @@
           url-prefix="tags"
           v-bind="$attrs"
         />
-      </v-card-text>
-    </v-card>
+      </div>
+    </div>
 
-    <!-- Recipe Tools Edit -->
-    <v-card
+    <!-- Recipe Tools (edit mode only) -->
+    <div
       v-if="isEditForm"
-      class="mt-2"
+      class="bs-card mt-2"
     >
-      <v-card-title class="py-2">
+      <h3 class="px-4 py-2 font-semibold text-on-surface">
         {{ $t('tool.required-tools') }}
-      </v-card-title>
-      <v-divider class="mx-2" />
-      <v-card-text>
+      </h3>
+      <hr class="mx-2 border-t border-border" />
+      <div class="px-4 py-3">
         <RecipeOrganizerSelector
           v-model="recipe.tools"
           selector-type="tools"
           v-bind="$attrs"
         />
-      </v-card-text>
-    </v-card>
+      </div>
+    </div>
 
+    <!-- Nutrition + Assets (controlled by recipe settings) -->
     <RecipeNutrition
       v-if="recipe.settings.showNutrition && !liteMode"
       v-model="recipe.nutrition"

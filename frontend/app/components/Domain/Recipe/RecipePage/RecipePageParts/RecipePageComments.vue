@@ -1,35 +1,27 @@
 <template>
   <div>
-    <v-card-title class="headline pb-3">
-      <v-icon class="mr-2">
-        {{ $globals.icons.commentTextMultipleOutline }}
-      </v-icon>
+    <!-- Section title -->
+    <h2 class="text-xl font-medium pb-3 flex items-center gap-2 text-on-surface">
+      <AppIcon :path="$globals.icons.commentTextMultipleOutline" size="md" class="text-on-surface/60" />
       {{ $t("recipe.comments") }}
-    </v-card-title>
-    <v-divider class="mx-2" />
-    <div
-      v-if="user.id"
-      class="d-flex flex-column"
-    >
-      <div
-        class="d-flex mt-3"
-        style="gap: 10px"
-      >
+    </h2>
+    <hr class="mx-2 border-t border-border" />
+
+    <!-- New comment form (logged-in users only) -->
+    <div v-if="user.id" class="flex flex-col mt-3">
+      <div class="flex gap-3">
         <UserAvatar
           :tooltip="false"
           size="40"
           :user-id="user.id"
         />
-
-        <v-textarea
+        <textarea
           v-model="comment"
-          hide-details
-          density="compact"
-          single-line
-          variant="outlined"
-          auto-grow
           rows="2"
           :placeholder="$t('recipe.join-the-conversation')"
+          class="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-on-surface
+                 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-primary
+                 focus:border-primary transition-colors"
         />
       </div>
       <div class="ml-auto mt-1">
@@ -45,39 +37,40 @@
         </BaseButton>
       </div>
     </div>
+
+    <!-- Comment list -->
     <div
       v-for="recipeComment in recipe.comments"
       :key="recipeComment.id"
-      class="d-flex my-2"
-      style="gap: 10px"
+      class="flex gap-3 my-2"
     >
       <UserAvatar
         :tooltip="false"
         size="40"
         :user-id="recipeComment.userId"
       />
-      <v-card
-        variant="outlined"
-        class="flex-grow-1"
-      >
-        <v-card-text class="pa-3 pb-0">
-          <p class="">
-            {{ recipeComment.user.fullName }} • {{ $d(Date.parse(recipeComment.createdAt), "medium") }}
+      <div class="flex-1 border border-border rounded-lg overflow-hidden">
+        <div class="px-3 pt-3 pb-1">
+          <p class="text-sm font-medium text-on-surface/70 mb-1">
+            {{ recipeComment.user.fullName }}
+            <span class="font-normal">•</span>
+            {{ $d(Date.parse(recipeComment.createdAt), "medium") }}
           </p>
           <SafeMarkdown :source="recipeComment.text" />
-        </v-card-text>
-        <v-card-actions class="justify-end mt-0 pt-0">
-          <v-btn
-            v-if="user.id == recipeComment.user.id || user.admin"
-            color="error"
-            variant="text"
-            size="x-small"
+        </div>
+        <div
+          v-if="user.id == recipeComment.user.id || user.admin"
+          class="flex justify-end px-3 pb-2"
+        >
+          <button
+            type="button"
+            class="text-xs text-error hover:underline transition-colors"
             @click="deleteComment(recipeComment.id)"
           >
             {{ $t("general.delete") }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
