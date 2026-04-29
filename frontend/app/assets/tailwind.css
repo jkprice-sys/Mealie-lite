@@ -73,16 +73,18 @@ html.dark {
   .bs-btn-md  { @apply text-sm  px-4   py-2;   }
   .bs-btn-lg  { @apply text-base px-5  py-2.5; }
 
-  /* Variants */
+  /* Variants
+     NOTE: opacity modifiers (/10 etc.) don't work with CSS var() colors in Tailwind v3.
+     Use plain gray hover states for ghost, and brightness filters for solid variants. */
   .bs-btn-primary  { @apply bg-primary  text-white hover:brightness-90  active:brightness-75; }
   .bs-btn-error    { @apply bg-error    text-white hover:brightness-90  active:brightness-75; }
   .bs-btn-success  { @apply bg-success  text-white hover:brightness-90  active:brightness-75; }
   .bs-btn-outline  { @apply bg-transparent border border-primary text-primary
-                            hover:bg-primary hover:text-white active:brightness-90; }
-  .bs-btn-ghost    { @apply bg-transparent text-on-surface hover:bg-black/8
-                            dark:hover:bg-white/10; }
+                            hover:brightness-90 active:brightness-75; }
+  .bs-btn-ghost    { @apply bg-transparent text-on-surface hover:bg-gray-100
+                            dark:hover:bg-gray-700; }
   .bs-btn-error-outline { @apply bg-transparent border border-error text-error
-                                 hover:bg-error hover:text-white; }
+                                 hover:brightness-90; }
 
   /* --- Cards --- */
   .bs-card {

@@ -34,7 +34,7 @@
                   type="button"
                   :class="[
                     'w-full text-left px-3 py-2 text-sm text-on-surface',
-                    active ? 'bg-primary/10' : '',
+                    active ? 'bg-gray-100 dark:bg-gray-700' : '',
                   ]"
                   @click="$emit(child.event)"
                 >

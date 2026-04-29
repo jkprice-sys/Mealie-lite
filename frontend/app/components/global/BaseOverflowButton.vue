@@ -44,7 +44,7 @@
               type="button"
               :class="[
                 'flex w-full items-center gap-2 px-3 py-2 text-sm text-on-surface',
-                active ? 'bg-primary/10' : '',
+                active ? 'bg-gray-100 dark:bg-gray-700' : '',
               ]"
               @click="setValue(item)"
             >
@@ -59,7 +59,7 @@
               :to="item.to"
               :class="[
                 'flex w-full items-center gap-2 px-3 py-2 text-sm text-on-surface no-underline',
-                active ? 'bg-primary/10' : '',
+                active ? 'bg-gray-100 dark:bg-gray-700' : '',
               ]"
             >
               <AppIcon v-if="item.icon" :path="item.icon" size="sm" />
@@ -73,7 +73,7 @@
               type="button"
               :class="[
                 'flex w-full items-center gap-2 px-3 py-2 text-sm text-on-surface',
-                active ? 'bg-primary/10' : '',
+                active ? 'bg-gray-100 dark:bg-gray-700' : '',
               ]"
               @click="$emit(item.event ?? '')"
             >
