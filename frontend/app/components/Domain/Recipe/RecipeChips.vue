@@ -1,25 +1,21 @@
 <template>
-  <div v-if="items.length > 0">
-    <h2
-      v-if="title"
-      class="mt-4"
-    >
+  <div v-if="items.length > 0" class="flex flex-wrap gap-1">
+    <h2 v-if="title" class="w-full mt-4 text-base font-medium text-on-surface">
       {{ title }}
     </h2>
-    <v-chip
+    <button
       v-for="category in items.slice(0, limit)"
       :key="category.name"
-      label
-      class="mr-1 mt-1"
-      color="accent"
-      variant="flat"
-      :size="small ? 'small' : 'default'"
-      dark
-
-      @click.prevent="() => $emit('item-selected', category, urlPrefix)"
+      type="button"
+      :class="[
+        'inline-flex items-center rounded px-2 py-0.5 font-medium bg-accent text-white',
+        'transition-colors hover:brightness-90 cursor-pointer',
+        small ? 'text-xs' : 'text-sm',
+      ]"
+      @click.prevent="$emit('item-selected', category, urlPrefix)"
     >
       {{ truncateText(category.name) }}
-    </v-chip>
+    </button>
   </div>
 </template>
 
@@ -37,6 +33,7 @@ interface Props {
   small?: boolean;
   maxWidth?: string | null;
 }
+
 const props = withDefaults(defineProps<Props>(), {
   truncate: false,
   items: () => [],
@@ -48,6 +45,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 defineEmits(["item-selected"]);
+
 function truncateText(text: string, length = 20, clamp = "...") {
   if (!props.truncate) return text;
   const node = document.createElement("div");
@@ -56,5 +54,3 @@ function truncateText(text: string, length = 20, clamp = "...") {
   return content.length > length ? content.slice(0, length) + clamp : content;
 }
 </script>
-
-<style></style>

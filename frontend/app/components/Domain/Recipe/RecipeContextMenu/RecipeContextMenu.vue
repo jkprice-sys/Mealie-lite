@@ -1,49 +1,46 @@
 <template>
-  <div class="text-center">
-    <v-menu
-      offset-y
-      start
-      :eager="isMenuContentLoaded"
-      :bottom="!menuTop"
-      :nudge-bottom="!menuTop ? '5' : '0'"
-      :top="menuTop"
-      :nudge-top="menuTop ? '5' : '0'"
-      allow-overflow
-      close-delay="125"
-      content-class="d-print-none"
-      @update:model-value="onMenuToggle"
-    >
-      <template #activator="{ props: activatorProps }">
-        <v-btn
-          icon
-          :variant="fab ? 'flat' : undefined"
-          :rounded="fab ? 'circle' : undefined"
-          :size="fab ? 'small' : undefined"
-          :color="fab ? color : 'secondary'"
-          :fab="fab"
-          v-bind="activatorProps"
-          @click.prevent
-        >
-          <v-icon
-            :size="!fab ? undefined : 'x-large'"
-            :color="fab ? 'white' : 'secondary'"
-          >
-            {{ icon }}
-          </v-icon>
-        </v-btn>
-      </template>
+  <div class="relative" @click.prevent>
+    <Menu as="div" class="relative">
+      <MenuButton
+        :class="[
+          'bs-btn rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-primary',
+          fab
+            ? 'bs-btn-sm bg-primary text-white hover:brightness-90'
+            : 'p-1 text-on-surface/60 hover:bg-gray-100 dark:hover:bg-gray-700',
+        ]"
+        @click.prevent.stop
+      >
+        <AppIcon :path="icon" :size="fab ? 'lg' : 'md'" />
+      </MenuButton>
 
-      <RecipeContextMenuContent
-        v-if="isMenuContentLoaded"
-        v-bind="contentProps"
-        @print="$emit('print')"
-        @deleted="$emit('deleted', $event)"
-      />
-    </v-menu>
+      <Transition
+        enter-active-class="transition duration-100 ease-out"
+        enter-from-class="opacity-0 scale-95"
+        enter-to-class="opacity-100 scale-100"
+        leave-active-class="transition duration-75 ease-in"
+        leave-from-class="opacity-100 scale-100"
+        leave-to-class="opacity-0 scale-95"
+      >
+        <MenuItems
+          class="absolute right-0 z-50 w-52 rounded-lg border border-border bg-surface
+                 shadow-lg py-1 focus:outline-none print:hidden"
+          :class="menuTop ? 'bottom-full mb-1' : 'top-full mt-1'"
+        >
+          <!-- Content is lazy-loaded on first open -->
+          <RecipeContextMenuContent
+            v-if="isMenuContentLoaded"
+            v-bind="contentProps"
+            @print="$emit('print')"
+            @deleted="$emit('deleted', $event)"
+          />
+        </MenuItems>
+      </Transition>
+    </Menu>
   </div>
 </template>
 
 <script setup lang="ts">
+import { Menu, MenuButton, MenuItems } from "@headlessui/vue";
 import type { Recipe } from "~/lib/api/types/recipe";
 
 interface ContextMenuIncludes {
@@ -112,24 +109,22 @@ defineEmits<{
 }>();
 
 const { $globals } = useNuxtApp();
+const icon = computed(() => props.menuIcon || $globals.icons.dotsVertical);
 
+// Lazy-load the content component on first open
 const isMenuContentLoaded = ref(false);
 
-const icon = computed(() => {
-  return props.menuIcon || $globals.icons.dotsVertical;
+// Watch for MenuItems becoming visible by observing menu open state via a watcher trick:
+// Headless UI doesn't expose open state via template ref, so we load eagerly on mount
+// but defer the import itself.
+onMounted(() => {
+  // Pre-load after a short idle so it's ready when the user first clicks
+  requestIdleCallback
+    ? requestIdleCallback(() => { isMenuContentLoaded.value = true; })
+    : setTimeout(() => { isMenuContentLoaded.value = true; }, 500);
 });
 
-// Props to pass to the content component (excluding internal wrapper props)
-const contentProps = computed(() => {
-  const { ...rest } = props;
-  return rest;
-});
-
-function onMenuToggle(isOpen: boolean) {
-  if (isOpen && !isMenuContentLoaded.value) {
-    isMenuContentLoaded.value = true;
-  }
-}
+const contentProps = computed(() => ({ ...props }));
 
 const RecipeContextMenuContent = defineAsyncComponent(
   () => import("./RecipeContextMenuContent.vue"),
