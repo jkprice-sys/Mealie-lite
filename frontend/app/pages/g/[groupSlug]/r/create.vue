@@ -60,7 +60,7 @@ const subpages = computed<MenuItem[]>(() => [
   },
   {
     icon: $globals.icons.codeTags,
-    text: i18n.t("recipe.import-from-html-or-json"),
+    text: i18n.t("recipe.import-html-json"),
     value: "html",
   },
   {
