@@ -16,13 +16,11 @@
         <template #content>
           <div class="flex-1-1 d-flex flex-column justify-center align-center ga-2">
             <p>{{ $t('recipe.select-one-of-the-various-ways-to-create-a-recipe') }}</p>
-            <div class="ml-auto">
-              <BaseOverflowButton
-                v-model="subpage"
-                rounded
-                :items="subpages"
-              />
-            </div>
+            <BaseOverflowButton
+              v-model="subpage"
+              rounded
+              :items="subpages"
+            />
           </div>
         </template>
       </BasePageTitle>
@@ -31,20 +29,11 @@
       </section>
     </v-container>
 
-    <AdvancedOnly>
-      <v-container class="d-flex justify-center align-center my-4">
-        <router-link
-          :to="`/group/migrations`"
-          class="text-primary"
-        > {{ $t('recipe.looking-for-migrations') }}</router-link>
-      </v-container>
-    </AdvancedOnly>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { MenuItem } from "~/components/global/BaseOverflowButton.vue";
-import AdvancedOnly from "~/components/global/AdvancedOnly.vue";
 
 definePageMeta({
   middleware: ["group-only"],
