@@ -147,8 +147,6 @@ import {
   TransitionChild,
   TransitionRoot,
 } from "@headlessui/vue";
-import { useDisplay } from "vuetify";
-
 // ── Props ──────────────────────────────────────────────────────────────────
 interface DialogProps {
   modelValue: boolean;

@@ -1,126 +1,98 @@
 <template>
-  <div :style="`height: ${height}px;`">
-    <v-expand-transition>
-      <v-card
-        :ripple="false"
-        :class="[
-          isFlat ? 'mx-auto flat' : 'mx-auto',
-          { 'disable-highlight': disableHighlight },
-        ]"
-        :style="{ cursor }"
-        hover
-        height="100%"
-        :to="$attrs.selected ? undefined : recipeRoute"
-        @click="$emit('selected')"
-      >
-        <v-img
-          v-if="vertical"
-          class="rounded-sm"
-          cover
-        >
+  <div
+    :style="`height: ${height}px;`"
+    class="w-full"
+  >
+    <NuxtLink
+      :to="$attrs.selected ? undefined : recipeRoute"
+      class="flex h-full rounded-lg border border-border bg-surface
+             hover:shadow-md transition-shadow no-underline overflow-hidden"
+      :class="[isFlat ? 'shadow-none bg-transparent border-transparent' : '', disableHighlight ? 'pointer-events-none' : '']"
+      :style="{ cursor }"
+      @click="$emit('selected')"
+    >
+      <!-- Image — left side (hidden when vertical layout) -->
+      <div v-if="!vertical" class="shrink-0" style="width: 125px;">
+        <slot name="avatar">
           <RecipeCardImage
             tiny
             :icon-size="100"
             :slug="slug"
             :recipe-id="recipeId"
             :image-version="image"
-            :height="height"
+            height="100%"
           />
-        </v-img>
-        <v-list-item
-          lines="two"
-          class="py-0"
-          :class="vertical ? 'px-2' : 'px-0'"
-          item-props
-          height="100%"
-          density="compact"
-        >
-          <template #prepend>
-            <slot
-              v-if="!vertical"
-              name="avatar"
-            >
-              <RecipeCardImage
-                tiny
-                :icon-size="100"
-                :slug="slug"
-                :recipe-id="recipeId"
-                :image-version="image"
-                width="125"
-                :height="height"
-              />
-            </slot>
-          </template>
-          <div class="pl-4 d-flex flex-column justify-space-between align-stretch pr-2">
-            <v-list-item-title class="mt-3 mb-1 text-top text-truncate w-100">
-              {{ name }}
-            </v-list-item-title>
-            <v-list-item-subtitle class="ma-0 text-top">
-              <SafeMarkdown v-if="description" :source="description" />
-              <p v-else>
-                <br>
-                <br>
-                <br>
-              </p>
-            </v-list-item-subtitle>
-            <div
-              class="d-flex flex-nowrap justify-start ma-0 pt-2 pb-0"
-              style="overflow-x: hidden; overflow-y: hidden; white-space: nowrap;"
-            >
-              <RecipeChips
-                :truncate="true"
-                :items="tags"
-                :title="false"
-                :limit="2"
-                small
-                url-prefix="tags"
-                v-bind="$attrs"
-              />
-            </div>
-          </div>
-          <slot name="actions">
-            <v-card-actions class="w-100 my-0 px-1 py-0">
-              <RecipeFavoriteBadge
-                v-if="isOwnGroup && showRecipeContent"
-                :recipe-id="recipeId"
-                show-always
-                class="ma-0 pa-0"
-              />
-              <div v-else class="my-0 px-1 py-0" /> <!-- Empty div to keep the layout consistent -->
-              <RecipeCardRating
-                v-if="showRecipeContent"
-                :class="[{ 'pb-2': !isOwnGroup }, 'ml-n2']"
-                :model-value="rating"
-                :recipe-id="recipeId"
-              />
+        </slot>
+      </div>
 
-              <!-- If we're not logged-in, no items display, so we hide this menu -->
-              <!-- We also add padding to the v-rating above to compensate -->
-              <RecipeContextMenu
-                v-if="isOwnGroup && showRecipeContent"
-                :slug="slug"
-                :menu-icon="$globals.icons.dotsHorizontal"
-                :name="name"
-                :recipe-id="recipeId"
-                class="ml-auto"
-                :use-items="{
-                  delete: false,
-                  edit: false,
-                  download: true,
-                  mealplanner: true,
-                  shoppingList: true,
-                  print: false,
-                  printPreferences: false,
-                  share: true,
-                }"
-                @deleted="$emit('delete', slug)"
-              />
-            </v-card-actions>
-          </slot>
-        </v-list-item>
-        <slot />
-      </v-card>
-    </v-expand-transition>
+      <!-- Content — right side -->
+      <div class="flex flex-col flex-1 pl-4 pr-2 py-2 min-w-0 justify-between">
+        <!-- Title -->
+        <p class="text-sm font-medium text-on-surface truncate mt-1 mb-0.5">
+          {{ name }}
+        </p>
+
+        <!-- Description -->
+        <div class="text-xs text-on-surface/60 flex-1 overflow-hidden">
+          <SafeMarkdown v-if="description" :source="description" />
+        </div>
+
+        <!-- Chips -->
+        <div class="mt-1 overflow-hidden whitespace-nowrap">
+          <RecipeChips
+            :truncate="true"
+            :items="tags"
+            :title="false"
+            :limit="2"
+            small
+            url-prefix="tags"
+            v-bind="$attrs"
+          />
+        </div>
+
+        <!-- Actions row -->
+        <slot name="actions">
+          <div class="flex items-center gap-1 mt-1">
+            <RecipeFavoriteBadge
+              v-if="isOwnGroup && showRecipeContent"
+              :recipe-id="recipeId"
+              show-always
+            />
+            <div v-else class="px-1" />
+
+            <RecipeCardRating
+              v-if="showRecipeContent"
+              :model-value="rating"
+              :recipe-id="recipeId"
+              :class="!isOwnGroup ? 'pb-2' : ''"
+            />
+
+            <div class="flex-1" />
+
+            <RecipeContextMenu
+              v-if="isOwnGroup && showRecipeContent"
+              :slug="slug"
+              :menu-icon="$globals.icons.dotsHorizontal"
+              :name="name"
+              :recipe-id="recipeId"
+              :use-items="{
+                delete: false,
+                edit: false,
+                download: true,
+                mealplanner: true,
+                shoppingList: true,
+                print: false,
+                printPreferences: false,
+                share: true,
+              }"
+              @deleted="$emit('delete', slug)"
+            />
+          </div>
+        </slot>
+      </div>
+    </NuxtLink>
+
+    <slot />
   </div>
 </template>
 
@@ -145,6 +117,7 @@ interface Props {
   height?: number;
   disableHighlight?: boolean;
 }
+
 const props = withDefaults(defineProps<Props>(), {
   rating: 0,
   image: "abc123",
@@ -160,56 +133,15 @@ defineEmits<{
   delete: [slug: string];
 }>();
 
+const { $globals } = useNuxtApp();
 const auth = useMealieAuth();
 const { isOwnGroup } = useLoggedInState();
 
 const route = useRoute();
 const groupSlug = computed(() => route.params.groupSlug || auth.user.value?.groupSlug || "");
-const showRecipeContent = computed(() => props.recipeId && props.slug);
-const recipeRoute = computed<string>(() => {
-  return showRecipeContent.value ? `/g/${groupSlug.value}/r/${props.slug}` : "";
-});
+const showRecipeContent = computed(() => !!props.recipeId && !!props.slug);
+const recipeRoute = computed<string>(() =>
+  showRecipeContent.value ? `/g/${groupSlug.value}/r/${props.slug}` : ""
+);
 const cursor = computed(() => showRecipeContent.value ? "pointer" : "auto");
 </script>
-
-<style scoped>
-:deep(.v-list-item__prepend) {
-  height: 100%;
-}
-.v-mobile-img {
-  padding-top: 0;
-  padding-bottom: 0;
-  padding-left: 0;
-}
-.v-card--reveal {
-  align-items: center;
-  bottom: 0;
-  justify-content: center;
-  opacity: 0.8;
-  position: absolute;
-  width: 100%;
-}
-.v-card--text-show {
-  opacity: 1 !important;
-}
-.headerClass {
-  white-space: nowrap;
-  word-break: normal;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.text-top {
-  align-self: start !important;
-}
-
-.flat,
-.theme--dark .flat {
-  box-shadow: none !important;
-  background-color: transparent !important;
-}
-
-.disable-highlight :deep(.v-card__overlay) {
-  opacity: 0 !important;
-}
-</style>

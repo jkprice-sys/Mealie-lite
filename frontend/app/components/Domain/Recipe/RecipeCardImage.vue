@@ -1,29 +1,35 @@
 <template>
-  <v-img
-    v-if="!fallBackImage"
-    :height="height"
-    cover
-    min-height="125"
-    max-height="fill-height"
-    :src="getImage(recipeId)"
-    @click="$emit('click')"
-    @load="fallBackImage = false"
-    @error="fallBackImage = true"
-  >
-    <slot />
-  </v-img>
   <div
-    v-else
-    class="icon-slot"
+    class="relative overflow-hidden bg-gray-100 dark:bg-gray-800 w-full"
+    :style="containerStyle"
     @click="$emit('click')"
   >
-    <v-icon
-      color="primary"
-      class="icon-position"
-      :size="iconSize"
+    <!-- Recipe image -->
+    <img
+      v-if="!fallBackImage"
+      :src="getImage(recipeId)"
+      :alt="slug || ''"
+      class="w-full h-full object-cover"
+      @load="fallBackImage = false"
+      @error="fallBackImage = true"
+    />
+
+    <!-- Fallback: centered app icon when image fails or is missing -->
+    <div
+      v-else
+      class="w-full h-full flex items-center justify-center"
     >
-      {{ $globals.icons.primary }}
-    </v-icon>
+      <svg
+        viewBox="0 0 24 24"
+        class="text-primary opacity-70 fill-current"
+        :style="`width: ${iconSize}px; height: ${iconSize}px;`"
+        aria-hidden="true"
+      >
+        <path :d="$globals.icons.primary" />
+      </svg>
+    </div>
+
+    <!-- Overlay content (e.g. hover description from RecipeCard) -->
     <slot />
   </div>
 </template>
@@ -41,6 +47,7 @@ interface Props {
   imageVersion?: string | null;
   height?: number | string;
 }
+
 const props = withDefaults(defineProps<Props>(), {
   tiny: null,
   small: null,
@@ -51,55 +58,35 @@ const props = withDefaults(defineProps<Props>(), {
   height: "100%",
 });
 
-defineEmits<{
-  click: [];
-}>();
+defineEmits<{ click: [] }>();
 
+const { $globals } = useNuxtApp();
 const { recipeImage, recipeSmallImage, recipeTinyImage } = useStaticRoutes();
 
 const fallBackImage = ref(false);
+
+const containerStyle = computed(() => {
+  const h = props.height;
+  if (h === "100%") return { height: "100%" };
+  return { height: typeof h === "number" ? `${h}px` : h, minHeight: "125px" };
+});
+
 const imageSize = computed(() => {
-  if (props.tiny) return "tiny";
+  if (props.tiny)  return "tiny";
   if (props.small) return "small";
-  if (props.large) return "large";
   return "large";
 });
 
-watch(
-  () => props.recipeId,
-  () => {
-    fallBackImage.value = false;
-  },
-);
+// Reset fallback when recipe changes
+watch(() => props.recipeId, () => {
+  fallBackImage.value = false;
+});
 
 function getImage(recipeId: string) {
   switch (imageSize.value) {
-    case "tiny":
-      return recipeTinyImage(recipeId, props.imageVersion);
-    case "small":
-      return recipeSmallImage(recipeId, props.imageVersion);
-    case "large":
-      return recipeImage(recipeId, props.imageVersion);
+    case "tiny":  return recipeTinyImage(recipeId, props.imageVersion);
+    case "small": return recipeSmallImage(recipeId, props.imageVersion);
+    default:      return recipeImage(recipeId, props.imageVersion);
   }
 }
 </script>
-
-<style scoped>
-.icon-slot {
-  position: relative;
-}
-
-.icon-slot > div {
-  top: 0;
-  position: absolute;
-  z-index: 1;
-}
-
-.icon-position {
-  opacity: 0.8;
-  display: flex !important;
-  position: relative;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-</style>

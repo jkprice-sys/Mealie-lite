@@ -1,98 +1,92 @@
 <template>
-  <!-- Wrap v-hover with a div to provide a proper DOM element for the transition -->
-  <div>
-    <v-hover
-      v-slot="{ isHovering, props: hoverProps }"
-      :open-delay="50"
-    >
-      <v-card
-        v-bind="hoverProps"
-        :class="{ 'on-hover': isHovering }"
-        :style="{ cursor }"
-        :elevation="isHovering ? 12 : 2"
-        :to="recipeRoute"
-        :min-height="imageHeight + 75"
-        @click.self="$emit('click')"
+  <NuxtLink
+    :to="recipeRoute"
+    class="group bs-card overflow-hidden flex flex-col no-underline transition-shadow duration-150 hover:shadow-lg"
+    :style="{ minHeight: `${imageHeight + 75}px`, cursor }"
+    @click.self="$emit('click')"
+  >
+    <!-- Image + hover description overlay -->
+    <div class="relative shrink-0">
+      <RecipeCardImage
+        small
+        :icon-size="imageHeight"
+        :height="imageHeight"
+        :slug="slug"
+        :recipe-id="recipeId"
+        :image-version="image"
+      />
+
+      <!-- Description revealed on hover -->
+      <div
+        v-if="description"
+        class="absolute inset-0 bg-secondary/80 opacity-0 group-hover:opacity-100
+               transition-opacity duration-200 flex items-start justify-center p-4 overflow-hidden"
       >
-        <RecipeCardImage
-          small
-          :icon-size="imageHeight"
-          :height="imageHeight"
-          :slug="slug"
+        <div class="text-white text-sm line-clamp-8">
+          <SafeMarkdown :source="description" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Recipe name -->
+    <h3 class="px-4 pt-3 pb-1 text-lg font-normal text-on-surface truncate">
+      {{ name }}
+    </h3>
+
+    <!-- Actions row -->
+    <slot name="actions">
+      <div
+        v-if="showRecipeContent"
+        class="flex items-center px-1 pb-1 gap-1 mt-auto flex-wrap"
+      >
+        <RecipeFavoriteBadge
+          v-if="isOwnGroup"
           :recipe-id="recipeId"
-          :image-version="image"
-        >
-          <v-expand-transition v-if="description">
-            <div
-              v-if="isHovering"
-              class="d-flex transition-fast-in-fast-out bg-secondary v-card--reveal"
-              style="height: 100%"
-            >
-              <v-card-text class="v-card--text-show white--text">
-                <div class="descriptionWrapper">
-                  <SafeMarkdown :source="description" />
-                </div>
-              </v-card-text>
-            </div>
-          </v-expand-transition>
-        </RecipeCardImage>
-        <v-card-title class="mb-n3 px-4" style="font-size: 1.25rem;">
-          {{ name }}
-        </v-card-title>
+          show-always
+        />
+        <div v-else class="px-1" />
 
-        <slot name="actions">
-          <v-card-actions
-            v-if="showRecipeContent"
-            class="px-1"
-          >
-            <RecipeFavoriteBadge
-              v-if="isOwnGroup"
-              :recipe-id="recipeId"
-              show-always
-            />
-            <div v-else class="px-1" /> <!-- Empty div to keep the layout consistent -->
+        <RecipeCardRating
+          :model-value="rating"
+          :recipe-id="recipeId"
+        />
 
-            <RecipeCardRating
-              :model-value="rating"
-              :recipe-id="recipeId"
-            />
-            <v-spacer />
-            <RecipeChips
-              :truncate="true"
-              :items="tags"
-              :title="false"
-              :limit="2"
-              small
-              url-prefix="tags"
-              v-bind="$attrs"
-            />
+        <div class="flex-1" />
 
-            <!-- If we're not logged-in, no items display, so we hide this menu -->
-            <RecipeContextMenu
-              v-if="isOwnGroup && showRecipeContent"
-              color="grey-darken-2"
-              :slug="slug"
-              :menu-icon="$globals.icons.dotsVertical"
-              :name="name"
-              :recipe-id="recipeId"
-              :use-items="{
-                delete: false,
-                edit: false,
-                download: true,
-                mealplanner: true,
-                shoppingList: true,
-                print: false,
-                printPreferences: false,
-                share: true,
-              }"
-              @deleted="$emit('delete', slug)"
-            />
-          </v-card-actions>
-        </slot>
-        <slot />
-      </v-card>
-    </v-hover>
-  </div>
+        <RecipeChips
+          :truncate="true"
+          :items="tags"
+          :title="false"
+          :limit="2"
+          small
+          url-prefix="tags"
+          v-bind="$attrs"
+        />
+
+        <RecipeContextMenu
+          v-if="isOwnGroup"
+          color="grey-darken-2"
+          :slug="slug"
+          :menu-icon="$globals.icons.dotsVertical"
+          :name="name"
+          :recipe-id="recipeId"
+          :use-items="{
+            delete: false,
+            edit: false,
+            download: true,
+            mealplanner: true,
+            shoppingList: true,
+            print: false,
+            printPreferences: false,
+            share: true,
+          }"
+          @deleted="$emit('delete', slug)"
+        />
+      </div>
+    </slot>
+
+    <slot />
+  </NuxtLink>
 </template>
 
 <script setup lang="ts">
@@ -114,6 +108,7 @@ interface Props {
   recipeId: string;
   imageHeight?: number;
 }
+
 const props = withDefaults(defineProps<Props>(), {
   description: null,
   rating: 0,
@@ -128,41 +123,15 @@ defineEmits<{
   delete: [slug: string];
 }>();
 
+const { $globals } = useNuxtApp();
 const auth = useMealieAuth();
 const { isOwnGroup } = useLoggedInState();
 
 const route = useRoute();
 const groupSlug = computed(() => route.params.groupSlug || auth.user.value?.groupSlug || "");
-const showRecipeContent = computed(() => props.recipeId && props.slug);
-const recipeRoute = computed<string>(() => {
-  return showRecipeContent.value ? `/g/${groupSlug.value}/r/${props.slug}` : "";
-});
+const showRecipeContent = computed(() => !!props.recipeId && !!props.slug);
+const recipeRoute = computed<string>(() =>
+  showRecipeContent.value ? `/g/${groupSlug.value}/r/${props.slug}` : ""
+);
 const cursor = computed(() => showRecipeContent.value ? "pointer" : "auto");
 </script>
-
-<style>
-.v-card--reveal {
-  align-items: center;
-  bottom: 0;
-  justify-content: center;
-  opacity: 0.8;
-  position: absolute;
-  width: 100%;
-}
-.v-card--text-show {
-  opacity: 1 !important;
-}
-.headerClass {
-  white-space: nowrap;
-  word-break: normal;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.descriptionWrapper {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 8;
-  line-clamp: 8;
-  overflow: hidden;
-}
-</style>
