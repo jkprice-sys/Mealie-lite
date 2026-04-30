@@ -98,11 +98,10 @@
       <BaseButton
         v-if="!isEditForm && !isCookMode"
         minor
-        cancel
         color="primary"
+        :icon="$globals.icons.primary"
         @click="toggleCookMode()"
       >
-        <template #icon>{{ $globals.icons.primary }}</template>
         {{ $t("recipe.cook-mode") }}
       </BaseButton>
     </div>

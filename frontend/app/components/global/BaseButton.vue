@@ -120,8 +120,14 @@ const sizeClass = computed(() => {
 });
 
 const variantClass = computed(() => {
-  // Cancel / minor props → ghost
-  if (props.cancel || props.minor) return "bs-btn-ghost";
+  // cancel → neutral ghost (close icon, no color override)
+  if (props.cancel) return "bs-btn-ghost";
+  // minor → ghost but honour the color prop for text
+  if (props.minor) {
+    if (resolvedColor.value === "error")   return "bs-btn-ghost text-error";
+    if (resolvedColor.value === "primary") return "bs-btn-ghost text-primary";
+    return "bs-btn-ghost";
+  }
   // outlined
   if (props.secondary) {
     if (resolvedColor.value === "error") return "bs-btn-error-outline";
