@@ -15,9 +15,9 @@
       @submit="actions.updateOne(createTarget)"
       @cancel="deleteCreateTarget()"
     >
-      <v-card-text>
+      <div class="px-4 py-2">
         <CookbookEditor :key="createTargetKey" v-model="createTarget" />
-      </v-card-text>
+      </div>
     </BaseDialog>
 
     <!-- Delete Dialog -->
@@ -29,20 +29,17 @@
       can-confirm
       @confirm="deleteCookbook()"
     >
-      <v-card-text>
-        <p>{{ $t("general.confirm-delete-generic-with-name", { name: $t("cookbook.cookbook") }) }}</p>
-        <p v-if="deleteTarget" class="mt-4 ml-4">
-          {{ deleteTarget.name }}
-        </p>
-      </v-card-text>
+      <div class="px-4 py-2 space-y-2">
+        <p class="text-sm text-on-surface">{{ $t("general.confirm-delete-generic-with-name", { name: $t("cookbook.cookbook") }) }}</p>
+        <p v-if="deleteTarget" class="mt-4 ml-4 text-sm font-medium text-on-surface">{{ deleteTarget.name }}</p>
+      </div>
     </BaseDialog>
 
-    <!-- Cookbook Page -->
-    <!-- Page Title -->
-    <v-container class="lg-container">
+    <!-- Page content -->
+    <div class="lg-container mx-auto px-4 py-4">
       <BasePageTitle divider>
         <template #header>
-          <v-img width="100%" max-height="100" max-width="100" src="/svgs/manage-cookbooks.svg" />
+          <img width="100" height="100" src="/svgs/manage-cookbooks.svg" class="object-contain" />
         </template>
         <template #title>
           {{ $t("cookbook.cookbooks") }}
@@ -50,65 +47,66 @@
         {{ $t("cookbook.description") }}
       </BasePageTitle>
 
+      <!-- Hide other households toggle -->
       <div class="my-6">
-        <v-checkbox
-          v-model="cookbookPreferences.hideOtherHouseholds"
-          :label="$t('cookbook.hide-cookbooks-from-other-households')"
-          hide-details
-          color="primary"
-        />
-        <div class="ml-10 mt-n3">
-          <p class="text-subtitle-2 my-0 py-0">
-            {{ $t("cookbook.hide-cookbooks-from-other-households-description") }}
-          </p>
-        </div>
+        <label class="flex items-center gap-3 cursor-pointer text-sm text-on-surface">
+          <input
+            v-model="cookbookPreferences.hideOtherHouseholds"
+            type="checkbox"
+            class="w-4 h-4 rounded border-border accent-primary"
+          />
+          {{ $t('cookbook.hide-cookbooks-from-other-households') }}
+        </label>
+        <p class="text-xs text-on-surface/60 mt-1 ml-7">
+          {{ $t("cookbook.hide-cookbooks-from-other-households-description") }}
+        </p>
       </div>
 
-      <!-- Create New -->
+      <!-- Create button -->
       <BaseButton create @click="createCookbook" />
 
-      <!-- Cookbook List -->
-      <v-expansion-panels class="mt-2">
+      <!-- Cookbook accordion list -->
+      <div class="mt-2 space-y-2">
         <VueDraggable
           v-model="myCookbooks"
           handle=".handle"
           :delay="250"
           :delay-on-touch-only="true"
-          style="width: 100%"
           @end="updateAll(myCookbooks)"
         >
-          <v-expansion-panel
+          <div
             v-for="(cookbook, index) in myCookbooks"
             :key="cookbook.id"
-            class="my-2 left-border rounded"
+            class="rounded-lg border border-border bg-surface overflow-hidden"
           >
-            <v-expansion-panel-title disable-icon-rotate class="text-h6 opacity-80">
-              <div class="d-flex align-center">
-                <v-icon size="large" start>
-                  {{ $globals.icons.pages }}
-                </v-icon>
-                {{ cookbook.name }}
+            <!-- Panel header -->
+            <button
+              type="button"
+              class="w-full flex items-center justify-between gap-3 px-4 py-3 text-left
+                     hover:bg-primary/5 transition-colors"
+              @click="togglePanel(cookbook.id)"
+            >
+              <div class="flex items-center gap-2">
+                <AppIcon :path="$globals.icons.pages" size="md" class="text-on-surface/60" />
+                <span class="text-base font-semibold opacity-80">{{ cookbook.name }}</span>
               </div>
-              <template #actions>
-                <div class="d-flex align-center">
-                  <v-btn icon variant="text" class="ml-2">
-                    <v-icon>
-                      {{ $globals.icons.edit }}
-                    </v-icon>
-                  </v-btn>
-                  <v-icon class="handle" :size="40">
-                    {{ $globals.icons.arrowUpDown }}
-                  </v-icon>
+              <div class="flex items-center gap-1 shrink-0">
+                <AppIcon
+                  :path="openPanels.has(cookbook.id) ? $globals.icons.chevronDown : $globals.icons.arrowRight"
+                  size="sm"
+                  class="text-on-surface/50 transition-transform"
+                  :class="openPanels.has(cookbook.id) ? 'rotate-0' : ''"
+                />
+                <div class="handle cursor-grab active:cursor-grabbing p-1 rounded hover:bg-border">
+                  <AppIcon :path="$globals.icons.arrowUpDown" size="md" class="text-on-surface/50" />
                 </div>
-              </template>
-            </v-expansion-panel-title>
-            <v-expansion-panel-text>
-              <CookbookEditor
-                v-model="myCookbooks[index]"
-                :collapsable="false"
-              />
-              <v-card-actions>
-                <v-spacer />
+              </div>
+            </button>
+
+            <!-- Panel body -->
+            <div v-if="openPanels.has(cookbook.id)" class="border-t border-border px-4 pb-4 pt-3">
+              <CookbookEditor v-model="myCookbooks[index]" :collapsable="false" />
+              <div class="flex justify-end mt-3">
                 <BaseButtonGroup
                   :buttons="[
                     {
@@ -126,12 +124,12 @@
                   @delete="deleteEventHandler(myCookbooks[index])"
                   @save="actions.updateOne(myCookbooks[index])"
                 />
-              </v-card-actions>
-            </v-expansion-panel-text>
-          </v-expansion-panel>
+              </div>
+            </div>
+          </div>
         </VueDraggable>
-      </v-expansion-panels>
-    </v-container>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -147,30 +145,21 @@ definePageMeta({
   middleware: ["group-only", "lite-mode"],
 });
 
-const dialogStates = reactive({
-  create: false,
-  delete: false,
-});
-
 const i18n = useI18n();
+const { $globals } = useNuxtApp();
 
-// Set page title
-useSeoMeta({
-  title: i18n.t("cookbook.cookbooks"),
-});
+useSeoMeta({ title: i18n.t("cookbook.cookbooks") });
 
 const auth = useMealieAuth();
 const { store: allCookbooks, actions, updateAll } = useCookbookStore();
 
-// Make a local reactive copy of myCookbooks
 const myCookbooks = ref<ReadCookBook[]>([]);
 watch(
   allCookbooks,
   (cookbooks) => {
-    myCookbooks.value
-      = cookbooks?.filter(
-        cookbook => cookbook.householdId === auth.user.value?.householdId,
-      ).sort((a, b) => a.position > b.position) ?? [];
+    myCookbooks.value = cookbooks?.filter(
+      cookbook => cookbook.householdId === auth.user.value?.householdId,
+    ).sort((a, b) => a.position > b.position) ?? [];
   },
   { immediate: true },
 );
@@ -178,7 +167,16 @@ watch(
 const { household } = useHouseholdSelf();
 const cookbookPreferences = useCookbookPreferences();
 
-// create
+// Accordion open state
+const openPanels = reactive(new Set<string>());
+function togglePanel(id: string) {
+  if (openPanels.has(id)) openPanels.delete(id);
+  else openPanels.add(id);
+}
+
+const dialogStates = reactive({ create: false, delete: false });
+
+// Create
 const createTargetKey = ref(0);
 const createTarget = ref<ReadCookBook | null>(null);
 async function createCookbook() {
@@ -187,12 +185,8 @@ async function createCookbook() {
     String((myCookbooks.value?.length ?? 0) + 1),
   ]) as string;
 
-  const data = { name } as CreateCookBook;
-  await actions.createOne(data).then((cookbook) => {
-    if (!cookbook) {
-      return;
-    }
-
+  await actions.createOne({ name } as CreateCookBook).then((cookbook) => {
+    if (!cookbook) return;
     myCookbooks.value.push(cookbook);
     createTarget.value = cookbook as ReadCookBook;
     createTargetKey.value++;
@@ -200,16 +194,14 @@ async function createCookbook() {
   dialogStates.create = true;
 }
 
-// delete
+// Delete
 const deleteTarget = ref<ReadCookBook | null>(null);
 function deleteEventHandler(item: ReadCookBook) {
   deleteTarget.value = item;
   dialogStates.delete = true;
 }
 async function deleteCookbook() {
-  if (!deleteTarget.value) {
-    return;
-  }
+  if (!deleteTarget.value) return;
   await actions.deleteOne(deleteTarget.value.id);
   myCookbooks.value = myCookbooks.value.filter(c => c.id !== deleteTarget.value?.id);
   dialogStates.delete = false;
@@ -217,23 +209,19 @@ async function deleteCookbook() {
 }
 
 async function deleteCreateTarget() {
-  if (!createTarget.value?.id) {
-    return;
-  }
+  if (!createTarget.value?.id) return;
   await actions.deleteOne(createTarget.value.id);
   myCookbooks.value = myCookbooks.value.filter(c => c.id !== createTarget.value?.id);
   dialogStates.create = false;
   createTarget.value = null;
 }
+
 function handleUnmount() {
-  if (!createTarget.value?.id || createTarget.value.queryFilterString) {
-    return;
-  }
+  if (!createTarget.value?.id || createTarget.value.queryFilterString) return;
   deleteCreateTarget();
 }
-onMounted(() => {
-  window.addEventListener("beforeunload", handleUnmount);
-});
+
+onMounted(() => window.addEventListener("beforeunload", handleUnmount));
 onBeforeUnmount(() => {
   handleUnmount();
   window.removeEventListener("beforeunload", handleUnmount);

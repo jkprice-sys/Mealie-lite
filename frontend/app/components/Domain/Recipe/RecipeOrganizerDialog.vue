@@ -9,21 +9,22 @@
       :submit-disabled="!name"
       @submit="select"
     >
-      <v-form>
-        <v-card-text>
-          <v-text-field
+      <div class="px-4 py-3 space-y-3">
+        <div>
+          <label class="block text-xs text-on-surface/60 mb-1">{{ properties.label }}</label>
+          <input
             v-model="name"
-            :label="properties.label"
-            :rules="[rules.required]"
+            type="text"
             autofocus
+            class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface
+                   focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
           />
-          <v-checkbox
-            v-if="itemType === Organizer.Tool"
-            v-model="onHand"
-            :label="$t('tool.on-hand')"
-          />
-        </v-card-text>
-      </v-form>
+        </div>
+        <label v-if="itemType === Organizer.Tool" class="flex items-center gap-2 cursor-pointer">
+          <input v-model="onHand" type="checkbox" class="accent-primary" />
+          <span class="text-sm text-on-surface">{{ $t('tool.on-hand') }}</span>
+        </label>
+      </div>
     </BaseDialog>
   </div>
 </template>

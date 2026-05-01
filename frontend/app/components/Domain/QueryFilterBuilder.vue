@@ -1,6 +1,6 @@
 <template>
-  <v-card class="ma-0" flat fluid>
-    <v-card-text class="ma-0 pa-0">
+  <div>
+    <div>
       <VueDraggable
         v-model="fields"
         handle=".handle"
@@ -14,174 +14,147 @@
         @start="drag = true"
         @end="onDragEnd"
       >
-        <v-row
+        <div
           v-for="(field, index) in fields"
           :key="field.id"
-          class="d-flex flex-row flex-wrap mx-auto pb-2"
-          :class="$vuetify.display.xs ? (Math.floor(index / 1) % 2 === 0 ? 'bg-dark' : 'bg-light') : ''"
-          style="max-width: 100%;"
+          class="flex flex-wrap items-end gap-2 pb-2"
         >
           <!-- drag handle -->
-          <v-col
-            :cols="config.items.icon.cols(index)"
-            :sm="config.items.icon.sm(index)"
-            :class="$vuetify.display.smAndDown ? 'd-flex pa-0' : 'd-flex justify-end pr-6'"
-          >
-            <v-icon class="handle my-auto" :size="28" style="cursor: move;">
-              {{ $globals.icons.arrowUpDown }}
-            </v-icon>
-          </v-col>
-
-          <!-- and / or  -->
-          <v-col
-            v-if="index != 0 || $vuetify.display.smAndUp"
-            :cols="config.items.logicalOperator.cols(index)"
-            :sm="config.items.logicalOperator.sm(index)"
-            :class="config.col.class"
-          >
-            <v-select
-              v-if="index"
-              :model-value="field.logicalOperator?.value"
-              :items="[logOps.AND, logOps.OR]"
-              item-title="label"
-              item-value="value"
-              variant="underlined"
-              class="text-center"
-              @update:model-value="setLogicalOperatorValue(field, index, $event as unknown as LogicalOperator)"
+          <div class="flex items-center flex-shrink-0">
+            <AppIcon
+              :path="$globals.icons.arrowUpDown"
+              class="handle cursor-move text-on-surface/40 hover:text-on-surface transition-colors"
+              size="md"
             />
-          </v-col>
+          </div>
 
-          <!-- left parenthesis -->
-          <v-col
-            v-if="showAdvanced"
-            :cols="config.items.leftParens.cols(index)"
-            :sm="config.items.leftParens.sm(index)"
-            :class="config.col.class"
-          >
-            <v-select
-              :model-value="field.leftParenthesis"
-              :items="['', '(', '((', '(((']"
-              variant="underlined"
-              class="text-center"
-              @update:model-value="setLeftParenthesisValue(field, index, $event)"
-            />
-          </v-col>
+          <!-- and / or (not for first row) -->
+          <div v-if="index !== 0" class="w-16 flex-shrink-0">
+            <select
+              :value="field.logicalOperator?.value"
+              class="w-full rounded border border-border bg-surface px-1 py-1 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+              @change="setLogicalOperatorValue(field, index, ($event.target as HTMLSelectElement).value as LogicalOperator)"
+            >
+              <option :value="logOps.AND.value">{{ logOps.AND.label }}</option>
+              <option :value="logOps.OR.value">{{ logOps.OR.label }}</option>
+            </select>
+          </div>
+          <div v-else class="w-16 flex-shrink-0" />
+
+          <!-- left parenthesis (advanced) -->
+          <div v-if="showAdvanced" class="w-14 flex-shrink-0">
+            <select
+              :value="field.leftParenthesis"
+              class="w-full rounded border border-border bg-surface px-1 py-1 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary text-center"
+              @change="setLeftParenthesisValue(field, index, ($event.target as HTMLSelectElement).value)"
+            >
+              <option value="">-</option>
+              <option value="(">(</option>
+              <option value="((">(( </option>
+              <option value="(((">(((</option>
+            </select>
+          </div>
 
           <!-- field name -->
-          <v-col
-            :cols="config.items.fieldName.cols(index)"
-            :sm="config.items.fieldName.sm(index)"
-            :class="config.col.class"
-          >
-            <v-select
-              :model-value="field.label"
-              :items="fieldDefs"
-              variant="underlined"
-              item-title="label"
-              item-value="label"
-              class="text-center"
-              @update:model-value="setField(index, $event)"
-            />
-          </v-col>
+          <div class="flex-1 min-w-[120px]">
+            <select
+              :value="field.label"
+              class="w-full rounded border border-border bg-surface px-2 py-1 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary text-center"
+              @change="setField(index, ($event.target as HTMLSelectElement).value)"
+            >
+              <option v-for="def in fieldDefs" :key="def.label" :value="def.label">
+                {{ def.label }}
+              </option>
+            </select>
+          </div>
 
           <!-- relational operator -->
-          <v-col
-            :cols="config.items.relationalOperator.cols(index)"
-            :sm="config.items.relationalOperator.sm(index)"
-            :class="config.col.class"
-          >
-            <v-select
-              v-if="field.type !== 'boolean'"
-              :model-value="field.relationalOperatorValue?.value"
-              :items="field.relationalOperatorChoices"
-              item-title="label"
-              item-value="value"
-              variant="underlined"
-              class="text-center"
-              @update:model-value="setRelationalOperatorValue(field, index, $event as unknown as RelationalKeyword | RelationalOperator)"
-            />
-          </v-col>
+          <div v-if="field.type !== 'boolean'" class="w-24 flex-shrink-0">
+            <select
+              :value="field.relationalOperatorValue?.value"
+              class="w-full rounded border border-border bg-surface px-1 py-1 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary text-center"
+              @change="setRelationalOperatorValue(field, index, ($event.target as HTMLSelectElement).value as RelationalKeyword | RelationalOperator)"
+            >
+              <option
+                v-for="op in field.relationalOperatorChoices"
+                :key="op.value"
+                :value="op.value"
+              >{{ op.label }}</option>
+            </select>
+          </div>
 
           <!-- field value -->
-          <v-col
-            :cols="config.items.fieldValue.cols(index)"
-            :sm="config.items.fieldValue.sm(index)"
-            :class="config.col.class"
-          >
-            <v-select
+          <div class="flex-1 min-w-[120px]">
+            <!-- choices multi-select -->
+            <select
               v-if="field.fieldChoices"
-              :model-value="field.values"
-              :items="field.fieldChoices"
-              item-title="label"
-              item-value="value"
+              :value="undefined"
               multiple
-              variant="underlined"
-              @update:model-value="setFieldValues(field, index, $event)"
-            />
-            <v-text-field
-              v-else-if="field.type === 'string'"
-              :model-value="field.value"
-              variant="underlined"
-              @update:model-value="setFieldValue(field, index, $event)"
-            />
-            <v-number-input
-              v-else-if="field.type === 'number'"
-              :model-value="field.value"
-              variant="underlined"
-              control-variant="stacked"
-              inset
-              :precision="null"
-              @update:model-value="setFieldValue(field, index, $event)"
-            />
-            <v-checkbox
-              v-else-if="field.type === 'boolean'"
-              :model-value="field.value"
-              @update:model-value="setFieldValue(field, index, $event!)"
-            />
-            <v-menu
-              v-else-if="field.type === 'date'"
-              v-model="datePickers[index]"
-              :close-on-content-click="false"
-              transition="scale-transition"
-              offset-y
-              max-width="290px"
-              min-width="auto"
+              class="w-full rounded border border-border bg-surface px-2 py-1 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+              @change="setFieldValuesFromEvent(field, index, $event)"
             >
-              <template #activator="{ props: activatorProps }">
-                <v-text-field
-                  :model-value="$d(safeNewDate(field.value + 'T00:00:00'))"
-                  variant="underlined"
-                  color="primary"
-                  class="date-input"
-                  v-bind="activatorProps"
-                  readonly
-                />
-              </template>
-              <v-date-picker
-                :model-value="safeNewDate(field.value + 'T00:00:00')"
-                hide-header
-                :first-day-of-week="firstDayOfWeek"
-                :local="$i18n.locale"
-                @update:model-value="val => setFieldValue(field, index, val ? val.toISOString().slice(0, 10) : '')"
-              />
-            </v-menu>
-            <!--
-              Relative dates are assumed to be negative intervals with a unit of days.
-              The input is a *positive*, interpreted internally as a *negative* offset.
-            -->
-            <v-number-input
-              v-else-if="field.type === 'relativeDate'"
-              :model-value="parseRelativeDateOffset(field.value)"
-              :suffix="$t('query-filter.dates.days-ago', parseRelativeDateOffset(field.value))"
-              variant="underlined"
-              control-variant="stacked"
-              density="compact"
-              inset
-              :min="0"
-              :precision="0"
-              class="date-input"
-              @update:model-value="setFieldValue(field, index, $event)"
+              <option
+                v-for="choice in field.fieldChoices"
+                :key="choice.value"
+                :value="choice.value"
+                :selected="(field.values || []).includes(choice.value)"
+              >{{ choice.label }}</option>
+            </select>
+
+            <!-- string input -->
+            <input
+              v-else-if="field.type === 'string'"
+              :value="field.value"
+              type="text"
+              class="w-full rounded border border-border bg-surface px-2 py-1 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+              @input="setFieldValue(field, index, ($event.target as HTMLInputElement).value)"
             />
+
+            <!-- number input -->
+            <input
+              v-else-if="field.type === 'number'"
+              :value="field.value"
+              type="number"
+              class="w-full rounded border border-border bg-surface px-2 py-1 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+              @input="setFieldValue(field, index, Number(($event.target as HTMLInputElement).value))"
+            />
+
+            <!-- boolean checkbox -->
+            <label v-else-if="field.type === 'boolean'" class="flex items-center gap-1.5 cursor-pointer py-1">
+              <input
+                type="checkbox"
+                :checked="!!field.value"
+                class="accent-primary"
+                @change="setFieldValue(field, index, ($event.target as HTMLInputElement).checked)"
+              />
+              <span class="text-xs text-on-surface">{{ field.label }}</span>
+            </label>
+
+            <!-- date picker -->
+            <input
+              v-else-if="field.type === 'date'"
+              :value="toDateInputValue(field.value as string)"
+              type="date"
+              class="w-full rounded border border-border bg-surface px-2 py-1 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+              @change="setFieldValue(field, index, ($event.target as HTMLInputElement).value)"
+            />
+
+            <!-- relative date (days ago) -->
+            <div v-else-if="field.type === 'relativeDate'" class="flex items-center gap-1">
+              <input
+                :value="parseRelativeDateOffset(field.value as string)"
+                type="number"
+                min="0"
+                step="1"
+                class="w-20 rounded border border-border bg-surface px-2 py-1 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                @input="setFieldValue(field, index, ($event.target as HTMLInputElement).value)"
+              />
+              <span class="text-xs text-on-surface/60">
+                {{ $t('query-filter.dates.days-ago', parseRelativeDateOffset(field.value as string)) }}
+              </span>
+            </div>
+
+            <!-- organizer selectors -->
             <RecipeOrganizerSelector
               v-else-if="field.type === Organizer.Category"
               v-model="field.organizers"
@@ -189,7 +162,6 @@
               :show-add="false"
               :show-label="false"
               :show-icon="false"
-              variant="underlined"
               @update:model-value="val => setFieldOrganizers(field, index, (val || []) as OrganizerBase[])"
             />
             <RecipeOrganizerSelector
@@ -199,7 +171,6 @@
               :show-add="false"
               :show-label="false"
               :show-icon="false"
-              variant="underlined"
               @update:model-value="val => setFieldOrganizers(field, index, (val || []) as OrganizerBase[])"
             />
             <RecipeOrganizerSelector
@@ -209,7 +180,6 @@
               :show-add="false"
               :show-label="false"
               :show-icon="false"
-              variant="underlined"
               @update:model-value="val => setFieldOrganizers(field, index, (val || []) as OrganizerBase[])"
             />
             <RecipeOrganizerSelector
@@ -219,7 +189,6 @@
               :show-add="false"
               :show-label="false"
               :show-icon="false"
-              variant="underlined"
               @update:model-value="val => setFieldOrganizers(field, index, (val || []) as OrganizerBase[])"
             />
             <RecipeOrganizerSelector
@@ -229,7 +198,6 @@
               :show-add="false"
               :show-label="false"
               :show-icon="false"
-              variant="underlined"
               @update:model-value="val => setFieldOrganizers(field, index, (val || []) as OrganizerBase[])"
             />
             <RecipeOrganizerSelector
@@ -239,65 +207,53 @@
               :show-add="false"
               :show-label="false"
               :show-icon="false"
-              variant="underlined"
               @update:model-value="val => setFieldOrganizers(field, index, (val || []) as OrganizerBase[])"
             />
-          </v-col>
+          </div>
 
-          <!-- right parenthesis -->
-          <v-col
-            v-if="showAdvanced"
-            :cols="config.items.rightParens.cols(index)"
-            :sm="config.items.rightParens.sm(index)"
-            :class="config.col.class"
-          >
-            <v-select
-              :model-value="field.rightParenthesis"
-              :items="['', ')', '))', ')))']"
-              variant="underlined"
-              class="text-center"
-              @update:model-value="setRightParenthesisValue(field, index, $event)"
-            />
-            v-if="!$vuetify.display.smAndDown || index === fields.length - 1"
-            :cols="config.items.fieldActions.cols(index)"
-            :sm="config.items.fieldActions.sm(index)"
-            :class="config.col.class"
+          <!-- right parenthesis (advanced) -->
+          <div v-if="showAdvanced" class="w-14 flex-shrink-0">
+            <select
+              :value="field.rightParenthesis"
+              class="w-full rounded border border-border bg-surface px-1 py-1 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary text-center"
+              @change="setRightParenthesisValue(field, index, ($event.target as HTMLSelectElement).value)"
             >
-            <BaseButtonGroup
-              :buttons="[
-                {
-                  icon: $globals.icons.delete,
-                  text: $t('general.delete'),
-                  event: 'delete',
-                  disabled: fields.length === 1,
-                },
-              ]"
-              class="my-auto"
-              @delete="removeField(index)"
-            />
-          </v-col>
-        </v-row>
+              <option value="">-</option>
+              <option value=")">)</option>
+              <option value="))">))</option>
+              <option value=")))">)))</option>
+            </select>
+          </div>
+
+          <!-- delete action -->
+          <div class="flex-shrink-0">
+            <button
+              type="button"
+              :disabled="fields.length === 1"
+              class="p-1 rounded text-error hover:bg-error/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              :title="$t('general.delete')"
+              @click="removeField(index)"
+            >
+              <AppIcon :path="$globals.icons.delete" size="sm" />
+            </button>
+          </div>
+        </div>
       </VueDraggable>
-    </v-card-text>
-    <v-card-actions>
-      <v-row fluid class="d-flex justify-end ma-2">
-        <v-spacer />
-        <v-checkbox
-          v-model="showAdvanced"
-          hide-details
-          :label="$t('general.show-advanced')"
-          class="my-auto mr-4"
-          color="primary"
-        />
-        <BaseButton
-          create
-          :text="$t('general.add-field')"
-          class="my-auto"
-          @click="addField(fieldDefs[0])"
-        />
-      </v-row>
-    </v-card-actions>
-  </v-card>
+    </div>
+
+    <!-- Actions bar -->
+    <div class="flex items-center justify-end gap-3 mt-3">
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input v-model="showAdvanced" type="checkbox" class="accent-primary" />
+        <span class="text-sm text-on-surface">{{ $t('general.show-advanced') }}</span>
+      </label>
+      <BaseButton
+        create
+        :text="$t('general.add-field')"
+        @click="addField(fieldDefs[0])"
+      />
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -333,6 +289,7 @@ const emit = defineEmits<{
   (event: "inputJSON", value: QueryFilterJSON | undefined): void;
 }>();
 
+const { $globals } = useNuxtApp();
 const { household } = useHouseholdSelf();
 const {
   logOps,
@@ -373,14 +330,14 @@ function onDragEnd(event: any) {
   state.datePickers[newIndex] = false;
 }
 
-// add id to fields to prevent reactivity issues
 type FieldWithId = Field & { id: number };
 const fields = ref<FieldWithId[]>([]);
 
-const uid = ref(1); // init uid to pass to fields
+const uid = ref(1);
 function useUid() {
   return uid.value++;
 }
+
 function addField(field: FieldDefinition) {
   fields.value.push({
     ...getFieldFromFieldDef(field),
@@ -392,22 +349,17 @@ function addField(field: FieldDefinition) {
 function setField(index: number, fieldLabel: string) {
   state.datePickers[index] = false;
   const fieldDef = props.fieldDefs.find(fieldDef => fieldDef.label === fieldLabel);
-  if (!fieldDef) {
-    return;
-  }
+  if (!fieldDef) return;
 
   const resetValue = (fieldDef.type !== fields.value[index].type) || (fieldDef.fieldChoices !== fields.value[index].fieldChoices);
   const updatedField = { ...fields.value[index], ...fieldDef };
-
-  // we have to set this explicitly since it might be undefined
   updatedField.fieldChoices = fieldDef.fieldChoices;
 
   fields.value[index] = {
     ...getFieldFromFieldDef(updatedField, resetValue),
-    id: fields.value[index].id, // keep the id
+    id: fields.value[index].id,
   };
 
-  // Defaults
   switch (fields.value[index].type) {
     case "date":
       fields.value[index].value = safeNewDate("");
@@ -415,7 +367,6 @@ function setField(index: number, fieldLabel: string) {
     case "relativeDate":
       fields.value[index].value = "$NOW-30d";
       break;
-
     default:
       break;
   }
@@ -430,10 +381,7 @@ function setRightParenthesisValue(field: FieldWithId, index: number, value: stri
 }
 
 function setLogicalOperatorValue(field: FieldWithId, index: number, value: LogicalOperator | undefined) {
-  if (!value) {
-    value = logOps.value.AND.value;
-  }
-
+  if (!value) value = logOps.value.AND.value;
   fields.value[index].logicalOperator = value ? logOps.value[value] : undefined;
 }
 
@@ -446,9 +394,7 @@ function setFieldValue(field: FieldWithId, index: number, value: FieldValue) {
   state.datePickers[index] = false;
 
   if (field.type === "relativeDate") {
-    // Value is set to an int representing the offset from $NOW
-    // Values are assumed to be negative offsets ('-') with a unit of days ('d')
-    fields.value[index].value = `$NOW-${Math.abs(value)}d`;
+    fields.value[index].value = `$NOW-${Math.abs(value as number)}d`;
   }
   else {
     fields.value[index].value = value;
@@ -459,9 +405,14 @@ function setFieldValues(field: FieldWithId, index: number, values: FieldValue[])
   fields.value[index].values = values;
 }
 
+function setFieldValuesFromEvent(field: FieldWithId, index: number, event: Event) {
+  const select = event.target as HTMLSelectElement;
+  const values = Array.from(select.selectedOptions).map(o => o.value);
+  setFieldValues(field, index, values);
+}
+
 function setFieldOrganizers(field: FieldWithId, index: number, organizers: OrganizerBase[]) {
   fields.value[index].organizers = organizers;
-  // Sync the values array with the organizers array
   fields.value[index].values = organizers.map(org => org.id?.toString() || "").filter(id => id);
 }
 
@@ -484,9 +435,7 @@ const fieldsUpdater = useDebounceFn(() => {
 watch(fields, fieldsUpdater, { deep: true });
 
 async function hydrateOrganizers(field: FieldWithId, _index: number) {
-  if (!field.values?.length || !isOrganizerType(field.type)) {
-    return;
-  }
+  if (!field.values?.length || !isOrganizerType(field.type)) return;
 
   const { store, actions } = storeMap[field.type];
   if (!store.value.length) {
@@ -507,10 +456,7 @@ async function hydrateOrganizers(field: FieldWithId, _index: number) {
 }
 
 function initFieldsError(error = "") {
-  if (error) {
-    console.error(error);
-  }
-
+  if (error) console.error(error);
   fields.value = [];
   if (props.fieldDefs.length) {
     addField(props.fieldDefs[0]);
@@ -541,15 +487,8 @@ async function initializeFields() {
 
     field.leftParenthesis = part.leftParenthesis || field.leftParenthesis;
     field.rightParenthesis = part.rightParenthesis || field.rightParenthesis;
-    field.logicalOperator = part.logicalOperator
-      ? logOps.value[part.logicalOperator]
-      : field.logicalOperator;
-    field.relationalOperatorValue = part.relationalOperator
-      ? relOps.value[part.relationalOperator]
-      : field.relationalOperatorValue;
-    field.relationalOperatorValue = part.relationalOperator
-      ? relOps.value[part.relationalOperator]
-      : field.relationalOperatorValue;
+    field.logicalOperator = part.logicalOperator ? logOps.value[part.logicalOperator] : field.logicalOperator;
+    field.relationalOperatorValue = part.relationalOperator ? relOps.value[part.relationalOperator] : field.relationalOperatorValue;
 
     if (field.leftParenthesis || field.rightParenthesis) {
       state.showAdvanced = true;
@@ -652,32 +591,24 @@ function safeNewDate(input: string): Date {
   return date;
 }
 
-/**
- * Parse a relative date string offset (e.g. $NOW-30d --> 30)
- *
- * Currently only values with a negative offset ('-') and a unit of days ('d') are supported
- */
+function toDateInputValue(value: string): string {
+  if (!value) return "";
+  const date = safeNewDate(value + "T00:00:00");
+  if (isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+}
+
 function parseRelativeDateOffset(value: string): number {
   const defaultVal = 30;
-  if (!value) {
-    return defaultVal;
-  }
+  if (!value) return defaultVal;
 
   try {
     if (!value.startsWith(placeholderKeywords.value["$NOW"].value)) {
       return defaultVal;
     }
-
     const remainder = value.slice(placeholderKeywords.value["$NOW"].value.length);
-    if (!remainder.startsWith("-")) {
-      throw new Error("Invalid operator (not '-')");
-    }
-
-    if (remainder.slice(-1) !== "d") {
-      throw new Error("Invalid unit (not 'd')");
-    }
-
-    // Slice off sign and unit
+    if (!remainder.startsWith("-")) throw new Error("Invalid operator");
+    if (remainder.slice(-1) !== "d") throw new Error("Invalid unit");
     return parseInt(remainder.slice(1, -1));
   }
   catch (error) {
@@ -686,80 +617,8 @@ function parseRelativeDateOffset(value: string): number {
   }
 }
 
-const config = computed(() => {
-  const multiple = fields.value.length > 1;
-  const adv = state.showAdvanced;
-
-  return {
-    col: {
-      class: "d-flex justify-center align-end py-0",
-    },
-    items: {
-      icon: {
-        cols: (_index: number) => 2,
-        sm: (_index: number) => 1,
-        style: "width: fit-content;",
-      },
-      leftParens: {
-        cols: (index: number) => (adv ? (index === 0 ? 2 : 0) : 0),
-        sm: (_index: number) => (adv ? 1 : 0),
-      },
-      logicalOperator: {
-        cols: (_index: number) => 0,
-        sm: (_index: number) => (multiple ? 1 : 0),
-      },
-      fieldName: {
-        cols: (index: number) => {
-          if (adv) return index === 0 ? 8 : 12;
-          return index === 0 ? 10 : 12;
-        },
-        sm: (_index: number) => (adv ? 2 : 3),
-      },
-      relationalOperator: {
-        cols: (_index: number) => 12,
-        sm: (_index: number) => 2,
-      },
-      fieldValue: {
-        cols: (index: number) => {
-          const last = index === fields.value.length - 1;
-          if (adv) return last ? 8 : 10;
-          return last ? 10 : 12;
-        },
-        sm: (_index: number) => (adv ? 3 : 4),
-      },
-      rightParens: {
-        cols: (index: number) => (adv ? (index === fields.value.length - 1 ? 2 : 0) : 0),
-        sm: (_index: number) => (adv ? 1 : 0),
-      },
-      fieldActions: {
-        cols: (index: number) => (index === fields.value.length - 1 ? 2 : 0),
-        sm: (_index: number) => 1,
-      },
-    },
-  };
-});
+// suppress unused refs from toRefs
+void datePickers;
+void drag;
+void firstDayOfWeek;
 </script>
-
-<style scoped>
-* {
-  font-size: 1em;
-  --bg-opactity: calc(var(--v-hover-opacity) * var(--v-theme-overlay-multiplier));
-}
-
-.bg-dark {
-  background-color: rgba(0, 0, 0, var(--bg-opactity));
-}
-
-.bg-light {
-  background-color: rgba(255, 255, 255, var(--bg-opactity));
-}
-
-:deep(.date-input input) {
-  text-align: end;
-  padding-right: 6px;
-}
-
-:deep(.date-input .v-field__field) {
-  align-items: center;
-}
-</style>

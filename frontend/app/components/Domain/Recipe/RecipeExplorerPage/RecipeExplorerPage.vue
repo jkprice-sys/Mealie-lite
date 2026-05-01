@@ -1,17 +1,14 @@
 <template>
-  <v-container
-    fluid
-    class="px-0"
-  >
+  <div class="w-full px-0">
     <RecipeExplorerPageSearch
       ref="searchComponent"
       @ready="onSearchReady"
     />
-    <v-divider />
-    <v-container class="mt-6 px-md-6">
+    <hr class="border-border" />
+    <div class="mt-6 px-2 md:px-6">
       <RecipeCardSection
         v-if="ready"
-        class="mt-n5"
+        class="-mt-5"
         :icon="$globals.icons.silverwareForkKnife"
         :title="$t('general.recipes')"
         :recipes="recipes"
@@ -21,8 +18,8 @@
         @replace-recipes="replaceRecipes"
         @append-recipes="appendRecipes"
       />
-    </v-container>
-  </v-container>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">

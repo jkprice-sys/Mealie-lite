@@ -1,11 +1,5 @@
 <template>
-  <!--
-    DefaultLayout — sidebar-free layout for ByteSized.
-    Navigation lives entirely in AppHeader (inline on desktop, hamburger on mobile).
-    v-app is kept as root so Vuetify dialogs/overlays that haven't been migrated yet
-    can still teleport into it.
-  -->
-  <v-app>
+  <div class="min-h-screen bg-background text-on-surface">
     <TheSnackbar />
 
     <!-- Top navigation bar (includes all nav links) -->
@@ -17,7 +11,7 @@
         <NuxtPage />
       </div>
     </main>
-  </v-app>
+  </div>
 </template>
 
 <script setup lang="ts">

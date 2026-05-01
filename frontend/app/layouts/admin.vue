@@ -1,14 +1,15 @@
 <template>
-  <v-app dark>
+  <div class="min-h-screen bg-background">
     <TheSnackbar />
 
     <AppHeader>
-      <v-btn
-        icon
+      <button
+        type="button"
+        class="p-2 rounded-lg text-on-surface/70 hover:bg-on-surface/10 transition-colors"
         @click.stop="sidebar = !sidebar"
       >
-        <v-icon> {{ $globals.icons.menu }}</v-icon>
-      </v-btn>
+        <AppIcon :path="$globals.icons.menu" size="sm" />
+      </button>
     </AppHeader>
 
     <AppSidebar
@@ -19,17 +20,14 @@
       :secondary-links="developerLinks"
     />
 
-    <v-main>
-      <v-scroll-x-transition>
-        <div>
-          <NuxtPage />
-        </div>
-      </v-scroll-x-transition>
-    </v-main>
-  </v-app>
+    <main class="transition-all duration-200">
+      <NuxtPage />
+    </main>
+  </div>
 </template>
 
 <script setup lang="ts">
+import { useBreakpoints, breakpointsTailwind } from "@vueuse/core";
 import AppHeader from "@/components/Layout/LayoutParts/AppHeader.vue";
 import AppSidebar from "@/components/Layout/LayoutParts/AppSidebar.vue";
 import TheSnackbar from "~/components/Layout/LayoutParts/TheSnackbar.vue";
@@ -37,12 +35,12 @@ import type { SidebarLinks } from "~/types/application-types";
 import { useGlobalI18n } from "~/composables/use-global-i18n";
 
 const i18n = useGlobalI18n();
-const display = useDisplay();
+const bp = useBreakpoints(breakpointsTailwind);
 const { $globals } = useNuxtApp();
 
 const sidebar = ref<boolean>(false);
 onMounted(() => {
-  sidebar.value = display.lgAndUp.value;
+  sidebar.value = bp.lgAndGreater.value;
 });
 
 const topLinks: SidebarLinks = [
@@ -52,13 +50,6 @@ const topLinks: SidebarLinks = [
     title: i18n.t("sidebar.site-settings"),
     restricted: true,
   },
-
-  // {
-  //   icon: $globals.icons.chart,
-  //   to: "/admin/analytics",
-  //   title: "Analytics",
-  //   restricted: true,
-  // },
   {
     icon: $globals.icons.user,
     to: "/admin/manage/users",

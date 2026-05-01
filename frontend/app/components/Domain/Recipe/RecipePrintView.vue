@@ -2,69 +2,49 @@
 <template>
   <div :class="dense ? 'wrapper' : 'wrapper pa-3'">
     <section>
-      <v-container class="ma-0 pa-0">
-        <v-row>
-          <v-col
-            v-if="preferences.imagePosition && preferences.imagePosition != ImagePosition.hidden"
-            :order="preferences.imagePosition == ImagePosition.left ? -1 : 1"
-            cols="4"
-            align-self="center"
-          >
-            <img
-              :key="imageKey"
-              :src="recipeImageUrl"
-              style="min-height: 50; max-width: 100%;"
-            >
-          </v-col>
-          <v-col order="0">
-            <v-card-title class="headline pl-0">
-              <v-icon
-                start
-                color="primary"
-              >
-                {{ $globals.icons.primary }}
-              </v-icon>
-              {{ recipe.name }}
-            </v-card-title>
-            <div
-              v-if="recipeYield"
-              class="d-flex justify-space-between align-center pb-6"
-            >
-              <div>
-                <v-icon start>
-                  {{ $globals.icons.potSteam }}
-                </v-icon>
-                <!-- eslint-disable-next-line vue/no-v-html -->
-                <span v-html="recipeYield" />
-              </div>
+      <div class="flex flex-wrap gap-4">
+        <img
+          v-if="preferences.imagePosition && preferences.imagePosition != ImagePosition.hidden"
+          :key="imageKey"
+          :src="recipeImageUrl"
+          style="min-height: 50px; max-width: 100%; width: 33%;"
+          :class="preferences.imagePosition == ImagePosition.left ? 'order-first' : 'order-last'"
+          class="self-center"
+        />
+        <div class="flex-1 min-w-0">
+          <h2 class="headline pl-0 text-xl font-bold">
+            <AppIcon :path="$globals.icons.primary" size="sm" class="text-primary" />
+            {{ recipe.name }}
+          </h2>
+          <div v-if="recipeYield" class="flex justify-between items-center pb-6">
+            <div class="flex items-center gap-1">
+              <AppIcon :path="$globals.icons.potSteam" size="sm" />
+              <!-- eslint-disable-next-line vue/no-v-html -->
+              <span v-html="recipeYield" />
             </div>
-            <v-row class="d-flex justify-start">
-              <RecipeTimeCard
-                :prep-time="recipe.prepTime"
-                :total-time="recipe.totalTime"
-                :perform-time="recipe.performTime"
-                small
-                color="white"
-                class="ml-4"
-              />
-            </v-row>
-
-            <v-card-text
-              v-if="preferences.showDescription"
-              class="px-0"
-            >
-              <SafeMarkdown :source="recipe.description" />
-            </v-card-text>
-          </v-col>
-        </v-row>
-      </v-container>
+          </div>
+          <div class="flex justify-start">
+            <RecipeTimeCard
+              :prep-time="recipe.prepTime"
+              :total-time="recipe.totalTime"
+              :perform-time="recipe.performTime"
+              small
+              color="white"
+              class="ml-4"
+            />
+          </div>
+          <div v-if="preferences.showDescription">
+            <SafeMarkdown :source="recipe.description" />
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- Ingredients -->
     <section>
-      <v-card-title class="headline pl-0">
+      <h2 class="headline pl-0 text-xl font-bold">
         {{ $t("recipe.ingredients") }}
-      </v-card-title>
+      </h2>
       <div
         v-for="(ingredientSection, sectionIndex) in ingredientSections"
         :key="`ingredient-section-${sectionIndex}`"
@@ -101,12 +81,12 @@
         :key="`instruction-section-${sectionIndex}`"
         :class="{ 'print-section': instructionSection.sectionName }"
       >
-        <v-card-title
+        <h2
           v-if="!sectionIndex"
-          class="headline pl-0"
+          class="headline pl-0 text-xl font-bold"
         >
           {{ $t("recipe.instructions") }}
-        </v-card-title>
+        </h2>
         <div
           v-for="(step, stepIndex) in instructionSection.instructions"
           :key="`instruction-${stepIndex}`"
@@ -137,10 +117,7 @@
 
     <!-- Notes -->
     <div v-if="preferences.showNotes">
-      <v-divider
-        v-if="hasNotes"
-        class="grey my-4"
-      />
+      <hr v-if="hasNotes" class="border-border my-4" />
 
       <section>
         <div
@@ -160,9 +137,9 @@
 
     <!-- Nutrition -->
     <div v-if="preferences.showNutrition">
-      <v-card-title class="headline pl-0">
+      <h2 class="headline pl-0 text-xl font-bold">
         {{ $t("recipe.nutrition") }}
-      </v-card-title>
+      </h2>
 
       <section>
         <div class="print-section">
@@ -218,6 +195,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const i18n = useI18n();
+const { $globals } = useNuxtApp();
 const preferences = useUserPrintPreferences();
 const { recipeImage } = useStaticRoutes();
 const { imageKey } = usePageState(props.recipe.slug);
@@ -389,11 +367,6 @@ function parseText(ingredient: RecipeIngredient) {
 p {
   padding-bottom: 0 !important;
   margin-bottom: 0 !important;
-}
-
-.v-card__text {
-  padding-bottom: 0;
-  margin-bottom: 0;
 }
 
 .ingredient-grid {

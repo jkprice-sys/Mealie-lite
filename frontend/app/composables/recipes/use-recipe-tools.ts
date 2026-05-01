@@ -1,6 +1,5 @@
 import { useAsyncKey } from "../use-utils";
 import { useUserApi } from "~/composables/api";
-import type { VForm } from "~/types/vuetify";
 import type { RecipeTool } from "~/lib/api/types/recipe";
 
 export const useTools = function (eager = true) {
@@ -43,8 +42,8 @@ export const useTools = function (eager = true) {
       loading.value = false;
     },
 
-    async createOne(domForm: VForm | null = null) {
-      if (domForm && !domForm.validate()) {
+    async createOne(domForm: HTMLFormElement | null = null) {
+      if (domForm && !domForm.checkValidity()) {
         validForm.value = false;
       }
 

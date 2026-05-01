@@ -1,84 +1,65 @@
 <template v-if="_showCards">
-  <div class="text-center">
+  <div class="text-center" :class="small ? 'text-sm' : 'text-base'">
+
     <!-- Total Time -->
-    <div
-      v-if="validateTotalTime"
-      class="time-card-flex mx-auto"
-    >
-      <v-row
-        no-gutters
-        class="d-flex flex-no-wrap align-center"
-        :style="fontSize"
-      >
-        <v-icon
-          :x-large="!small"
-          start
-          color="primary"
-        >
-          {{ $globals.icons.clockOutline }}
-        </v-icon>
-        <p class="my-0">
-          <span class="font-weight-bold opacity-80">{{ validateTotalTime.name }}</span><br>{{ validateTotalTime.value }}
-        </p>
-      </v-row>
+    <div v-if="validateTotalTime" class="flex flex-nowrap items-center justify-center gap-2 mx-auto w-fit">
+      <AppIcon
+        :path="$globals.icons.clockOutline"
+        :size="small ? 'sm' : 'lg'"
+        class="text-primary shrink-0"
+      />
+      <p class="my-0 text-left">
+        <span class="font-semibold opacity-80">{{ validateTotalTime.name }}</span><br>
+        {{ validateTotalTime.value }}
+      </p>
     </div>
-    <v-divider
+
+    <hr
       v-if="validateTotalTime && (validatePrepTime || validatePerformTime)"
-      class="my-2"
+      class="my-2 border-border"
     />
-    <!-- Prep Time & Perform Time -->
+
+    <!-- Prep & Perform Times -->
     <div
       v-if="validatePrepTime || validatePerformTime"
-      class="time-card-flex mx-auto"
+      class="flex flex-wrap sm:flex-nowrap items-center justify-center gap-4 mx-auto"
     >
-      <v-row
-        no-gutters
-        class="d-flex justify-center align-center"
-        :class="{ 'flex-column': $vuetify.display.smAndDown }"
-        style="width: 100%;"
-        :style="fontSize"
-      >
-        <div
-          v-if="validatePrepTime"
-          class="d-flex flex-no-wrap my-1 align-center"
-        >
-          <v-icon
-            :size="small ? 'small' : 'large'"
-            left
-            color="primary"
-          >
-            {{ $globals.icons.knife }}
-          </v-icon>
-          <p class="my-0">
-            <span class="font-weight-bold opacity-80">{{ validatePrepTime.name }}</span><br>{{ validatePrepTime.value }}
-          </p>
-        </div>
-        <v-divider
-          v-if="validatePrepTime && validatePerformTime"
-          vertical
-          class="mx-4"
+      <div v-if="validatePrepTime" class="flex flex-nowrap items-center gap-2">
+        <AppIcon
+          :path="$globals.icons.knife"
+          :size="small ? 'sm' : 'lg'"
+          class="text-primary shrink-0"
         />
-        <div
-          v-if="validatePerformTime"
-          class="d-flex flex-no-wrap my-1 align-center"
-        >
-          <v-icon
-            :size="small ? 'small' : 'large'"
-            left
-            color="primary"
-          >
-            {{ $globals.icons.potSteam }}
-          </v-icon>
-          <p class="my-0">
-            <span class="font-weight-bold opacity-80">{{ validatePerformTime.name }}</span><br>{{ validatePerformTime.value }}
-          </p>
-        </div>
-      </v-row>
+        <p class="my-0 text-left">
+          <span class="font-semibold opacity-80">{{ validatePrepTime.name }}</span><br>
+          {{ validatePrepTime.value }}
+        </p>
+      </div>
+
+      <div
+        v-if="validatePrepTime && validatePerformTime"
+        class="hidden sm:block w-px h-8 bg-border"
+      />
+
+      <div v-if="validatePerformTime" class="flex flex-nowrap items-center gap-2">
+        <AppIcon
+          :path="$globals.icons.potSteam"
+          :size="small ? 'sm' : 'lg'"
+          class="text-primary shrink-0"
+        />
+        <p class="my-0 text-left">
+          <span class="font-semibold opacity-80">{{ validatePerformTime.name }}</span><br>
+          {{ validatePerformTime.value }}
+        </p>
+      </div>
     </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
+const { $globals } = useNuxtApp();
+
 interface Props {
   prepTime?: string | null;
   totalTime?: string | null;
@@ -100,35 +81,19 @@ function isEmpty(str: string | null) {
   return !str || str.length === 0;
 }
 
-const _showCards = computed(() => {
-  return [props.prepTime, props.totalTime, props.performTime].some(x => !isEmpty(x));
-});
+const _showCards = computed(() =>
+  [props.prepTime, props.totalTime, props.performTime].some(x => !isEmpty(x)),
+);
 
-const validateTotalTime = computed(() => {
-  return !isEmpty(props.totalTime) ? { name: i18n.t("recipe.total-time"), value: props.totalTime } : null;
-});
+const validateTotalTime = computed(() =>
+  !isEmpty(props.totalTime) ? { name: i18n.t("recipe.total-time"), value: props.totalTime } : null,
+);
 
-const validatePrepTime = computed(() => {
-  return !isEmpty(props.prepTime) ? { name: i18n.t("recipe.prep-time"), value: props.prepTime } : null;
-});
+const validatePrepTime = computed(() =>
+  !isEmpty(props.prepTime) ? { name: i18n.t("recipe.prep-time"), value: props.prepTime } : null,
+);
 
-const validatePerformTime = computed(() => {
-  return !isEmpty(props.performTime) ? { name: i18n.t("recipe.perform-time"), value: props.performTime } : null;
-});
-
-const fontSize = computed(() => {
-  return props.small ? { fontSize: "smaller" } : { fontSize: "larger" };
-});
+const validatePerformTime = computed(() =>
+  !isEmpty(props.performTime) ? { name: i18n.t("recipe.perform-time"), value: props.performTime } : null,
+);
 </script>
-
-<style scoped>
-.text-center {
-  font-size: smaller;
-}
-.time-card-flex {
-  width: fit-content;
-}
-.custom-transparent {
-  opacity: 0.7;
-}
-</style>

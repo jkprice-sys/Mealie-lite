@@ -1,8 +1,7 @@
 import { useAsyncValidator } from "~/composables/use-validators";
-import type { VForm } from "~/types/auto-forms";
 import { usePublicApi } from "~/composables/api/api-client";
 
-const domAccountForm = ref<VForm | null>(null);
+const domAccountForm = ref<HTMLFormElement | null>(null);
 const username = ref("");
 const fullName = ref("");
 const email = ref("");
@@ -13,13 +12,8 @@ const advancedOptions = ref(false);
 export const useUserRegistrationForm = () => {
   const i18n = useI18n();
 
-  async function safeValidate(form: Ref<VForm | null>) {
-    if (!form.value) {
-      return false;
-    }
-
-    const result = await form.value.validate();
-    return result.valid;
+  function safeValidate(form: Ref<HTMLFormElement | null>) {
+    return form.value?.checkValidity() ?? true;
   }
   // ================================================================
   // Provide Group Details
@@ -55,7 +49,7 @@ export const useUserRegistrationForm = () => {
         return false;
       }
 
-      return await safeValidate(domAccountForm as Ref<VForm>);
+      return safeValidate(domAccountForm);
     },
     reset: () => {
       accountDetails.username.value = "";

@@ -1,40 +1,44 @@
 <template>
-  <v-container max-width="880" class="end-page-content">
-    <div class="d-flex flex-column ga-6">
-      <div>
-        <v-card-title class="text-h4 justify-center">
-          {{ $t('admin.setup.setup-complete') }}
-        </v-card-title>
-        <v-card-subtitle class="justify-center">
-          {{ $t('admin.setup.here-are-a-few-things-to-help-you-get-started') }}
-        </v-card-subtitle>
-      </div>
-      <div
-        v-for="section, idx in sections"
-        :key="idx"
-        class="d-flex flex-column ga-3"
-      >
-        <v-card-title class="text-h6 pl-0">
-          {{ section.title }}
-        </v-card-title>
-        <div class="sections d-flex flex-column ga-2">
-          <v-card
-            v-for="link, linkIdx in section.links"
-            :key="linkIdx"
-            clas="link-card"
-            :href="link.to"
-            :title="link.text"
-            :subtitle="link.description"
-            :append-icon="$globals.icons.chevronRight"
+  <div class="max-w-[880px] mx-auto py-4 flex flex-col gap-6">
+    <div class="text-center">
+      <h2 class="text-2xl font-bold text-on-surface">
+        {{ $t('admin.setup.setup-complete') }}
+      </h2>
+      <p class="text-sm text-on-surface/60 mt-1">
+        {{ $t('admin.setup.here-are-a-few-things-to-help-you-get-started') }}
+      </p>
+    </div>
+
+    <div
+      v-for="(section, idx) in sections"
+      :key="idx"
+      class="flex flex-col gap-3"
+    >
+      <h3 class="text-base font-semibold text-on-surface pl-0">
+        {{ section.title }}
+      </h3>
+      <div class="flex flex-col gap-2">
+        <a
+          v-for="(link, linkIdx) in section.links"
+          :key="linkIdx"
+          :href="typeof link.to === 'string' ? link.to : link.to.value"
+          class="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 hover:bg-on-surface/5 transition-colors"
+        >
+          <div
+            class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+            :class="`bg-${section.color}/10 text-${section.color}`"
           >
-            <template #prepend>
-              <v-avatar :icon="link.icon || undefined" variant="tonal" :color="section.color" />
-            </template>
-          </v-card>
-        </div>
+            <AppIcon :path="link.icon" size="sm" />
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-on-surface">{{ link.text }}</p>
+            <p class="text-xs text-on-surface/60 mt-0.5">{{ link.description }}</p>
+          </div>
+          <AppIcon :path="$globals.icons.chevronRight" size="sm" class="text-on-surface/40 flex-shrink-0" />
+        </a>
       </div>
     </div>
-  </v-container>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -100,17 +104,3 @@ const sections = ref([
   },
 ]);
 </script>
-
-<style>
-.v-container {
-  .v-card-title,
-  .v-card-subtitle {
-    padding: 0;
-    white-space: unset;
-  }
-
-  .v-card-item {
-    gap: 0.5rem;
-  }
-}
-</style>

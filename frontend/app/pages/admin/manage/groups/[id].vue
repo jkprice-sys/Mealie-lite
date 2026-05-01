@@ -1,58 +1,53 @@
 <template>
-  <v-container
-    v-if="group"
-    class="narrow-container"
-  >
+  <div v-if="group" class="px-4 py-4 max-w-3xl mx-auto">
     <BasePageTitle>
       <template #header>
-        <v-img
-          width="100%"
-          max-height="125"
-          max-width="125"
-          src="/svgs/manage-group-settings.svg"
-        />
+        <img width="125" height="125" src="/svgs/manage-group-settings.svg" class="object-contain" />
       </template>
       <template #title>
         {{ $t('group.admin-group-management') }}
       </template>
     </BasePageTitle>
     <AppToolbar back />
-    <v-card-text> {{ $t('group.group-id-value', [group.id]) }} </v-card-text>
-    <v-form
+
+    <p class="text-sm text-on-surface/70 mb-4">{{ $t('group.group-id-value', [group.id]) }}</p>
+
+    <form
       v-if="!userError"
       ref="refGroupEditForm"
       @submit.prevent="handleSubmit"
     >
-      <v-card variant="outlined" style="border-color: lightgrey;">
-        <v-card-text>
-          <v-text-field
-            v-model="group.name"
-            :label="$t('group.group-name')"
-          />
+      <div class="rounded-xl border border-border bg-surface">
+        <div class="px-4 py-3 space-y-3">
+          <div>
+            <label class="block text-xs text-on-surface/60 mb-1">{{ $t('group.group-name') }}</label>
+            <input
+              v-model="group.name"
+              type="text"
+              class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+
           <GroupPreferencesEditor
             v-if="group.preferences"
             v-model="group.preferences"
           />
-        </v-card-text>
-      </v-card>
-      <div class="d-flex pa-2">
-        <BaseButton
-          type="submit"
-          edit
-          class="ml-auto"
-        >
+        </div>
+      </div>
+
+      <div class="flex justify-end mt-3">
+        <BaseButton type="submit" edit>
           {{ $t("general.update") }}
         </BaseButton>
       </div>
-    </v-form>
-  </v-container>
+    </form>
+  </div>
 </template>
 
 <script setup lang="ts">
 import GroupPreferencesEditor from "~/components/Domain/Group/GroupPreferencesEditor.vue";
 import { useAdminApi } from "~/composables/api";
 import { alert } from "~/composables/use-toast";
-import type { VForm } from "vuetify/components";
 
 definePageMeta({
   layout: "admin",
@@ -63,10 +58,7 @@ const i18n = useI18n();
 
 const groupId = computed(() => route.params.id as string);
 
-// ==============================================
-// New User Form
-
-const refGroupEditForm = ref<VForm | null>(null);
+const refGroupEditForm = ref<HTMLFormElement | null>(null);
 
 const adminApi = useAdminApi();
 
@@ -86,14 +78,13 @@ const { data: group } = useLazyAsyncData(`get-household-${groupId.value}`, async
 }, { watch: [groupId] });
 
 async function handleSubmit() {
-  if (!refGroupEditForm.value?.validate() || group.value === null) {
+  if (!(refGroupEditForm.value?.checkValidity() ?? false) || group.value === null) {
     return;
   }
 
   const { response, data } = await adminApi.groups.updateOne(group.value.id, group.value);
   if (response?.status === 200 && data) {
     if (group.value.slug !== data.slug) {
-      // the slug updated, which invalidates the nav URLs
       window.location.reload();
     }
     group.value = data;

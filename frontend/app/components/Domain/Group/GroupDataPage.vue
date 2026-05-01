@@ -57,12 +57,12 @@
     can-confirm
     @confirm="$emit('deleteOne', deleteTarget.id)"
   >
-    <v-card-text>
+    <div class="px-4 py-3 text-sm text-on-surface">
       {{ $t("general.confirm-delete-generic") }}
-      <p v-if="deleteTarget" class="mt-4 ml-4">
+      <p v-if="deleteTarget" class="mt-3 ml-4 font-medium">
         {{ deleteTarget.name || deleteTarget.title || deleteTarget.id }}
       </p>
-    </v-card-text>
+    </div>
   </BaseDialog>
 
   <!-- Bulk Delete Dialog -->
@@ -75,20 +75,20 @@
     can-confirm
     @confirm="$emit('bulk-action', 'delete-selected', bulkDeleteTarget)"
   >
-    <v-card-text>
-      <p class="h4">
-        {{ $t('general.confirm-delete-generic-items') }}
-      </p>
-      <v-card variant="outlined">
-        <v-virtual-scroll height="400" item-height="25" :items="bulkDeleteTarget">
-          <template #default="{ item }">
-            <v-list-item class="pb-2">
-              <v-list-item-title>{{ item.name || item.title || item.id }}</v-list-item-title>
-            </v-list-item>
-          </template>
-        </v-virtual-scroll>
-      </v-card>
-    </v-card-text>
+    <div class="px-4 py-3 text-sm text-on-surface space-y-3">
+      <p class="font-medium">{{ $t('general.confirm-delete-generic-items') }}</p>
+      <div class="rounded-lg border border-border overflow-y-auto max-h-[400px]">
+        <ul class="divide-y divide-border">
+          <li
+            v-for="item in bulkDeleteTarget"
+            :key="item.id ?? item.name"
+            class="px-3 py-2 text-sm text-on-surface"
+          >
+            {{ item.name || item.title || item.id }}
+          </li>
+        </ul>
+      </div>
+    </div>
   </BaseDialog>
 
   <BaseCardSectionTitle

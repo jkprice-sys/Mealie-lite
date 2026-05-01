@@ -1,56 +1,57 @@
 <template>
   <div>
-    <v-card-title class="headline">
+    <h2 class="text-lg font-semibold text-on-surface mb-1">
       {{ $t('recipe.create-recipe') }}
-    </v-card-title>
-    <v-card-text>
+    </h2>
+    <p class="text-sm text-on-surface/70 mb-4">
       {{ $t('recipe.create-a-recipe-by-providing-the-name-all-recipes-must-have-unique-names') }}
-      <v-form
-        ref="domCreateByName"
-        @submit.prevent
-      >
-        <v-text-field
+    </p>
+
+    <form @submit.prevent="createByName(newRecipeName)">
+      <!-- Name input -->
+      <div class="relative mb-1">
+        <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+          <AppIcon :path="$globals.icons.primary" size="sm" class="text-on-surface/40" />
+        </div>
+        <input
           v-model="newRecipeName"
-          :label="$t('recipe.recipe-name')"
-          :prepend-inner-icon="$globals.icons.primary"
-          validate-on="blur"
+          type="text"
           autofocus
-          variant="solo-filled"
-          clearable
-          class="rounded-lg mt-2"
-          color="primary"
-          rounded
-          :rules="[validators.required]"
-          :hint="$t('recipe.new-recipe-names-must-be-unique')"
-          persistent-hint
-          @keyup.enter="createByName(newRecipeName)"
-        />
-      </v-form>
-    </v-card-text>
-    <v-card-actions class="justify-center">
-      <div style="width: 250px">
-        <BaseButton
-          :disabled="newRecipeName.trim() === ''"
-          rounded
-          block
-          :loading="state.loading"
-          @click="createByName(newRecipeName)"
+          required
+          :placeholder="$t('recipe.recipe-name')"
+          class="w-full rounded-lg border border-border bg-surface pl-9 pr-4 py-2.5 text-sm
+                 text-on-surface placeholder-gray-400 focus:outline-none focus:ring-2
+                 focus:ring-primary focus:border-primary transition-colors"
         />
       </div>
-    </v-card-actions>
+      <p class="text-xs text-on-surface/50 mb-6 ml-1">
+        {{ $t('recipe.new-recipe-names-must-be-unique') }}
+      </p>
+
+      <!-- Submit -->
+      <div class="flex flex-col items-center">
+        <BaseButton
+          type="submit"
+          :disabled="newRecipeName.trim() === ''"
+          :loading="state.loading"
+          class="w-64"
+        />
+      </div>
+    </form>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { AxiosResponse } from "axios";
 import { useUserApi } from "~/composables/api";
-import { validators } from "~/composables/use-validators";
-import type { VForm } from "~/types/auto-forms";
+
+const { $globals } = useNuxtApp();
 
 const state = reactive({
   error: false,
   loading: false,
 });
+
 const auth = useMealieAuth();
 const route = useRoute();
 const groupSlug = computed(() => route.params.groupSlug as string || auth.user.value?.groupSlug || "");
@@ -68,12 +69,10 @@ function handleResponse(response: AxiosResponse<string> | null, edit = false) {
 }
 
 const newRecipeName = ref("");
-const domCreateByName = ref<VForm | null>(null);
 
 async function createByName(name: string) {
-  if (!domCreateByName.value?.validate() || name === "") {
-    return;
-  }
+  if (name.trim() === "") return;
+  state.loading = true;
   const { response } = await api.recipes.createOne({ name });
   handleResponse(response as any, true);
 }

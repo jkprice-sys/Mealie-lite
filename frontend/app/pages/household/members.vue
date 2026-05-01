@@ -1,118 +1,95 @@
 <template>
-  <v-container>
+  <div class="container mx-auto px-4 py-4">
     <BasePageTitle divider>
       <template #header>
-        <v-img
-          width="100%"
-          max-height="125"
-          max-width="125"
-          src="/svgs/manage-members.svg"
-        />
+        <img width="125" height="125" src="/svgs/manage-members.svg" class="object-contain" />
       </template>
       <template #title>
         {{ $t('group.manage-members') }}
       </template>
       <i18n-t keypath="group.manage-members-description">
-        <template #manage>
-          <b>{{ $t('group.manage') }}</b>
-        </template>
-        <template #invite>
-          <b>{{ $t('group.invite') }}</b>
-        </template>
+        <template #manage><b>{{ $t('group.manage') }}</b></template>
+        <template #invite><b>{{ $t('group.invite') }}</b></template>
       </i18n-t>
-      <v-container class="mt-1 px-0">
-        <nuxt-link
-          class="text-center text-primary"
-          :to="`/user/profile/edit`"
-        > {{ $t('group.looking-to-update-your-profile') }}
-        </nuxt-link>
-      </v-container>
+      <div class="mt-1">
+        <NuxtLink class="text-center text-primary text-sm hover:underline" to="/user/profile/edit">
+          {{ $t('group.looking-to-update-your-profile') }}
+        </NuxtLink>
+      </div>
     </BasePageTitle>
-    <v-data-table
-      :headers="headers"
-      :items="members || []"
-      item-key="id"
-      class="elevation-0"
-      :items-per-page="-1"
-      hide-default-footer
-      disable-pagination
-    >
-      <template #[`item.avatar`]="{ item }">
-        <UserAvatar
-          v-if="item"
-          :tooltip="false"
-          :user-id="item.id"
-        />
-      </template>
-      <template #[`item.admin`]="{ item }">
-        {{ item && item.admin ? $t('user.admin') : $t('user.user') }}
-      </template>
-      <template #[`item.manageHousehold`]="{ item }">
-        <div
-          v-if="item"
-          class="d-flex justify-center"
-        >
-          <v-checkbox
-            v-model="item.canManageHousehold"
-            :disabled="item.id === sessionUser?.id || item.admin"
-            color="primary"
-            class=""
-            style="max-width: 30px"
-            hide-details
-            @change="setPermissions(item)"
-          />
-        </div>
-      </template>
-      <template #[`item.manage`]="{ item }">
-        <div
-          v-if="item"
-          class="d-flex justify-center"
-        >
-          <v-checkbox
-            v-model="item.canManage"
-            :disabled="item.id === sessionUser?.id || item.admin"
-            class=""
-            style="max-width: 30px"
-            hide-details
-            color="primary"
-            @change="setPermissions(item)"
-          />
-        </div>
-      </template>
-      <template #[`item.organize`]="{ item }">
-        <div
-          v-if="item"
-          class="d-flex justify-center"
-        >
-          <v-checkbox
-            v-model="item.canOrganize"
-            :disabled="item.id === sessionUser?.id || item.admin"
-            class=""
-            style="max-width: 30px"
-            hide-details
-            color="primary"
-            @change="setPermissions(item)"
-          />
-        </div>
-      </template>
-      <template #[`item.invite`]="{ item }">
-        <div
-          v-if="item"
-          class="d-flex justify-center"
-        >
-          <v-checkbox
-            v-model="item.canInvite"
-            :disabled="item.id === sessionUser?.id || item.admin"
-            class=""
-            style="max-width: 30px"
-            hide-details
-            color="primary"
-            @change="setPermissions(item)"
-          />
-        </div>
-      </template>
-    </v-data-table>
-  </v-container>
+
+    <!-- Members table -->
+    <div class="overflow-x-auto mt-4">
+      <table class="w-full text-sm text-on-surface">
+        <thead>
+          <tr class="border-b border-border">
+            <th class="py-3 px-2 text-left text-xs font-semibold text-on-surface/60 uppercase tracking-wide w-12" />
+            <th class="py-3 px-2 text-left text-xs font-semibold text-on-surface/60 uppercase tracking-wide">{{ $t('user.username') }}</th>
+            <th class="py-3 px-2 text-left text-xs font-semibold text-on-surface/60 uppercase tracking-wide">{{ $t('user.full-name') }}</th>
+            <th class="py-3 px-2 text-left text-xs font-semibold text-on-surface/60 uppercase tracking-wide">{{ $t('user.admin') }}</th>
+            <th class="py-3 px-2 text-center text-xs font-semibold text-on-surface/60 uppercase tracking-wide">{{ $t('group.manage') }}</th>
+            <th class="py-3 px-2 text-center text-xs font-semibold text-on-surface/60 uppercase tracking-wide">{{ $t('settings.organize') }}</th>
+            <th class="py-3 px-2 text-center text-xs font-semibold text-on-surface/60 uppercase tracking-wide">{{ $t('group.invite') }}</th>
+            <th class="py-3 px-2 text-center text-xs font-semibold text-on-surface/60 uppercase tracking-wide">{{ $t('group.manage-household') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="item in members"
+            :key="item?.id"
+            class="border-b border-border hover:bg-primary/5 transition-colors"
+          >
+            <td class="py-2 px-2">
+              <UserAvatar v-if="item" :tooltip="false" :user-id="item.id" />
+            </td>
+            <td class="py-2 px-2">{{ item?.username }}</td>
+            <td class="py-2 px-2">{{ item?.fullName }}</td>
+            <td class="py-2 px-2">{{ item?.admin ? $t('user.admin') : $t('user.user') }}</td>
+            <td class="py-2 px-2 text-center">
+              <input
+                v-if="item"
+                v-model="item.canManage"
+                type="checkbox"
+                class="w-4 h-4 rounded border-border accent-primary"
+                :disabled="item.id === sessionUser?.id || item.admin"
+                @change="setPermissions(item)"
+              />
+            </td>
+            <td class="py-2 px-2 text-center">
+              <input
+                v-if="item"
+                v-model="item.canOrganize"
+                type="checkbox"
+                class="w-4 h-4 rounded border-border accent-primary"
+                :disabled="item.id === sessionUser?.id || item.admin"
+                @change="setPermissions(item)"
+              />
+            </td>
+            <td class="py-2 px-2 text-center">
+              <input
+                v-if="item"
+                v-model="item.canInvite"
+                type="checkbox"
+                class="w-4 h-4 rounded border-border accent-primary"
+                :disabled="item.id === sessionUser?.id || item.admin"
+                @change="setPermissions(item)"
+              />
+            </td>
+            <td class="py-2 px-2 text-center">
+              <input
+                v-if="item"
+                v-model="item.canManageHousehold"
+                type="checkbox"
+                class="w-4 h-4 rounded border-border accent-primary"
+                :disabled="item.id === sessionUser?.id || item.admin"
+                @change="setPermissions(item)"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -122,44 +99,27 @@ import UserAvatar from "~/components/Domain/User/UserAvatar.vue";
 
 const api = useUserApi();
 const i18n = useI18n();
+const auth = useMealieAuth();
+const sessionUser = computed(() => auth.user.value);
 
-useSeoMeta({
-  title: i18n.t("profile.members"),
-});
+useSeoMeta({ title: i18n.t("profile.members") });
 
 const members = ref<UserOut[] | null[]>([]);
 
-const headers = [
-  { title: "", value: "avatar", sortable: false, align: "center" },
-  { title: i18n.t("user.username"), value: "username" },
-  { title: i18n.t("user.full-name"), value: "fullName" },
-  { title: i18n.t("user.admin"), value: "admin" },
-  { title: i18n.t("group.manage"), value: "manage", sortable: false, align: "center" },
-  { title: i18n.t("settings.organize"), value: "organize", sortable: false, align: "center" },
-  { title: i18n.t("group.invite"), value: "invite", sortable: false, align: "center" },
-  { title: i18n.t("group.manage-household"), value: "manageHousehold", sortable: false, align: "center" },
-];
-
 async function refreshMembers() {
   const { data } = await api.households.fetchMembers();
-  if (data) {
-    members.value = data.items;
-  }
+  if (data) members.value = data.items;
 }
 
 async function setPermissions(user: UserOut) {
-  const payload = {
-    userId: user.id,
-    canInvite: user.canInvite,
+  await api.households.setMemberPermissions({
+    userId:             user.id,
+    canInvite:          user.canInvite,
     canManageHousehold: user.canManageHousehold,
-    canManage: user.canManage,
-    canOrganize: user.canOrganize,
-  };
-
-  await api.households.setMemberPermissions(payload);
+    canManage:          user.canManage,
+    canOrganize:        user.canOrganize,
+  });
 }
 
-onMounted(async () => {
-  await refreshMembers();
-});
+onMounted(async () => await refreshMembers());
 </script>

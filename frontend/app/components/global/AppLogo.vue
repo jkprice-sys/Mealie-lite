@@ -1,19 +1,14 @@
 <template>
   <div class="icon-container">
-    <v-divider class="icon-divider" />
-    <v-avatar
-      :class="['icon-avatar']"
-      :size="size"
+    <hr class="icon-divider border-border" />
+    <div
+      class="icon-avatar rounded-full overflow-hidden border-2 border-border bg-surface flex items-center justify-center shrink-0"
+      :style="{ width: `${size}px`, height: `${size}px` }"
     >
       <slot>
-        <v-img
-          src="/logo.png"
-          :width="size"
-          :height="size"
-          cover
-        />
+        <img src="/logo.png" :width="size" :height="size" class="object-cover w-full h-full" />
       </slot>
-    </v-avatar>
+    </div>
   </div>
 </template>
 
@@ -22,9 +17,6 @@ withDefaults(defineProps<{ size?: number }>(), { size: 75 });
 </script>
 
 <style scoped>
-.icon-white {
-  fill: white;
-}
 .icon-container {
   display: flex;
   flex-direction: column;
@@ -36,9 +28,5 @@ withDefaults(defineProps<{ size?: number }>(), { size: 75 });
 .icon-divider {
   width: 100%;
   margin-bottom: -2.5rem;
-}
-.icon-avatar {
-  border-color: rgba(0, 0, 0, 0.12);
-  border: 2px;
 }
 </style>

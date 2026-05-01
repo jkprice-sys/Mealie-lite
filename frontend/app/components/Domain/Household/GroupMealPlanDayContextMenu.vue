@@ -6,50 +6,49 @@
       :recipes="recipesWithScales"
       :shopping-lists="shoppingLists"
     />
-    <v-menu
-      offset-y
-      start
-      :bottom="!menuTop"
-      :nudge-bottom="!menuTop ? '5' : '0'"
-      :top="menuTop"
-      :nudge-top="menuTop ? '5' : '0'"
-      allow-overflow
-      close-delay="125"
-      content-class="d-print-none"
-    >
-      <template #activator="{ props: activatorProps }">
-        <v-btn
-          :class="{ 'rounded-circle': fab }"
-          :size="fab ? 'small' : undefined"
-          :color="color"
-          :icon="!fab"
-          variant="text"
-          dark
-          v-bind="activatorProps"
-          @click.prevent
+    <Menu as="div" class="relative inline-block text-left">
+      <MenuButton
+        class="inline-flex items-center justify-center rounded-full p-1 text-on-surface/60 hover:bg-on-surface/10 hover:text-on-surface transition-colors focus:outline-none"
+        @click.prevent
+      >
+        <AppIcon :path="icon" size="sm" />
+      </MenuButton>
+      <Transition
+        enter-active-class="transition duration-100 ease-out"
+        enter-from-class="transform scale-95 opacity-0"
+        enter-to-class="transform scale-100 opacity-100"
+        leave-active-class="transition duration-75 ease-in"
+        leave-from-class="transform scale-100 opacity-100"
+        leave-to-class="transform scale-95 opacity-0"
+      >
+        <MenuItems
+          class="absolute right-0 z-50 mt-1 w-48 rounded-lg border border-border bg-surface shadow-lg focus:outline-none"
         >
-          <v-icon>{{ icon }}</v-icon>
-        </v-btn>
-      </template>
-      <v-list density="compact">
-        <v-list-item
-          v-for="(item, index) in menuItems"
-          :key="index"
-          @click="contextMenuEventHandler(item.event)"
-        >
-          <template #prepend>
-            <v-icon :color="item.color">
-              {{ item.icon }}
-            </v-icon>
-          </template>
-          <v-list-item-title>{{ item.title }}</v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-menu>
+          <div class="py-1">
+            <MenuItem
+              v-for="(item, index) in menuItems"
+              :key="index"
+              v-slot="{ active }"
+            >
+              <button
+                type="button"
+                class="flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors"
+                :class="active ? 'bg-primary/10 text-primary' : 'text-on-surface'"
+                @click="contextMenuEventHandler(item.event)"
+              >
+                <AppIcon :path="item.icon" size="sm" :class="item.color ? `text-${item.color}` : ''" />
+                {{ item.title }}
+              </button>
+            </MenuItem>
+          </div>
+        </MenuItems>
+      </Transition>
+    </Menu>
   </div>
 </template>
 
 <script setup lang="ts">
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/vue";
 import type { Recipe } from "~/lib/api/types/recipe";
 import RecipeDialogAddToShoppingList from "~/components/Domain/Recipe/RecipeDialogAddToShoppingList.vue";
 import type { ShoppingListSummary } from "~/lib/api/types/household";
@@ -102,7 +101,7 @@ const state = reactive({
 
 const { shoppingListDialog, menuItems } = toRefs(state);
 
-const icon = props.menuIcon || $globals.icons.dotsVertical;
+const icon = computed(() => props.menuIcon || $globals.icons.dotsVertical);
 
 const shoppingLists = ref<ShoppingListSummary[]>();
 const recipesWithScales = computed(() => {

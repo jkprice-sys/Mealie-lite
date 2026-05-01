@@ -1,16 +1,8 @@
 <template>
-  <v-container
-    v-if="user"
-    class="narrow-container"
-  >
+  <div v-if="user" class="px-4 py-4 max-w-3xl mx-auto">
     <BasePageTitle>
       <template #header>
-        <v-img
-          width="100%"
-          max-height="125"
-          max-width="125"
-          src="/svgs/manage-profile.svg"
-        />
+        <img width="125" height="125" src="/svgs/manage-profile.svg" class="object-contain" />
       </template>
       <template #title>
         {{ $t("user.admin-user-management") }}
@@ -18,123 +10,87 @@
       {{ $t("user.changes-reflected-immediately") }}
     </BasePageTitle>
     <AppToolbar back />
-    <v-form
+
+    <form
       v-if="!userError"
       ref="refNewUserForm"
       @submit.prevent="handleSubmit"
     >
-      <v-card
-        variant="outlined"
-        style="border-color: lightgrey;"
-      >
-        <v-sheet class="pt-4">
-          <v-card-text>
-            <div class="d-flex">
-              <p> {{ $t("user.user-id-with-value", { id: user.id }) }}</p>
-            </div>
-            <!-- This is disabled since we can't properly handle changing the user's group in most scenarios -->
+      <div class="rounded-xl border border-border bg-surface">
+        <div class="px-4 pt-4 pb-3 space-y-3">
+          <p class="text-sm text-on-surface/70">{{ $t("user.user-id-with-value", { id: user.id }) }}</p>
 
-            <v-row>
-              <v-col cols="6">
-                <v-select
-                  v-if="groups"
-                  v-model="user.group"
-                  disabled
-                  :items="groups"
-                  variant="solo-filled"
-                  flat
-                  item-title="name"
-                  item-value="name"
-                  :return-object="false"
-                  :label="$t('group.user-group')"
-                  :rules="[validators.required]"
-                />
-              </v-col>
-              <v-col cols="6">
-                <v-select
-                  v-if="households"
-                  v-model="user.household"
-                  :items="households"
-                  variant="solo-filled"
-                  flat
-                  item-title="name"
-                  item-value="name"
-                  :return-object="false"
-                  :label="$t('household.user-household')"
-                  :rules="[validators.required]"
-                />
-              </v-col>
-            </v-row>
-            <div class="d-flex py-2 pr-2">
-              <BaseButton
-                type="button"
-                :loading="generatingToken"
-                create
-                @click.prevent="handlePasswordReset"
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div v-if="groups">
+              <label class="block text-xs text-on-surface/60 mb-1">{{ $t('group.user-group') }}</label>
+              <select
+                v-model="user.group"
+                disabled
+                class="w-full rounded-lg border border-border bg-on-surface/5 px-3 py-2 text-sm text-on-surface/50 cursor-not-allowed"
               >
-                {{ $t("user.generate-password-reset-link") }}
-              </BaseButton>
+                <option v-for="g in groups" :key="g.id" :value="g.name">{{ g.name }}</option>
+              </select>
             </div>
+            <div v-if="households">
+              <label class="block text-xs text-on-surface/60 mb-1">{{ $t('household.user-household') }}</label>
+              <select
+                v-model="user.household"
+                required
+                class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option v-for="h in households" :key="h.id" :value="h.name">{{ h.name }}</option>
+              </select>
+            </div>
+          </div>
 
-            <div
-              v-if="resetUrl"
-              class="mb-2"
+          <div class="py-1">
+            <BaseButton
+              type="button"
+              :loading="generatingToken"
+              create
+              @click.prevent="handlePasswordReset"
             >
-              <v-card-text>
-                <p class="text-center pb-0">
-                  {{ resetUrl }}
-                </p>
-              </v-card-text>
-              <v-card-actions
-                class="align-center pt-0"
-                style="gap: 4px"
-              >
-                <BaseButton
-                  cancel
-                  @click="resetUrl = ''"
-                >
-                  {{ $t("general.close") }}
-                </BaseButton>
-                <v-spacer />
-                <BaseButton
-                  v-if="user.email"
-                  color="info"
-                  class="mr-1"
-                  @click="sendResetEmail"
-                >
-                  <template #icon>
-                    {{ $globals.icons.email }}
-                  </template>
-                  {{ $t("user.email") }}
-                </BaseButton>
-                <AppButtonCopy
-                  :icon="false"
-                  color="info"
-                  :copy-text="resetUrl"
-                />
-              </v-card-actions>
-            </div>
+              {{ $t("user.generate-password-reset-link") }}
+            </BaseButton>
+          </div>
 
-            <AutoForm
-              v-model="user"
-              :items="userForm"
-              update-mode
-              :disabled-fields="disabledFields"
-            />
-          </v-card-text>
-        </v-sheet>
-      </v-card>
-      <div class="d-flex pa-2">
-        <BaseButton
-          type="submit"
-          edit
-          class="ml-auto"
-        >
+          <!-- Reset URL section -->
+          <div v-if="resetUrl" class="rounded-lg border border-border bg-background p-3 space-y-2">
+            <p class="text-sm text-center break-all text-on-surface">{{ resetUrl }}</p>
+            <div class="flex items-center gap-2 justify-end">
+              <BaseButton cancel @click="resetUrl = ''">
+                {{ $t("general.close") }}
+              </BaseButton>
+              <BaseButton
+                v-if="user.email"
+                color="info"
+                @click="sendResetEmail"
+              >
+                <template #icon>
+                  {{ $globals.icons.email }}
+                </template>
+                {{ $t("user.email") }}
+              </BaseButton>
+              <AppButtonCopy :icon="false" color="info" :copy-text="resetUrl" />
+            </div>
+          </div>
+
+          <AutoForm
+            v-model="user"
+            :items="userForm"
+            update-mode
+            :disabled-fields="disabledFields"
+          />
+        </div>
+      </div>
+
+      <div class="flex justify-end mt-3">
+        <BaseButton type="submit" edit>
           {{ $t("general.update") }}
         </BaseButton>
       </div>
-    </v-form>
-  </v-container>
+    </form>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -143,7 +99,6 @@ import { useGroups } from "~/composables/use-groups";
 import { useAdminHouseholds } from "~/composables/use-households";
 import { alert } from "~/composables/use-toast";
 import { useUserForm } from "~/composables/use-users";
-import { validators } from "~/composables/use-validators";
 import type { UserOut } from "~/lib/api/types/user";
 
 definePageMeta({
@@ -155,13 +110,11 @@ const { groups } = useGroups();
 const { useHouseholdsInGroup } = useAdminHouseholds();
 const i18n = useI18n();
 const route = useRoute();
+const { $globals } = useNuxtApp();
 
 const userId = route.params.id as string;
 
-// ==============================================
-// New User Form
-
-const refNewUserForm = ref<VForm | null>(null);
+const refNewUserForm = ref<HTMLFormElement | null>(null);
 
 const adminApi = useAdminApi();
 
@@ -191,7 +144,7 @@ onMounted(async () => {
 });
 
 async function handleSubmit() {
-  if (!refNewUserForm.value?.validate() || user.value === null) return;
+  if (!(refNewUserForm.value?.checkValidity() ?? false) || user.value === null) return;
 
   const { response, data } = await adminApi.users.updateOne(user.value.id, user.value);
 

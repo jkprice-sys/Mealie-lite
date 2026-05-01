@@ -1,10 +1,6 @@
 <template>
-  <v-toolbar
-    class="fixed-bar mt-0"
-    style="z-index: 2; position: sticky; background: transparent; box-shadow: none;"
-    density="compact"
-    elevation="0"
-  >
+  <div class="sticky top-[4.5em] z-[2] flex justify-end items-center gap-1 py-1 px-2 pointer-events-none">
+    <!-- Delete confirmation dialog -->
     <BaseDialog
       v-model="deleteDialog"
       :title="$t('recipe.delete-recipe')"
@@ -13,44 +9,35 @@
       can-confirm
       @confirm="emitDelete()"
     >
-      <v-card-text>
-        {{ $t("recipe.delete-confirmation") }}
-      </v-card-text>
+      <p class="text-sm text-on-surface">{{ $t("recipe.delete-confirmation") }}</p>
     </BaseDialog>
 
-    <v-spacer />
-    <div v-if="!open" class="custom-btn-group ma-1">
-      <RecipeFavoriteBadge v-if="loggedIn" color="primary" button-style :recipe-id="recipe.id!" show-always />
+    <!-- View mode: favorite / timeline / edit / context menu -->
+    <div v-if="!open" class="flex items-center gap-1 pointer-events-auto">
+      <RecipeFavoriteBadge
+        v-if="loggedIn"
+        color="primary"
+        button-style
+        :recipe-id="recipe.id!"
+        :slug="recipe.slug!"
+        show-always
+      />
       <RecipeTimelineBadge
         v-if="loggedIn && !liteMode"
-        class="ml-1"
         color="primary"
         button-style
         :slug="recipe.slug"
         :recipe-name="recipe.name!"
       />
-      <div v-if="loggedIn">
-        <v-tooltip v-if="canEdit" location="bottom" color="primary">
-          <template #activator="{ props: tooltipProps }">
-            <v-btn
-              icon
-              variant="flat"
-              rounded="circle"
-              size="small"
-              color="primary"
-              class="ml-1"
-              v-bind="tooltipProps"
-              @click="$emit('edit', true)"
-            >
-              <v-icon size="x-large">
-                {{ $globals.icons.edit }}
-              </v-icon>
-            </v-btn>
-          </template>
-          <span>{{ $t("general.edit") }}</span>
-        </v-tooltip>
-      </div>
-
+      <button
+        v-if="loggedIn && canEdit"
+        type="button"
+        :title="$t('general.edit')"
+        class="bs-btn bs-btn-md bs-btn-primary rounded-full w-9 h-9 p-0 flex items-center justify-center"
+        @click="$emit('edit', true)"
+      >
+        <AppIcon :path="$globals.icons.edit" size="md" />
+      </button>
       <RecipeContextMenu
         show-print
         :menu-top="false"
@@ -75,28 +62,26 @@
           recipeActions: true,
           delete: loggedIn,
         }"
-        class="ml-1"
         @print="$emit('print')"
       />
     </div>
-    <div v-if="open" class="custom-btn-group gapped ma-1">
-      <v-btn
+
+    <!-- Edit mode: delete / json / close / save -->
+    <div v-if="open" class="flex items-center gap-1 pointer-events-auto">
+      <button
         v-for="(btn, index) in editorButtons"
         :key="index"
-        :class="{ 'rounded-circle': $vuetify.display.xs }"
-        :size="$vuetify.display.xs ? 'small' : undefined"
-        :color="btn.color"
-        variant="elevated"
-        :icon="$vuetify.display.xs"
+        type="button"
+        :title="btn.text"
+        class="bs-btn bs-btn-sm"
+        :class="btnClass(btn.color)"
         @click="emitHandler(btn.event)"
       >
-        <v-icon :left="!$vuetify.display.xs">
-          {{ btn.icon }}
-        </v-icon>
-        {{ $vuetify.display.xs ? "" : btn.text }}
-      </v-btn>
+        <AppIcon :path="btn.icon" size="sm" />
+        <span class="hidden sm:inline">{{ btn.text }}</span>
+      </button>
     </div>
-  </v-toolbar>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -106,10 +91,10 @@ import RecipeTimelineBadge from "./RecipeTimelineBadge.vue";
 import type { Recipe } from "~/lib/api/types/recipe";
 import { useLiteMode } from "~/composables/use-lite-mode";
 
-const SAVE_EVENT = "save";
+const SAVE_EVENT   = "save";
 const DELETE_EVENT = "delete";
-const CLOSE_EVENT = "close";
-const JSON_EVENT = "json";
+const CLOSE_EVENT  = "close";
+const JSON_EVENT   = "json";
 
 interface Props {
   recipe: Recipe;
@@ -123,44 +108,52 @@ interface Props {
 }
 withDefaults(defineProps<Props>(), {
   recipeScale: 1,
-  loggedIn: false,
-  canEdit: false,
+  loggedIn:    false,
+  canEdit:     false,
 });
 
 const emit = defineEmits(["print", "input", "save", "delete", "close", "json", "edit"]);
 
 const deleteDialog = ref(false);
-
-const i18n = useI18n();
+const i18n         = useI18n();
 const { $globals } = useNuxtApp();
-const liteMode = useLiteMode();
+const liteMode     = useLiteMode();
 
 const editorButtons = computed(() => [
   {
-    text: i18n.t("general.delete"),
-    icon: $globals.icons.delete,
+    text:  i18n.t("general.delete"),
+    icon:  $globals.icons.delete,
     event: DELETE_EVENT,
     color: "error",
   },
   ...(!liteMode ? [{
-    text: i18n.t("general.json"),
-    icon: $globals.icons.codeBraces,
+    text:  i18n.t("general.json"),
+    icon:  $globals.icons.codeBraces,
     event: JSON_EVENT,
     color: "accent",
   }] : []),
   {
-    text: i18n.t("general.close"),
-    icon: $globals.icons.close,
+    text:  i18n.t("general.close"),
+    icon:  $globals.icons.close,
     event: CLOSE_EVENT,
     color: "",
   },
   {
-    text: i18n.t("general.save"),
-    icon: $globals.icons.save,
+    text:  i18n.t("general.save"),
+    icon:  $globals.icons.save,
     event: SAVE_EVENT,
     color: "success",
   },
 ]);
+
+function btnClass(color: string) {
+  switch (color) {
+    case "error":   return "bs-btn-error";
+    case "success": return "bs-btn-primary";
+    case "accent":  return "bs-btn-outline";
+    default:        return "bs-btn-ghost";
+  }
+}
 
 function emitHandler(event: string) {
   switch (event) {
@@ -182,39 +175,3 @@ function emitDelete() {
   emit("input", false);
 }
 </script>
-
-<style scoped>
-.custom-btn-group {
-  flex: 0, 1, auto;
-  display: inline-flex;
-}
-
-.gapped {
-  gap: 0.25rem;
-}
-
-.vertical {
-  flex-direction: column !important;
-}
-
-.sticky {
-  margin-left: auto;
-  position: fixed !important;
-  margin-top: 4.25rem;
-}
-
-.fixed-bar {
-  position: sticky;
-  top: 4.5em;
-  z-index: 2;
-  background: transparent !important;
-  box-shadow: none !important;
-  min-height: 0 !important;
-  height: 48px;
-  padding: 0 8px;
-}
-
-.fixed-bar-mobile {
-  top: 1.5em !important;
-}
-</style>

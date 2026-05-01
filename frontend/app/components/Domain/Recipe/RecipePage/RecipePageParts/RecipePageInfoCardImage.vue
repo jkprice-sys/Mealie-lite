@@ -1,18 +1,17 @@
 <template>
-  <v-img
+  <img
+    v-if="!hideImage"
     :key="imageKey"
-    :max-width="maxWidth"
-    min-height="50"
-    cover
-    width="100%"
-    :height="hideImage ? undefined : imageHeight"
     :src="recipeImageUrl"
-    class="d-print-none"
+    loading="lazy"
+    class="w-full print:hidden block object-cover"
+    :style="{ height: imageHeight, maxWidth: maxWidth || undefined }"
     @error="hideImage = true"
   />
 </template>
 
 <script setup lang="ts">
+import { useBreakpoints, breakpointsTailwind } from "@vueuse/core";
 import { useStaticRoutes, useUserApi } from "~/composables/api";
 import type { HouseholdSummary } from "~/lib/api/types/household";
 import { usePageState, usePageUser } from "~/composables/recipe-page/shared-state";
@@ -27,7 +26,9 @@ const props = withDefaults(defineProps<Props>(), {
   maxWidth: undefined,
 });
 
-const display = useDisplay();
+const bp = useBreakpoints(breakpointsTailwind);
+const isMobile = bp.smaller("md");
+
 const { recipeImage, recipeSmallImage } = useStaticRoutes();
 const { imageKey } = usePageState(props.recipe.slug);
 const { user } = usePageUser();
@@ -41,20 +42,17 @@ if (user) {
 }
 
 const hideImage = ref(false);
-const imageHeight = computed(() => {
-  return display.xs.value ? "200" : "400";
-});
+
+const imageHeight = computed(() => isMobile.value ? "200px" : "400px");
 
 const recipeImageUrl = computed(() => {
-  return display.smAndDown.value
+  return isMobile.value
     ? recipeSmallImage(props.recipe.id, props.recipe.image, imageKey.value)
     : recipeImage(props.recipe.id, props.recipe.image, imageKey.value);
 });
 
 watch(
   () => recipeImageUrl.value,
-  () => {
-    hideImage.value = false;
-  },
+  () => { hideImage.value = false; },
 );
 </script>

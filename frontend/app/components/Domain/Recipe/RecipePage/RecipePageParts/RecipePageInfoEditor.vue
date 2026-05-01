@@ -1,86 +1,99 @@
 <template>
-  <div>
-    <v-text-field
-      v-model="recipe.name"
-      class="my-3"
-      :label="$t('recipe.recipe-name')"
-      :rules="[validators.required]"
-      density="compact"
-      variant="underlined"
-    />
-    <v-container class="ma-0 pa-0">
-      <v-row>
-        <v-col cols="3">
-          <v-number-input
-            :model-value="recipe.recipeServings"
-            :min="0"
-            :precision="null"
-            density="compact"
-            :label="$t('recipe.servings')"
-            variant="underlined"
-            control-variant="hidden"
-            @update:model-value="recipe.recipeServings = $event"
-          />
-        </v-col>
-        <v-col cols="3">
-          <v-number-input
-            :model-value="recipe.recipeYieldQuantity"
-            :min="0"
-            :precision="null"
-            density="compact"
-            :label="$t('recipe.yield')"
-            variant="underlined"
-            control-variant="hidden"
-            @update:model-value="recipe.recipeYieldQuantity = $event"
-          />
-        </v-col>
-        <v-col cols="6">
-          <v-text-field
-            v-model="recipe.recipeYield"
-            density="compact"
-            :label="$t('recipe.yield-text')"
-            variant="underlined"
-          />
-        </v-col>
-      </v-row>
-    </v-container>
-
-    <div
-      class="d-flex flex-wrap"
-      style="gap: 1rem"
-    >
-      <v-text-field
-        v-model="recipe.totalTime"
-        :label="$t('recipe.total-time')"
-        density="compact"
-        variant="underlined"
-      />
-      <v-text-field
-        v-model="recipe.prepTime"
-        :label="$t('recipe.prep-time')"
-        density="compact"
-        variant="underlined"
-      />
-      <v-text-field
-        v-model="recipe.performTime"
-        :label="$t('recipe.perform-time')"
-        density="compact"
-        variant="underlined"
+  <div class="space-y-4">
+    <!-- Recipe name -->
+    <div>
+      <label class="block text-xs text-on-surface/60 mb-1">{{ $t('recipe.recipe-name') }}</label>
+      <input
+        v-model="recipe.name"
+        type="text"
+        required
+        class="w-full border-b border-border bg-transparent text-base text-on-surface
+               focus:outline-none focus:border-primary transition-colors py-1"
       />
     </div>
-    <v-textarea
-      v-model="recipe.description"
-      auto-grow
-      min-height="100"
-      :label="$t('recipe.description')"
-      density="compact"
-      variant="underlined"
-    />
+
+    <!-- Servings / yield quantity / yield text -->
+    <div class="grid grid-cols-6 gap-3">
+      <div class="col-span-2">
+        <label class="block text-xs text-on-surface/60 mb-1">{{ $t('recipe.servings') }}</label>
+        <input
+          :value="recipe.recipeServings"
+          type="number"
+          min="0"
+          step="any"
+          class="w-full border-b border-border bg-transparent text-sm text-on-surface
+                 focus:outline-none focus:border-primary transition-colors py-1"
+          @input="recipe.recipeServings = parseFloat(($event.target as HTMLInputElement).value) || 0"
+        />
+      </div>
+      <div class="col-span-2">
+        <label class="block text-xs text-on-surface/60 mb-1">{{ $t('recipe.yield') }}</label>
+        <input
+          :value="recipe.recipeYieldQuantity"
+          type="number"
+          min="0"
+          step="any"
+          class="w-full border-b border-border bg-transparent text-sm text-on-surface
+                 focus:outline-none focus:border-primary transition-colors py-1"
+          @input="recipe.recipeYieldQuantity = parseFloat(($event.target as HTMLInputElement).value) || 0"
+        />
+      </div>
+      <div class="col-span-2">
+        <label class="block text-xs text-on-surface/60 mb-1">{{ $t('recipe.yield-text') }}</label>
+        <input
+          v-model="recipe.recipeYield"
+          type="text"
+          class="w-full border-b border-border bg-transparent text-sm text-on-surface
+                 focus:outline-none focus:border-primary transition-colors py-1"
+        />
+      </div>
+    </div>
+
+    <!-- Times -->
+    <div class="flex flex-wrap gap-4">
+      <div class="flex-1 min-w-[120px]">
+        <label class="block text-xs text-on-surface/60 mb-1">{{ $t('recipe.total-time') }}</label>
+        <input
+          v-model="recipe.totalTime"
+          type="text"
+          class="w-full border-b border-border bg-transparent text-sm text-on-surface
+                 focus:outline-none focus:border-primary transition-colors py-1"
+        />
+      </div>
+      <div class="flex-1 min-w-[120px]">
+        <label class="block text-xs text-on-surface/60 mb-1">{{ $t('recipe.prep-time') }}</label>
+        <input
+          v-model="recipe.prepTime"
+          type="text"
+          class="w-full border-b border-border bg-transparent text-sm text-on-surface
+                 focus:outline-none focus:border-primary transition-colors py-1"
+        />
+      </div>
+      <div class="flex-1 min-w-[120px]">
+        <label class="block text-xs text-on-surface/60 mb-1">{{ $t('recipe.perform-time') }}</label>
+        <input
+          v-model="recipe.performTime"
+          type="text"
+          class="w-full border-b border-border bg-transparent text-sm text-on-surface
+                 focus:outline-none focus:border-primary transition-colors py-1"
+        />
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div>
+      <label class="block text-xs text-on-surface/60 mb-1">{{ $t('recipe.description') }}</label>
+      <textarea
+        v-model="recipe.description"
+        rows="3"
+        class="w-full border-b border-border bg-transparent text-sm text-on-surface
+               focus:outline-none focus:border-primary transition-colors py-1 resize-y"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { validators } from "~/composables/use-validators";
 import type { NoUndefinedField } from "~/lib/api/types/non-generated";
 import type { Recipe } from "~/lib/api/types/recipe";
 

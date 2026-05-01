@@ -8,33 +8,50 @@
       can-confirm
       @confirm="mergeFoods"
     >
-      <v-card-text>
-        <div>
-          {{ $t("data-pages.foods.merge-dialog-text") }}
+      <div class="px-4 py-3 space-y-3 text-sm text-on-surface">
+        <p>{{ $t("data-pages.foods.merge-dialog-text") }}</p>
+        <!-- Source food -->
+        <div class="space-y-1">
+          <label class="block text-xs text-on-surface/60">{{ $t('data-pages.foods.source-food') }}</label>
+          <input
+            v-model="fromFoodSearch"
+            type="text"
+            :placeholder="$t('search.search')"
+            class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm
+                   text-on-surface focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+          />
+          <select
+            :value="fromFood?.id ?? ''"
+            size="4"
+            class="w-full rounded-lg border border-border bg-surface px-2 py-1 text-sm text-on-surface focus:outline-none"
+            @change="fromFood = foods.find(f => f.id === ($event.target as HTMLSelectElement).value) ?? null"
+          >
+            <option v-for="f in filteredFoodsFrom" :key="f.id" :value="f.id">{{ f.name }}</option>
+          </select>
         </div>
-        <v-autocomplete
-          v-model="fromFood"
-          return-object
-          :items="foods"
-          :custom-filter="normalizeFilter"
-          item-title="name"
-          :label="$t('data-pages.foods.source-food')"
-        />
-        <v-autocomplete
-          v-model="toFood"
-          return-object
-          :items="foods"
-          :custom-filter="normalizeFilter"
-          item-title="name"
-          :label="$t('data-pages.foods.target-food')"
-        />
-
-        <template v-if="canMerge && fromFood && toFood">
-          <div class="text-center">
-            {{ $t("data-pages.foods.merge-food-example", { food1: fromFood.name, food2: toFood.name }) }}
-          </div>
-        </template>
-      </v-card-text>
+        <!-- Target food -->
+        <div class="space-y-1">
+          <label class="block text-xs text-on-surface/60">{{ $t('data-pages.foods.target-food') }}</label>
+          <input
+            v-model="toFoodSearch"
+            type="text"
+            :placeholder="$t('search.search')"
+            class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm
+                   text-on-surface focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+          />
+          <select
+            :value="toFood?.id ?? ''"
+            size="4"
+            class="w-full rounded-lg border border-border bg-surface px-2 py-1 text-sm text-on-surface focus:outline-none"
+            @change="toFood = foods.find(f => f.id === ($event.target as HTMLSelectElement).value) ?? null"
+          >
+            <option v-for="f in filteredFoodsTo" :key="f.id" :value="f.id">{{ f.name }}</option>
+          </select>
+        </div>
+        <p v-if="canMerge && fromFood && toFood" class="text-center text-on-surface/70 italic">
+          {{ $t("data-pages.foods.merge-food-example", { food1: fromFood.name, food2: toFood.name }) }}
+        </p>
+      </div>
     </BaseDialog>
 
     <!-- Seed Dialog -->
@@ -45,38 +62,28 @@
       can-confirm
       @confirm="seedDatabase"
     >
-      <v-card-text>
-        <div class="pb-2">
-          {{ $t("data-pages.foods.seed-dialog-text") }}
+      <div class="px-4 py-3 space-y-3 text-sm text-on-surface">
+        <p>{{ $t("data-pages.foods.seed-dialog-text") }}</p>
+        <div>
+          <label class="block text-xs text-on-surface/60 mb-1">{{ $t('data-pages.select-language') }}</label>
+          <select
+            v-model="locale"
+            class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm
+                   text-on-surface focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+          >
+            <option v-for="loc in locales" :key="loc.value" :value="loc.value">
+              {{ loc.name }} ({{ loc.progress }}% {{ $t("language-dialog.translated") }})
+            </option>
+          </select>
         </div>
-        <v-autocomplete
-          v-model="locale"
-          :items="locales"
-          item-title="name"
-          :custom-filter="normalizeFilter"
-          :label="$t('data-pages.select-language')"
-          class="my-3"
-          hide-details
-          variant="outlined"
-          offset
-        >
-          <template #item="{ item, props }">
-            <v-list-item v-bind="props">
-              <v-list-item-subtitle>
-                {{ item.raw.progress }}% {{ $t("language-dialog.translated") }}
-              </v-list-item-subtitle>
-            </v-list-item>
-          </template>
-        </v-autocomplete>
-
-        <v-alert
+        <div
           v-if="foods && foods.length > 0"
-          type="error"
-          class="mb-0 text-body-2"
+          class="flex items-start gap-2 rounded-lg bg-error/10 border border-error/30 px-3 py-2 text-sm text-error"
         >
-          {{ $t("data-pages.foods.seed-dialog-warning") }}
-        </v-alert>
-      </v-card-text>
+          <AppIcon :path="$globals.icons.alertCircle" size="sm" class="mt-0.5 shrink-0" />
+          <span>{{ $t("data-pages.foods.seed-dialog-warning") }}</span>
+        </div>
+      </div>
     </BaseDialog>
 
     <!-- Alias Sub-Dialog -->
@@ -96,35 +103,34 @@
       can-confirm
       @confirm="assignSelected"
     >
-      <v-card-text>
-        <v-card class="mb-4">
-          <v-card-title>{{ $t("general.caution") }}</v-card-title>
-          <v-card-text>{{ $t("data-pages.foods.label-overwrite-warning") }}</v-card-text>
-        </v-card>
-
-        <v-autocomplete
-          v-model="bulkAssignLabelId"
-          clearable
-          :items="allLabels"
-          :custom-filter="normalizeFilter"
-          item-value="id"
-          item-title="name"
-          :label="$t('data-pages.foods.food-label')"
-        />
-        <v-card variant="outlined">
-          <v-virtual-scroll
-            height="400"
-            item-height="25"
-            :items="bulkAssignTarget"
+      <div class="px-4 py-3 space-y-3 text-sm text-on-surface">
+        <div class="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2">
+          <p class="font-semibold text-warning mb-0.5">{{ $t("general.caution") }}</p>
+          <p class="text-on-surface/80">{{ $t("data-pages.foods.label-overwrite-warning") }}</p>
+        </div>
+        <div>
+          <label class="block text-xs text-on-surface/60 mb-1">{{ $t('data-pages.foods.food-label') }}</label>
+          <select
+            v-model="bulkAssignLabelId"
+            class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm
+                   text-on-surface focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
           >
-            <template #default="{ item }">
-              <v-list-item class="pb-2">
-                <v-list-item-title>{{ item.name }}</v-list-item-title>
-              </v-list-item>
-            </template>
-          </v-virtual-scroll>
-        </v-card>
-      </v-card-text>
+            <option value="">— {{ $t('general.none') }} —</option>
+            <option v-for="label in allLabels" :key="label.id" :value="label.id">{{ label.name }}</option>
+          </select>
+        </div>
+        <div class="rounded-lg border border-border overflow-y-auto max-h-[300px]">
+          <ul class="divide-y divide-border">
+            <li
+              v-for="item in bulkAssignTarget"
+              :key="item.id"
+              class="px-3 py-2 text-sm text-on-surface"
+            >
+              {{ item.name }}
+            </li>
+          </ul>
+        </div>
+      </div>
     </BaseDialog>
 
     <GroupDataPage
@@ -165,9 +171,11 @@
       </template>
 
       <template #[`item.onHand`]="{ item }">
-        <v-icon :color="item.onHand ? 'success' : undefined">
-          {{ item.onHand ? $globals.icons.check : $globals.icons.close }}
-        </v-icon>
+        <AppIcon
+          :path="item.onHand ? $globals.icons.check : $globals.icons.close"
+          size="sm"
+          :class="item.onHand ? 'text-success' : 'text-on-surface/30'"
+        />
       </template>
 
       <template #[`item.createdAt`]="{ item }">
@@ -408,6 +416,14 @@ function updateFoodAlias(newAliases: IngredientFoodAlias[]) {
 const mergeDialog = ref(false);
 const fromFood = ref<IngredientFoodWithOnHand | null>(null);
 const toFood = ref<IngredientFoodWithOnHand | null>(null);
+const fromFoodSearch = ref("");
+const toFoodSearch = ref("");
+const filteredFoodsFrom = computed(() =>
+  foods.value.filter(f => f.name.toLowerCase().includes(fromFoodSearch.value.toLowerCase())),
+);
+const filteredFoodsTo = computed(() =>
+  foods.value.filter(f => f.name.toLowerCase().includes(toFoodSearch.value.toLowerCase())),
+);
 
 const canMerge = computed(() => {
   return fromFood.value && toFood.value && fromFood.value.id !== toFood.value.id;

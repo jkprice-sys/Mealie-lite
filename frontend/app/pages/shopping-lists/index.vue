@@ -1,8 +1,6 @@
 <template>
-  <v-container
-    v-if="shoppingListChoices && ready"
-    class="narrow-container"
-  >
+  <div v-if="shoppingListChoices && ready" class="narrow-container mx-auto px-4 py-4">
+    <!-- Create dialog -->
     <BaseDialog
       v-model="state.createDialog"
       :title="$t('shopping-list.create-shopping-list')"
@@ -10,16 +8,20 @@
       can-submit
       @submit="createOne"
     >
-      <v-card-text>
-        <v-text-field
+      <div class="px-4 py-2">
+        <label class="block text-xs text-on-surface/60 mb-1">{{ $t('shopping-list.new-list') }}</label>
+        <input
           v-model="state.createName"
+          type="text"
           autofocus
-          :label="$t('shopping-list.new-list')"
+          class="w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm
+                 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary
+                 focus:border-primary transition-colors"
         />
-      </v-card-text>
+      </div>
     </BaseDialog>
 
-    <!-- Settings -->
+    <!-- Owner dialog -->
     <BaseDialog
       v-model="state.ownerDialog"
       :icon="$globals.icons.admin"
@@ -27,20 +29,24 @@
       can-confirm
       @confirm="updateOwner"
     >
-      <v-container>
-        <v-form>
-          <v-select
-            v-model="updateUserId"
-            :items="allUsers"
-            item-title="fullName"
-            item-value="id"
-            :label="$t('general.owner')"
-            :prepend-icon="$globals.icons.user"
-          />
-        </v-form>
-      </v-container>
+      <div class="px-4 py-2">
+        <div class="flex items-center gap-2">
+          <AppIcon :path="$globals.icons.user" size="sm" class="text-on-surface/50 shrink-0" />
+          <div class="flex-1">
+            <label class="block text-xs text-on-surface/60 mb-1">{{ $t('general.owner') }}</label>
+            <select
+              v-model="updateUserId"
+              class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface
+                     focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+            >
+              <option v-for="u in allUsers" :key="u.id" :value="u.id">{{ u.fullName }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </BaseDialog>
 
+    <!-- Delete dialog -->
     <BaseDialog
       v-model="state.deleteDialog"
       :title="$t('general.confirm')"
@@ -49,132 +55,112 @@
       can-confirm
       @confirm="deleteOne"
     >
-      <v-card-text>{{ $t('shopping-list.are-you-sure-you-want-to-delete-this-item') }}</v-card-text>
+      <p class="px-4 py-2 text-sm text-on-surface">{{ $t('shopping-list.are-you-sure-you-want-to-delete-this-item') }}</p>
     </BaseDialog>
+
     <BasePageTitle divider>
       <template #header>
-        <v-img
-          width="100%"
-          max-height="100"
-          max-width="100"
-          src="/svgs/shopping-cart.svg"
-        />
+        <img width="100" height="100" src="/svgs/shopping-cart.svg" class="object-contain" />
       </template>
       <template #title>
         {{ $t('shopping-list.shopping-lists') }}
       </template>
     </BasePageTitle>
 
-    <v-container class="d-flex align-center justify-end px-0 pt-0 pb-4">
-      <v-checkbox
-        v-model="preferences.viewAllLists"
-        hide-details
-        :label="$t('general.show-all')"
-        class="my-0 mr-4"
-      />
-      <BaseButton
-        create
-        class="my-0"
-        @click="state.createDialog = true"
-      />
-    </v-container>
+    <!-- Controls -->
+    <div class="flex items-center justify-end gap-4 py-4">
+      <label class="flex items-center gap-2 text-sm text-on-surface cursor-pointer">
+        <input
+          v-model="preferences.viewAllLists"
+          type="checkbox"
+          class="w-4 h-4 rounded border-border accent-primary"
+        />
+        {{ $t('general.show-all') }}
+      </label>
+      <BaseButton create @click="state.createDialog = true" />
+    </div>
 
-    <v-container v-if="!shoppingListChoices.length">
+    <!-- Empty state -->
+    <div v-if="!shoppingListChoices.length">
       <BasePageTitle>
-        <template #title>
-          {{ $t('shopping-list.no-shopping-lists-found') }}
-        </template>
+        <template #title>{{ $t('shopping-list.no-shopping-lists-found') }}</template>
       </BasePageTitle>
-    </v-container>
+    </div>
 
-    <section>
-      <v-card
+    <!-- List -->
+    <section class="space-y-2">
+      <NuxtLink
         v-for="list in shoppingListChoices"
         :key="list.id"
-        class="my-2 left-border"
         :to="`/shopping-lists/${list.id}`"
+        class="flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-surface
+               hover:bg-primary/5 transition-colors group block"
+        style="border-left: 3px solid rgb(var(--color-primary));"
       >
-        <v-card-title class="d-flex align-center">
-          <v-icon class="mr-2">
-            {{ $globals.icons.cartCheck }}
-          </v-icon>
-          <span class="flex-grow-1">
-            {{ list.name }}
-          </span>
-          <v-btn
-            icon
-            variant="plain"
-            @click.prevent="toggleOwnerDialog(list)"
-          >
-            <v-icon>
-              {{ $globals.icons.user }}
-            </v-icon>
-          </v-btn>
-          <v-btn
-            icon
-            variant="plain"
-            @click.prevent="openDelete(list.id)"
-          >
-            <v-icon>
-              {{ $globals.icons.delete }}
-            </v-icon>
-          </v-btn>
-        </v-card-title>
-      </v-card>
+        <AppIcon :path="$globals.icons.cartCheck" size="md" class="text-on-surface/60 shrink-0" />
+        <span class="flex-1 text-sm font-medium text-on-surface">{{ list.name }}</span>
+        <button
+          type="button"
+          :title="$t('user.edit-user')"
+          class="bs-btn bs-btn-sm bs-btn-ghost opacity-0 group-hover:opacity-100 transition-opacity"
+          @click.prevent="toggleOwnerDialog(list)"
+        >
+          <AppIcon :path="$globals.icons.user" size="sm" />
+        </button>
+        <button
+          type="button"
+          :title="$t('general.delete')"
+          class="bs-btn bs-btn-sm bs-btn-ghost text-error opacity-0 group-hover:opacity-100 transition-opacity"
+          @click.prevent="openDelete(list.id)"
+        >
+          <AppIcon :path="$globals.icons.delete" size="sm" />
+        </button>
+      </NuxtLink>
     </section>
-  </v-container>
+  </div>
 </template>
 
 <script setup lang="ts">
 definePageMeta({ middleware: ["lite-mode"] });
+
 import type { ShoppingListOut } from "~/lib/api/types/household";
 import { useUserApi } from "~/composables/api";
 import { useAsyncKey } from "~/composables/use-utils";
 import { useShoppingListPreferences } from "~/composables/use-users/preferences";
 import type { UserOut } from "~/lib/api/types/user";
 
+const { $globals } = useNuxtApp();
 const auth = useMealieAuth();
 const i18n = useI18n();
 const ready = ref(false);
 const userApi = useUserApi();
 const route = useRoute();
 
-useSeoMeta({
-  title: i18n.t("shopping-list.shopping-list"),
-});
+useSeoMeta({ title: i18n.t("shopping-list.shopping-list") });
 
 const overrideDisableRedirect = ref(false);
 const disableRedirect = computed(() => route.query.disableRedirect === "true" || overrideDisableRedirect.value);
 const preferences = useShoppingListPreferences();
 
 const state = reactive({
-  createName: "",
+  createName:  "",
   createDialog: false,
   deleteDialog: false,
   deleteTarget: "",
-  ownerDialog: false,
-  ownerTarget: ref<ShoppingListOut | null>(null),
+  ownerDialog:  false,
+  ownerTarget:  ref<ShoppingListOut | null>(null),
 });
 
-const { data: shoppingLists } = useAsyncData(useAsyncKey(), async () => {
-  return await fetchShoppingLists();
-});
+const { data: shoppingLists } = useAsyncData(useAsyncKey(), async () => fetchShoppingLists());
 
 const shoppingListChoices = computed(() => {
-  if (!shoppingLists.value) {
-    return [];
-  }
-
-  return shoppingLists.value.filter(list => preferences.value.viewAllLists || list.userId === auth.user.value?.id);
+  if (!shoppingLists.value) return [];
+  return shoppingLists.value.filter(
+    list => preferences.value.viewAllLists || list.userId === auth.user.value?.id,
+  );
 });
 
-// This has to appear before the shoppingListChoices watcher, otherwise that runs first and the redirect is not disabled
-watch(
-  () => preferences.value.viewAllLists,
-  () => {
-    overrideDisableRedirect.value = true;
-  },
-);
+watch(() => preferences.value.viewAllLists, () => { overrideDisableRedirect.value = true; });
 
 watch(
   () => shoppingListChoices,
@@ -186,19 +172,12 @@ watch(
       ready.value = true;
     }
   },
-  {
-    deep: true,
-  },
+  { deep: true },
 );
 
 async function fetchShoppingLists() {
   const { data } = await userApi.shopping.lists.getAll(1, -1, { orderBy: "name", orderDirection: "asc" });
-
-  if (!data) {
-    return [];
-  }
-
-  return data.items;
+  return data?.items ?? [];
 }
 
 async function refresh() {
@@ -207,11 +186,7 @@ async function refresh() {
 
 async function createOne() {
   const { data } = await userApi.shopping.lists.createOne({ name: state.createName });
-
-  if (data) {
-    refresh();
-    state.createName = "";
-  }
+  if (data) { refresh(); state.createName = ""; }
 }
 
 async function toggleOwnerDialog(list: ShoppingListOut) {
@@ -222,43 +197,25 @@ async function toggleOwnerDialog(list: ShoppingListOut) {
   state.ownerDialog = !state.ownerDialog;
 }
 
-// ===============================================================
-// Shopping List Edit User/Owner
-
 const allUsers = ref<UserOut[]>([]);
 const updateUserId = ref<string | undefined>();
 async function fetchAllUsers() {
   const { data } = await userApi.households.fetchMembers();
-  if (!data) {
-    return;
-  }
-
-  // update current user
+  if (!data) return;
   allUsers.value = data.items.sort((a, b) => ((a.fullName || "") < (b.fullName || "") ? -1 : 1));
   updateUserId.value = state.ownerTarget?.userId;
 }
 
 async function updateOwner() {
-  if (!state.ownerTarget || !updateUserId.value) {
-    return;
-  }
-  // user has not changed, so we should not update
-  if (state.ownerTarget.userId === updateUserId.value) {
-    return;
-  }
-  // get full list, so the move does not delete shopping list items
+  if (!state.ownerTarget || !updateUserId.value) return;
+  if (state.ownerTarget.userId === updateUserId.value) return;
   const { data: fullList } = await userApi.shopping.lists.getOne(state.ownerTarget.id);
-  if (!fullList) {
-    return;
-  }
+  if (!fullList) return;
   const { data } = await userApi.shopping.lists.updateOne(
     state.ownerTarget.id,
     { ...fullList, userId: updateUserId.value },
   );
-
-  if (data) {
-    refresh();
-  }
+  if (data) refresh();
 }
 
 function openDelete(id: string) {
@@ -268,8 +225,6 @@ function openDelete(id: string) {
 
 async function deleteOne() {
   const { data } = await userApi.shopping.lists.deleteOne(state.deleteTarget);
-  if (data) {
-    refresh();
-  }
+  if (data) refresh();
 }
 </script>

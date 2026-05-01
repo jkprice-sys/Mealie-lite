@@ -6,89 +6,54 @@
     width="70%"
     max-width="816px"
   >
-    <div class="pa-6">
-      <v-container class="print-config mb-3 pa-0">
-        <v-row>
-          <v-col
-            cols="auto"
-            align-self="center"
-            class="text-center"
-          >
-            <div
-              class="text-subtitle-2"
-              style="text-align: center;"
+    <div class="px-6 py-4">
+      <!-- Print config controls -->
+      <div class="flex flex-wrap gap-6 mb-4">
+        <!-- Image position toggle -->
+        <div class="flex flex-col items-center gap-2">
+          <span class="text-xs font-medium text-on-surface/60">{{ $t('recipe.recipe-image') }}</span>
+          <div class="inline-flex rounded-lg border border-border overflow-hidden">
+            <button
+              v-for="pos in [ImagePosition.left, ImagePosition.right, ImagePosition.hidden]"
+              :key="pos"
+              type="button"
+              class="px-3 py-2 transition-colors"
+              :class="preferences.imagePosition === pos ? 'bg-primary text-on-primary' : 'bg-surface text-on-surface hover:bg-primary/5'"
+              @click="preferences.imagePosition = pos"
             >
-              {{ $t('recipe.recipe-image') }}
-            </div>
-            <v-btn-toggle
-              v-model="preferences.imagePosition"
-              mandatory="force"
-              style="width: fit-content;"
+              <AppIcon
+                :path="pos === ImagePosition.left ? $globals.icons.dockLeft : pos === ImagePosition.right ? $globals.icons.dockRight : $globals.icons.windowClose"
+                size="sm"
+              />
+            </button>
+          </div>
+        </div>
+
+        <!-- Toggle switches -->
+        <div class="flex flex-col gap-2">
+          <label v-for="(pref, key) in prefToggles" :key="key" class="flex items-center gap-2 cursor-pointer">
+            <button
+              type="button"
+              role="switch"
+              :aria-checked="preferences[key]"
+              class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none shrink-0"
+              :class="preferences[key] ? 'bg-primary' : 'bg-on-surface/20'"
+              @click="preferences[key] = !preferences[key]"
             >
-              <v-btn :value="ImagePosition.left">
-                <v-icon>{{ $globals.icons.dockLeft }}</v-icon>
-              </v-btn>
-              <v-btn :value="ImagePosition.right">
-                <v-icon>{{ $globals.icons.dockRight }}</v-icon>
-              </v-btn>
-              <v-btn :value="ImagePosition.hidden">
-                <v-icon>{{ $globals.icons.windowClose }}</v-icon>
-              </v-btn>
-            </v-btn-toggle>
-          </v-col>
-          <v-col
-            cols="auto"
-            align-self="start"
-          >
-            <v-row no-gutters>
-              <v-switch
-                v-model="preferences.showDescription"
-                hide-details
-                color="primary"
-                :label="$t('recipe.description')"
+              <span
+                class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform"
+                :class="preferences[key] ? 'translate-x-4' : 'translate-x-0.5'"
               />
-            </v-row>
-            <v-row no-gutters>
-              <v-switch
-                v-model="preferences.showNotes"
-                hide-details
-                color="primary"
-                :label="$t('recipe.notes')"
-              />
-            </v-row>
-          </v-col>
-          <v-col
-            cols="auto"
-            align-self="start"
-          >
-            <v-row no-gutters>
-              <v-switch
-                v-model="preferences.showNutrition"
-                hide-details
-                color="primary"
-                :label="$t('recipe.nutrition')"
-              />
-            </v-row>
-            <v-row no-gutters>
-              <v-switch
-                v-model="preferences.expandChildRecipes"
-                hide-details
-                color="primary"
-                :label="$t('recipe.include-linked-recipe-ingredients')"
-              />
-            </v-row>
-          </v-col>
-        </v-row>
-      </v-container>
-      <v-card
-        height="fit-content"
-        max-height="40vh"
-        width="100%"
-        class="print-preview"
-        style="overflow-y: auto;"
-      >
+            </button>
+            <span class="text-sm text-on-surface">{{ pref }}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Print preview -->
+      <div class="rounded-lg border border-border max-h-[40vh] overflow-y-auto">
         <RecipePrintView :recipe="recipe" />
-      </v-card>
+      </div>
     </div>
   </BaseDialog>
 </template>
@@ -106,6 +71,15 @@ withDefaults(defineProps<Props>(), {
   recipe: undefined,
 });
 
+const { $globals } = useNuxtApp();
+const i18n = useI18n();
 const dialog = defineModel<boolean>({ default: false });
 const preferences = useUserPrintPreferences();
+
+const prefToggles = computed(() => ({
+  showDescription: i18n.t("recipe.description") as string,
+  showNotes: i18n.t("recipe.notes") as string,
+  showNutrition: i18n.t("recipe.nutrition") as string,
+  expandChildRecipes: i18n.t("recipe.include-linked-recipe-ingredients") as string,
+}));
 </script>

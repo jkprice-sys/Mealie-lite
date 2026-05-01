@@ -1,50 +1,48 @@
 <template>
-  <div v-if="valueNotNull || edit">
-    <v-card class="mt-2">
-      <v-card-title class="pt-2 pb-0">
+  <div v-if="valueNotNull || edit" class="mt-2">
+    <div class="bs-card overflow-hidden">
+      <div class="bs-card-header text-base">
         {{ $t("recipe.nutrition") }}
-      </v-card-title>
-      <v-divider class="mx-2 my-1" />
-      <v-card-text v-if="edit">
+      </div>
+
+      <!-- Edit mode: number inputs per nutrient -->
+      <div v-if="edit" class="bs-card-body space-y-2">
         <div
           v-for="(item, key, index) in modelValue"
           :key="index"
+          class="flex items-center gap-3"
         >
-          <v-number-input
-            :model-value="modelValue[key]"
-            :label="labels[key].label"
-            :suffix="labels[key].suffix"
-            density="compact"
+          <label class="w-40 shrink-0 text-sm text-on-surface/70">
+            {{ labels[key]?.label }}
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="any"
+            :value="modelValue[key] ?? ''"
+            :placeholder="labels[key]?.label"
             autocomplete="off"
-            variant="underlined"
-            control-variant="stacked"
-            inset
-            :precision="null"
-            :min="0"
-            @update:model-value="updateValue(key, $event)"
+            class="flex-1 border-b border-border bg-transparent text-sm text-on-surface
+                   focus:outline-none focus:border-primary transition-colors py-1"
+            @input="updateValue(key, ($event.target as HTMLInputElement).value)"
           />
+          <span class="text-xs text-on-surface/50 shrink-0 w-8">{{ labels[key]?.suffix }}</span>
         </div>
-      </v-card-text>
-      <v-list
-        v-if="showViewer"
-        density="compact"
-        class="mt-0 pt-0"
-      >
-        <v-list-item
+      </div>
+
+      <!-- View mode: compact list -->
+      <ul v-if="showViewer" class="divide-y divide-border">
+        <li
           v-for="(item, key, index) in renderedList"
           :key="index"
-          style="min-height: 25px"
+          class="flex items-center px-4 py-1 text-sm"
         >
-          <v-list-item-title class="pl-2 d-flex">
-            <div>{{ item.label }}</div>
-            <div class="ml-auto mr-1">
-              {{ item.value }}
-            </div>
-            <div>{{ item.suffix }}</div>
-          </v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-card>
+          <span class="text-on-surface/80">{{ item.label }}</span>
+          <span class="ml-auto mr-1 font-medium text-on-surface">{{ item.value }}</span>
+          <span class="text-on-surface/50 w-6">{{ item.suffix }}</span>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -63,34 +61,27 @@ const props = withDefaults(defineProps<Props>(), {
 const modelValue = defineModel<Nutrition>({ required: true });
 
 const { labels } = useNutritionLabels();
+
 const valueNotNull = computed(() => {
   let key: keyof Nutrition;
   for (key in modelValue.value) {
-    if (modelValue.value[key] !== null) {
-      return true;
-    }
+    if (modelValue.value[key] !== null) return true;
   }
   return false;
 });
 
 const showViewer = computed(() => !props.edit && valueNotNull.value);
 
-function updateValue(key: number | string, event: Event) {
-  modelValue.value = { ...modelValue.value, [key]: event };
+function updateValue(key: number | string, value: string) {
+  modelValue.value = { ...modelValue.value, [key]: value || null };
 }
 
-// Build a new list that only contains nutritional information that has a value
 const renderedList = computed(() => {
   return Object.entries(labels).reduce((item: NutritionLabelType, [key, label]) => {
     if (modelValue.value[key]?.trim()) {
-      item[key] = {
-        ...label,
-        value: modelValue.value[key],
-      };
+      item[key] = { ...label, value: modelValue.value[key] };
     }
     return item;
   }, {});
 });
 </script>
-
-<style lang="scss" scoped></style>

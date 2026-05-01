@@ -10,27 +10,24 @@
       @submit="saveAliases"
       @cancel="$emit('cancel')"
     >
-      <v-card-text>
-        <v-container>
-          <v-row v-for="alias, i in aliases" :key="i">
-            <v-col cols="10">
-              <v-text-field v-model="alias.name" :label="$t('general.name')" :rules="[validators.required]" />
-            </v-col>
-            <v-col cols="2">
-              <BaseButtonGroup
-                :buttons="[
-                  {
-                    icon: $globals.icons.delete,
-                    text: $t('general.delete'),
-                    event: 'delete',
-                  },
-                ]"
-                @delete="deleteAlias(i)"
-              />
-            </v-col>
-          </v-row>
-        </v-container>
-      </v-card-text>
+      <div class="px-4 py-3 space-y-2">
+        <div v-for="(alias, i) in aliases" :key="i" class="flex items-center gap-2">
+          <input
+            v-model="alias.name"
+            type="text"
+            :placeholder="$t('general.name')"
+            class="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface
+                   focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+          />
+          <button
+            type="button"
+            class="p-2 rounded-lg hover:bg-error/10 text-on-surface/40 hover:text-error transition-colors"
+            @click="deleteAlias(i)"
+          >
+            <AppIcon :path="$globals.icons.delete" size="sm" />
+          </button>
+        </div>
+      </div>
       <template #custom-card-action>
         <BaseButton edit @click="createAlias">
           {{ $t('data-pages.create-alias') }}

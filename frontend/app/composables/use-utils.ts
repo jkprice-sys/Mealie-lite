@@ -1,5 +1,7 @@
 import { useDark, useToggle } from "@vueuse/core";
-import type { FilterFunction } from "vuetify";
+
+// Local replacement for Vuetify's FilterFunction type (removed Vuetify dependency)
+type FilterFunction = (value: string, query: string, item?: any) => boolean;
 
 export const useToggleDarkMode = () => {
   const isDark = useDark();

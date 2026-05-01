@@ -1,34 +1,32 @@
 <template>
   <div>
-    <v-container class="flex-column">
-      <BasePageTitle divider>
-        <template #header>
-          <v-img
-            width="100%"
-            max-height="175"
-            max-width="175"
-            src="/svgs/recipes-create.svg"
+    <BasePageTitle divider>
+      <template #header>
+        <img
+          src="/svgs/recipes-create.svg"
+          alt=""
+          class="w-full max-w-[175px] max-h-[175px] object-contain"
+        />
+      </template>
+      <template #title>
+        {{ $t('recipe.recipe-creation') }}
+      </template>
+      <template #content>
+        <div class="flex flex-col gap-2 w-full">
+          <p class="text-sm text-on-surface/70">
+            {{ $t('recipe.select-one-of-the-various-ways-to-create-a-recipe') }}
+          </p>
+          <BaseOverflowButton
+            v-model="subpage"
+            :items="subpages"
           />
-        </template>
-        <template #title>
-          {{ $t('recipe.recipe-creation') }}
-        </template>
-        <template #content>
-          <div class="flex-1-1 d-flex flex-column justify-center align-center ga-2">
-            <p>{{ $t('recipe.select-one-of-the-various-ways-to-create-a-recipe') }}</p>
-            <BaseOverflowButton
-              v-model="subpage"
-              rounded
-              :items="subpages"
-            />
-          </div>
-        </template>
-      </BasePageTitle>
-      <section>
-        <NuxtPage />
-      </section>
-    </v-container>
+        </div>
+      </template>
+    </BasePageTitle>
 
+    <section>
+      <NuxtPage />
+    </section>
   </div>
 </template>
 
@@ -48,42 +46,13 @@ useSeoMeta({
 });
 
 const subpages = computed<MenuItem[]>(() => [
-  {
-    icon: $globals.icons.link,
-    text: i18n.t("recipe.import-with-url"),
-    value: "url",
-  },
-  {
-    icon: $globals.icons.link,
-    text: i18n.t("recipe.bulk-url-import"),
-    value: "bulk",
-  },
-  {
-    icon: $globals.icons.codeTags,
-    text: i18n.t("recipe.import-html-json"),
-    value: "html",
-  },
-  {
-    icon: $globals.icons.fileImage,
-    text: i18n.t("recipe.create-from-images"),
-    value: "image",
-    hide: !$appInfo.enableOpenaiImageServices,
-  },
-  {
-    icon: $globals.icons.edit,
-    text: i18n.t("recipe.create-recipe"),
-    value: "new",
-  },
-  {
-    icon: $globals.icons.zip,
-    text: i18n.t("recipe.import-with-zip"),
-    value: "zip",
-  },
-  {
-    icon: $globals.icons.robot,
-    text: i18n.t("recipe.debug-scraper"),
-    value: "debug",
-  },
+  { icon: $globals.icons.link,      text: i18n.t("recipe.import-with-url"),    value: "url"   },
+  { icon: $globals.icons.link,      text: i18n.t("recipe.bulk-url-import"),    value: "bulk"  },
+  { icon: $globals.icons.codeTags,  text: i18n.t("recipe.import-html-json"),   value: "html"  },
+  { icon: $globals.icons.fileImage, text: i18n.t("recipe.create-from-images"), value: "image", hide: !$appInfo.enableOpenaiImageServices },
+  { icon: $globals.icons.edit,      text: i18n.t("recipe.create-recipe"),      value: "new"   },
+  { icon: $globals.icons.zip,       text: i18n.t("recipe.import-with-zip"),    value: "zip"   },
+  { icon: $globals.icons.robot,     text: i18n.t("recipe.debug-scraper"),      value: "debug" },
 ]);
 
 const route = useRoute();

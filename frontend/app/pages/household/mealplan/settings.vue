@@ -1,28 +1,23 @@
 <template>
-  <v-container class="lg-container">
+  <div class="lg-container mx-auto px-4 py-6">
     <BasePageTitle divider>
       <template #header>
-        <v-img
-          width="100%"
-          max-height="100"
-          max-width="100"
-          src="/svgs/manage-cookbooks.svg"
-        />
+        <img width="100" height="100" src="/svgs/manage-cookbooks.svg" class="object-contain" />
       </template>
       <template #title>
         {{ $t('meal-plan.meal-plan-rules') }}
       </template>
-      {{ $t('meal-plan.meal-plan-rules-description') }}
+      <p class="text-sm text-on-surface/70">{{ $t('meal-plan.meal-plan-rules-description') }}</p>
     </BasePageTitle>
 
-    <v-card>
-      <v-card-title class="headline">
-        {{ $t('meal-plan.new-rule') }}
-      </v-card-title>
-      <v-divider class="mx-2" />
-      <v-card-text>
-        {{ $t('meal-plan.new-rule-description') }}
-
+    <!-- New rule card -->
+    <div class="rounded-xl border border-border bg-surface mt-6">
+      <div class="px-4 pt-4 pb-1">
+        <h2 class="text-base font-semibold text-on-surface">{{ $t('meal-plan.new-rule') }}</h2>
+      </div>
+      <hr class="border-border mx-4" />
+      <div class="px-4 py-3">
+        <p class="text-sm text-on-surface/70 mb-3">{{ $t('meal-plan.new-rule-description') }}</p>
         <GroupMealPlanRuleForm
           :key="createDataFormKey"
           v-model:day="createData.day"
@@ -30,145 +25,80 @@
           v-model:query-filter-string="createData.queryFilterString"
           class="mt-2"
         />
-      </v-card-text>
-      <v-card-actions class="justify-end">
-        <BaseButton
-          create
-          :disabled="!createData.queryFilterString"
-          @click="createRule"
-        />
-      </v-card-actions>
-    </v-card>
+      </div>
+      <div class="flex justify-end px-4 pb-3">
+        <BaseButton create :disabled="!createData.queryFilterString" @click="createRule" />
+      </div>
+    </div>
 
-    <section>
-      <BaseCardSectionTitle
-        class="mt-10"
-        :title="$t('meal-plan.recipe-rules')"
-      />
-      <div>
+    <!-- Existing rules -->
+    <section class="mt-10">
+      <BaseCardSectionTitle :title="$t('meal-plan.recipe-rules')" />
+      <div class="space-y-3 mt-4">
         <div
           v-for="(rule, idx) in allRules"
           :key="rule.id"
+          class="rounded-xl border-l-4 border-l-primary border border-border bg-surface overflow-hidden"
         >
-          <v-card class="my-2 left-border">
-            <v-card-title class="headline pb-1">
+          <!-- Rule header -->
+          <div class="px-4 pt-3 pb-2 flex items-start justify-between gap-2">
+            <p class="text-sm font-medium text-on-surface">
               {{ rule.day === "unset" ? $t('meal-plan.applies-to-all-days') : $t('meal-plan.applies-on-days', [rule.day]) }}
               {{ rule.entryType === "unset" ? $t('meal-plan.for-all-meal-types') : $t('meal-plan.for-type-meal-types', [rule.entryType]) }}
-              <span class="ml-auto">
-                <BaseButtonGroup
-                  :buttons="[
-                    {
-                      icon: $globals.icons.edit,
-                      text: $t('general.edit'),
-                      event: 'edit',
-                    },
-                    {
-                      icon: $globals.icons.delete,
-                      text: $t('general.delete'),
-                      event: 'delete',
-                    },
-                  ]"
-                  @delete="deleteRule(rule.id)"
-                  @edit="toggleEditState(rule.id)"
-                />
-              </span>
-            </v-card-title>
-            <v-card-text>
-              <template v-if="!editState[rule.id]">
-                <div v-if="rule.categories">
-                  <h4 class="py-1">
-                    {{ $t("category.categories") }}:
-                  </h4>
-                  <RecipeChips
-                    v-if="rule.categories.length"
-                    :items="rule.categories"
-                    small
-                    class="pb-3"
-                  />
-                  <v-card-text
-                    v-else
-                    label
-                    class="ma-0 px-0 pt-0 pb-3"
-                    text-color="accent"
-                    size="small"
-                    dark
-                  >
-                    {{ $t("meal-plan.any-category") }}
-                  </v-card-text>
-                </div>
+            </p>
+            <BaseButtonGroup
+              :buttons="[
+                { icon: $globals.icons.edit, text: $t('general.edit'), event: 'edit' },
+                { icon: $globals.icons.delete, text: $t('general.delete'), event: 'delete' },
+              ]"
+              @delete="deleteRule(rule.id)"
+              @edit="toggleEditState(rule.id)"
+            />
+          </div>
 
-                <div v-if="rule.tags">
-                  <h4 class="py-1">
-                    {{ $t("tag.tags") }}:
-                  </h4>
-                  <RecipeChips
-                    v-if="rule.tags.length"
-                    :items="rule.tags"
-                    url-prefix="tags"
-                    small
-                    class="pb-3"
-                  />
-                  <v-card-text
-                    v-else
-                    label
-                    class="ma-0 px-0 pt-0 pb-3"
-                    text-color="accent"
-                    size="small"
-                    dark
-                  >
-                    {{ $t("meal-plan.any-tag") }}
-                  </v-card-text>
-                </div>
-                <div v-if="rule.households">
-                  <h4 class="py-1">
-                    {{ $t("household.households") }}:
-                  </h4>
-                  <div v-if="rule.households.length">
-                    <v-chip
-                      v-for="household in rule.households"
-                      :key="household.id"
-                      label
-                      class="ma-1"
-                      color="accent"
-                      size="small"
-                      dark
-                    >
-                      {{ household.name }}
-                    </v-chip>
-                  </div>
-                  <v-card-text
-                    v-else
-                    label
-                    class="ma-0 px-0 pt-0 pb-3"
-                    text-color="accent"
-                    size="small"
-                    dark
-                  >
-                    {{ $t("meal-plan.any-household") }}
-                  </v-card-text>
-                </div>
-              </template>
-              <template v-else>
-                <GroupMealPlanRuleForm
-                  v-model:day="allRules[idx].day"
-                  v-model:entry-type="allRules[idx].entryType"
-                  v-model:query-filter-string="allRules[idx].queryFilterString"
-                  :query-filter="allRules[idx].queryFilter"
-                />
-                <div class="d-flex justify-end">
-                  <BaseButton
-                    update
-                    :disabled="!allRules[idx].queryFilterString"
-                    @click="updateRule(rule)"
-                  />
-                </div>
-              </template>
-            </v-card-text>
-          </v-card>
+          <!-- View mode -->
+          <div v-if="!editState[rule.id]" class="px-4 pb-3 space-y-2">
+            <div v-if="rule.categories">
+              <h4 class="text-xs font-semibold text-on-surface/60 uppercase tracking-wide py-1">{{ $t("category.categories") }}:</h4>
+              <RecipeChips v-if="rule.categories.length" :items="rule.categories" small class="pb-1" />
+              <p v-else class="text-xs text-on-surface/50">{{ $t("meal-plan.any-category") }}</p>
+            </div>
+            <div v-if="rule.tags">
+              <h4 class="text-xs font-semibold text-on-surface/60 uppercase tracking-wide py-1">{{ $t("tag.tags") }}:</h4>
+              <RecipeChips v-if="rule.tags.length" :items="rule.tags" url-prefix="tags" small class="pb-1" />
+              <p v-else class="text-xs text-on-surface/50">{{ $t("meal-plan.any-tag") }}</p>
+            </div>
+            <div v-if="rule.households">
+              <h4 class="text-xs font-semibold text-on-surface/60 uppercase tracking-wide py-1">{{ $t("household.households") }}:</h4>
+              <div v-if="rule.households.length" class="flex flex-wrap gap-1">
+                <span
+                  v-for="household in rule.households"
+                  :key="household.id"
+                  class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary"
+                >
+                  {{ household.name }}
+                </span>
+              </div>
+              <p v-else class="text-xs text-on-surface/50">{{ $t("meal-plan.any-household") }}</p>
+            </div>
+          </div>
+
+          <!-- Edit mode -->
+          <div v-else class="px-4 pb-3">
+            <GroupMealPlanRuleForm
+              v-model:day="allRules[idx].day"
+              v-model:entry-type="allRules[idx].entryType"
+              v-model:query-filter-string="allRules[idx].queryFilterString"
+              :query-filter="allRules[idx].queryFilter"
+            />
+            <div class="flex justify-end mt-3">
+              <BaseButton update :disabled="!allRules[idx].queryFilterString" @click="updateRule(rule)" />
+            </div>
+          </div>
         </div>
       </div>
     </section>
-  </v-container>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -181,13 +111,12 @@ import RecipeChips from "~/components/Domain/Recipe/RecipeChips.vue";
 
 const api = useUserApi();
 const i18n = useI18n();
+const { $globals } = useNuxtApp();
 
 useSeoMeta({
   title: i18n.t("meal-plan.meal-plan-settings"),
 });
 
-// ======================================================
-// Manage All
 const editState = ref<{ [key: string]: boolean }>({});
 const allRules = ref<PlanRulesOut[]>([]);
 
@@ -198,7 +127,6 @@ function toggleEditState(id: string) {
 
 async function refreshAll() {
   const { data } = await api.mealplanRules.getAll();
-
   if (data) {
     allRules.value = data.items ?? [];
   }
@@ -207,9 +135,6 @@ async function refreshAll() {
 useAsyncData(useAsyncKey(), async () => {
   await refreshAll();
 });
-
-// ======================================================
-// Creating Rules
 
 const createDataFormKey = ref(0);
 const createData = ref<PlanRulesCreate>({
@@ -222,20 +147,14 @@ async function createRule() {
   const { data } = await api.mealplanRules.createOne(createData.value);
   if (data) {
     refreshAll();
-    createData.value = {
-      entryType: "unset",
-      day: "unset",
-      queryFilterString: "",
-    };
+    createData.value = { entryType: "unset", day: "unset", queryFilterString: "" };
     createDataFormKey.value++;
   }
 }
 
 async function deleteRule(ruleId: string) {
   const { data } = await api.mealplanRules.deleteOne(ruleId);
-  if (data) {
-    refreshAll();
-  }
+  if (data) { refreshAll(); }
 }
 
 async function updateRule(rule: PlanRulesOut) {

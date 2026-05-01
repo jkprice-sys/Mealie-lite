@@ -8,66 +8,66 @@
     width="100%"
     max-width="1200"
   >
-    <div class="d-flex" :style="{ height: useMobile ? '100%' : '60vh', minHeight: '60vh' }">
-      <!-- Nav list -->
-      <v-list
+    <div class="flex" :style="{ height: useMobile ? '100%' : '60vh', minHeight: '60vh' }">
+      <!-- Nav sidebar -->
+      <div
         v-show="!useMobile || navOpen"
-        nav
-        density="compact"
-        color="primary"
-        class="overflow-y-auto border-e flex-shrink-0"
+        class="overflow-y-auto border-r border-border shrink-0 py-1"
         style="width: 200px; max-height: 60vh"
       >
-        <v-list-item
+        <button
           v-for="announcement in allAnnouncements.toReversed()"
           :key="announcement.key"
-          :active="currentAnnouncement.key === announcement.key"
-          rounded
+          type="button"
+          class="w-full text-left px-3 py-2 rounded-lg transition-colors flex flex-col gap-0.5 text-sm"
+          :class="currentAnnouncement.key === announcement.key
+            ? 'bg-primary text-on-primary'
+            : 'text-on-surface hover:bg-primary/10'"
           @click="setCurrentAnnouncement(announcement); navOpen = false"
         >
-          <v-list-item-title class="text-body-2">
-            {{ announcement.meta?.title }}
-          </v-list-item-title>
-          <v-list-item-subtitle v-if="announcement.date">
-            {{ $d(announcement.date) }}
-          </v-list-item-subtitle>
-
-          <template v-if="newAnnouncements.some(a => a.key === announcement.key)" #append>
-            <v-icon size="x-small" color="info">
-              {{ $globals.icons.alertCircle }}
-            </v-icon>
-          </template>
-        </v-list-item>
-      </v-list>
+          <span class="font-medium leading-snug">{{ announcement.meta?.title }}</span>
+          <span v-if="announcement.date" class="text-xs opacity-70">{{ $d(announcement.date) }}</span>
+          <span
+            v-if="newAnnouncements.some(a => a.key === announcement.key)"
+            class="inline-flex items-center"
+          >
+            <AppIcon :path="$globals.icons.alertCircle" size="xs" class="text-info" />
+          </span>
+        </button>
+      </div>
 
       <!-- Main content -->
-      <div
-        class="flex-grow-1 overflow-y-auto"
-      >
-        <v-btn
+      <div class="flex-1 overflow-y-auto">
+        <!-- Mobile nav toggle -->
+        <button
           v-if="useMobile"
-          :prepend-icon="navOpen ? $globals.icons.chevronLeft : $globals.icons.chevronRight"
-          density="compact"
-          variant="text"
-          class="mt-2 ms-2"
+          type="button"
+          class="inline-flex items-center gap-1 mt-2 ms-2 px-2 py-1 rounded text-sm text-on-surface/70 hover:bg-on-surface/10 transition-colors"
           @click="navOpen = !navOpen"
         >
+          <AppIcon :path="navOpen ? $globals.icons.chevronLeft : $globals.icons.chevronRight" size="sm" />
           {{ $t("announcements.all-announcements") }}
-        </v-btn>
-        <v-card-title>
-          <v-chip v-if="currentAnnouncement.date" label large class="me-1">
-            <v-icon class="me-1">
-              {{ $globals.icons.calendar }}
-            </v-icon>
+        </button>
+
+        <!-- Announcement title -->
+        <div class="px-4 pt-3 pb-1 flex items-center gap-2 flex-wrap">
+          <span
+            v-if="currentAnnouncement.date"
+            class="inline-flex items-center gap-1 rounded border border-border px-2 py-0.5 text-xs text-on-surface/70"
+          >
+            <AppIcon :path="$globals.icons.calendar" size="xs" />
             {{ $d(currentAnnouncement.date) }}
-          </v-chip>
-          {{ currentAnnouncement.meta?.title }}
-        </v-card-title>
-        <v-card-text>
+          </span>
+          <span class="font-semibold text-on-surface">{{ currentAnnouncement.meta?.title }}</span>
+        </div>
+
+        <!-- Announcement body -->
+        <div class="px-4 py-2 text-sm text-on-surface">
           <component :is="currentAnnouncement.component" />
-        </v-card-text>
+        </div>
       </div>
     </div>
+
     <template #custom-card-action>
       <BaseButton
         v-if="newAnnouncements.length"
@@ -89,13 +89,15 @@
 </template>
 
 <script setup lang="ts">
+import { useBreakpoints, breakpointsTailwind } from "@vueuse/core";
 import { useAnnouncements } from "~/composables/use-announcements";
 import type { Announcement } from "~/composables/use-announcements";
 
 const dialog = defineModel<boolean>({ default: false });
+const { $globals } = useNuxtApp();
 
-const display = useDisplay();
-const useMobile = computed(() => display.smAndDown.value);
+const bp = useBreakpoints(breakpointsTailwind);
+const useMobile = bp.smallerOrEqual("sm");
 const navOpen = ref(false);
 
 const route = useRoute();
@@ -121,7 +123,6 @@ function setCurrentAnnouncement(announcement: Announcement) {
 }
 
 function nextAnnouncement() {
-  // Find the first unread announcement after the current one (current is already removed from newAnnouncements)
   const next = newAnnouncements.value.find(a => a.key > currentAnnouncement.value!.key);
   if (next) {
     setCurrentAnnouncement(next);

@@ -1,35 +1,31 @@
 <template>
-  <v-container fluid>
+  <div class="px-4 py-4">
     <BaseDialog
       v-model="createDialog"
       :title="$t('household.create-household')"
       :icon="$globals.icons.household"
     >
       <template #activator />
-      <v-card-text>
-        <v-form ref="refNewHouseholdForm" @keydown.enter.prevent="handleCreateSubmit">
-          <v-select
-            v-if="groups"
+      <div class="px-4 py-3 space-y-3">
+        <div v-if="groups">
+          <label class="block text-xs text-on-surface/60 mb-1">{{ $t('household.household-group') }}</label>
+          <select
             v-model="createHouseholdForm.data.groupId"
-            :items="groups"
-            item-title="name"
-            item-value="id"
-            variant="filled"
-            :label="$t('household.household-group')"
-            :rules="[validators.required]"
-          />
-          <AutoForm
-            v-model="createHouseholdForm.data"
-            :update-mode="updateMode"
-            :items="createHouseholdForm.items"
-          />
-        </v-form>
-      </v-card-text>
+            required
+            class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="" disabled>{{ $t('household.household-group') }}</option>
+            <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
+          </select>
+        </div>
+        <AutoForm
+          v-model="createHouseholdForm.data"
+          :update-mode="updateMode"
+          :items="createHouseholdForm.items"
+        />
+      </div>
       <template #custom-card-action>
-        <BaseButton
-          type="submit"
-          @click="handleCreateSubmit"
-        >
+        <BaseButton type="button" @click="handleCreateSubmit">
           {{ $t("general.create") }}
         </BaseButton>
       </template>
@@ -44,72 +40,62 @@
       @confirm="deleteHousehold(deleteTarget)"
     >
       <template #activator />
-      <v-card-text>
-        {{ $t("general.confirm-delete-generic") }}
-      </v-card-text>
+      <div class="px-4 py-3">
+        <p class="text-sm text-on-surface">{{ $t("general.confirm-delete-generic") }}</p>
+      </div>
     </BaseDialog>
 
     <BaseCardSectionTitle :title="$t('household.household-management')" />
+
     <section>
-      <v-toolbar
-        flat
-        color="transparent"
-        class="justify-between"
-      >
+      <div class="flex items-center gap-2 mb-4">
         <BaseButton @click="openDialog">
           {{ $t("general.create") }}
         </BaseButton>
-      </v-toolbar>
+      </div>
 
-      <v-data-table
-        v-if="headers && households"
-        :headers="headers"
-        :items="households"
-        item-key="id"
-        class="elevation-0"
-        :items-per-page="-1"
-        hide-default-footer
-        disable-pagination
-        :search="search"
-        @click:row="($event, { item }) => handleRowClick(item)"
-      >
-        <template #[`item.users`]="{ item }">
-          {{ item.users?.length }}
-        </template>
-        <template #[`item.group`]="{ item }">
-          {{ item.group }}
-        </template>
-        <template #[`item.webhookEnable`]="{ item }">
-          {{ item.webhooks!.length > 0 ? $t("general.yes") : $t("general.no") }}
-        </template>
-        <template #[`item.actions`]="{ item }">
-          <v-tooltip
-            location="bottom"
-            :disabled="!(item && item.users!.length > 0)"
-          >
-            <template #activator="{ props }">
-              <div v-bind="props">
-                <v-btn
-                  :disabled="item && item.users!.length > 0"
-                  class="mr-1"
-                  icon
-                  color="error"
-                  variant="text"
-                  @click.stop="confirmDialog = true; deleteTarget = item.id"
+      <div class="overflow-x-auto rounded-xl border border-border">
+        <table class="w-full text-sm text-on-surface">
+          <thead>
+            <tr class="border-b border-border bg-surface">
+              <th class="px-3 py-2 text-left font-medium text-on-surface/60">{{ $t('household.household') }}</th>
+              <th class="px-3 py-2 text-left font-medium text-on-surface/60">{{ $t('general.name') }}</th>
+              <th class="px-3 py-2 text-left font-medium text-on-surface/60">{{ $t('group.group') }}</th>
+              <th class="px-3 py-2 text-left font-medium text-on-surface/60">{{ $t('user.total-users') }}</th>
+              <th class="px-3 py-2 text-left font-medium text-on-surface/60">{{ $t('user.webhooks-enabled') }}</th>
+              <th class="px-3 py-2 text-center font-medium text-on-surface/60">{{ $t('general.delete') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="h in households || []"
+              :key="h.id"
+              class="border-b border-border hover:bg-primary/5 cursor-pointer transition-colors"
+              @click="handleRowClick(h)"
+            >
+              <td class="px-3 py-2 text-xs text-on-surface/60">{{ h.id }}</td>
+              <td class="px-3 py-2">{{ h.name }}</td>
+              <td class="px-3 py-2">{{ h.group }}</td>
+              <td class="px-3 py-2">{{ h.users?.length }}</td>
+              <td class="px-3 py-2">{{ h.webhooks!.length > 0 ? $t("general.yes") : $t("general.no") }}</td>
+              <td class="px-3 py-2 text-center">
+                <button
+                  type="button"
+                  :disabled="h.users!.length > 0"
+                  :title="h.users!.length > 0 ? $t('admin.household-delete-note') : undefined"
+                  class="p-1 rounded text-error hover:bg-error/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  @click.stop="confirmDialog = true; deleteTarget = h.id"
                 >
-                  <v-icon>
-                    {{ $globals.icons.delete }}
-                  </v-icon>
-                </v-btn>
-              </div>
-            </template>
-            <span>{{ $t("admin.household-delete-note") }}</span>
-          </v-tooltip>
-        </template>
-      </v-data-table>
-      <v-divider />
+                  <AppIcon :path="$globals.icons.delete" size="sm" />
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <hr class="border-border mt-2" />
     </section>
-  </v-container>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -118,13 +104,13 @@ import { useGroups } from "~/composables/use-groups";
 import { useAdminHouseholds } from "~/composables/use-households";
 import { validators } from "~/composables/use-validators";
 import type { HouseholdInDB } from "~/lib/api/types/household";
-import type { VForm } from "~/types/auto-forms";
 
 definePageMeta({
   layout: "admin",
 });
 
 const i18n = useI18n();
+const { $globals } = useNuxtApp();
 
 useSeoMeta({
   title: i18n.t("household.manage-households"),
@@ -133,27 +119,11 @@ useSeoMeta({
 const { groups } = useGroups();
 const { households, deleteHousehold, createHousehold } = useAdminHouseholds();
 
-const refNewHouseholdForm = ref<VForm | null>(null);
-
 const createDialog = ref(false);
 const confirmDialog = ref(false);
 const deleteTarget = ref<string>("");
 const search = ref("");
 const updateMode = ref(false);
-
-const headers = [
-  {
-    title: i18n.t("household.household"),
-    align: "start",
-    sortable: false,
-    value: "id",
-  },
-  { title: i18n.t("general.name"), value: "name" },
-  { title: i18n.t("group.group"), value: "group" },
-  { title: i18n.t("user.total-users"), value: "users" },
-  { title: i18n.t("user.webhooks-enabled"), value: "webhookEnable" },
-  { title: i18n.t("general.delete"), value: "actions" },
-];
 
 const createHouseholdForm = reactive({
   items: [
@@ -183,10 +153,13 @@ function handleRowClick(item: HouseholdInDB) {
 }
 
 async function handleCreateSubmit() {
-  if (!refNewHouseholdForm.value?.validate()) {
+  if (!createHouseholdForm.data.groupId || !createHouseholdForm.data.name) {
     return;
   }
   createDialog.value = false;
   await createHousehold(createHouseholdForm.data);
 }
+
+// suppress unused
+void search;
 </script>

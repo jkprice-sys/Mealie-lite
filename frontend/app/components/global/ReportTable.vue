@@ -1,30 +1,40 @@
 <template>
-  <v-data-table
-    :headers="headers"
-    :items="items"
-    item-key="id"
-    class="elevation-0"
-    :items-per-page="50"
-    @click:row="($event, { item }) => handleRowClick(item)"
-  >
-    <template #[`item.category`]="{ item }">
-      {{ capitalize(item.category) }}
-    </template>
-    <template #[`item.timestamp`]="{ item }">
-      {{ $d(Date.parse(item.timestamp!), "long") }}
-    </template>
-    <template #[`item.status`]="{ item }">
-      {{ capitalize(item.status!) }}
-    </template>
-    <template #[`item.actions`]="{ item }">
-      <v-btn
-        icon
-        @click.stop="deleteReport(item.id)"
-      >
-        <v-icon>{{ $globals.icons.delete }}</v-icon>
-      </v-btn>
-    </template>
-  </v-data-table>
+  <div class="overflow-x-auto rounded-lg border border-border">
+    <table class="w-full text-sm text-on-surface">
+      <thead>
+        <tr class="bg-surface border-b border-border text-xs text-on-surface/60 font-medium">
+          <th class="px-4 py-3 text-left">{{ $t("category.category") }}</th>
+          <th class="px-4 py-3 text-left">{{ $t("general.name") }}</th>
+          <th class="px-4 py-3 text-left">{{ $t("general.timestamp") }}</th>
+          <th class="px-4 py-3 text-left">{{ $t("general.status") }}</th>
+          <th class="px-4 py-3 text-left w-12" />
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="item in items"
+          :key="item.id"
+          class="border-b border-border/50 last:border-0 transition-colors"
+          :class="item.status !== 'in-progress' ? 'cursor-pointer hover:bg-primary/5' : ''"
+          @click="handleRowClick(item)"
+        >
+          <td class="px-4 py-3">{{ capitalize(item.category) }}</td>
+          <td class="px-4 py-3">{{ item.name }}</td>
+          <td class="px-4 py-3">{{ item.timestamp ? $d(Date.parse(item.timestamp), "long") : '' }}</td>
+          <td class="px-4 py-3">{{ capitalize(item.status || '') }}</td>
+          <td class="px-4 py-3">
+            <button
+              type="button"
+              class="p-1 rounded hover:bg-error/10 text-on-surface/40 hover:text-error transition-colors"
+              @click.stop="deleteReport(item.id)"
+            >
+              <AppIcon :path="$globals.icons.delete" size="sm" />
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -41,22 +51,12 @@ const emit = defineEmits<{
   (e: "delete", id: string): void;
 }>();
 
+const { $globals } = useNuxtApp();
 const i18n = useI18n();
 const router = useRouter();
 
-const headers = [
-  { title: i18n.t("category.category"), value: "category", key: "category" },
-  { title: i18n.t("general.name"), value: "name", key: "name" },
-  { title: i18n.t("general.timestamp"), value: "timestamp", key: "timestamp" },
-  { title: i18n.t("general.status"), value: "status", key: "status" },
-  { title: i18n.t("general.delete"), value: "actions", key: "actions" },
-];
-
 function handleRowClick(item: ReportSummary) {
-  if (item.status === "in-progress") {
-    return;
-  }
-
+  if (item.status === "in-progress") return;
   router.push(`/group/reports/${item.id}`);
 }
 
@@ -68,5 +68,3 @@ function deleteReport(id: string) {
   emit("delete", id);
 }
 </script>
-
-<style lang="scss" scoped></style>

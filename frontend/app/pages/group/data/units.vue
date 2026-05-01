@@ -8,37 +8,56 @@
       can-confirm
       @confirm="mergeUnits"
     >
-      <v-card-text>
-        <i18n-t keypath="data-pages.units.combine-unit-description">
-          <template #source-unit-will-be-deleted>
-            <strong> {{ $t('data-pages.recipes.source-unit-will-be-deleted') }} </strong>
-          </template>
-        </i18n-t>
-
-        <v-autocomplete
-          v-model="fromUnit"
-          return-object
-          :items="unitStore"
-          :custom-filter="normalizeFilter"
-          item-title="name"
-          :label="$t('data-pages.units.source-unit')"
-          class="mt-2"
-        />
-        <v-autocomplete
-          v-model="toUnit"
-          return-object
-          :items="unitStore"
-          :custom-filter="normalizeFilter"
-          item-title="name"
-          :label="$t('data-pages.units.target-unit')"
-        />
-
-        <template v-if="canMerge && fromUnit && toUnit">
-          <div class="text-center">
-            {{ $t('data-pages.units.merging-unit-into-unit', [fromUnit.name, toUnit.name]) }}
-          </div>
-        </template>
-      </v-card-text>
+      <div class="px-4 py-3 space-y-3 text-sm text-on-surface">
+        <p>
+          <i18n-t keypath="data-pages.units.combine-unit-description">
+            <template #source-unit-will-be-deleted>
+              <strong> {{ $t('data-pages.recipes.source-unit-will-be-deleted') }} </strong>
+            </template>
+          </i18n-t>
+        </p>
+        <!-- Source unit -->
+        <div class="space-y-1">
+          <label class="block text-xs text-on-surface/60">{{ $t('data-pages.units.source-unit') }}</label>
+          <input
+            v-model="fromUnitSearch"
+            type="text"
+            :placeholder="$t('search.search')"
+            class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm
+                   text-on-surface focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+          />
+          <select
+            :value="fromUnit?.id ?? ''"
+            size="4"
+            class="w-full rounded-lg border border-border bg-surface px-2 py-1 text-sm text-on-surface focus:outline-none"
+            @change="fromUnit = unitStore?.find(u => u.id === ($event.target as HTMLSelectElement).value) ?? null"
+          >
+            <option v-for="u in filteredUnitsFrom" :key="u.id" :value="u.id">{{ u.name }}</option>
+          </select>
+        </div>
+        <!-- Target unit -->
+        <div class="space-y-1">
+          <label class="block text-xs text-on-surface/60">{{ $t('data-pages.units.target-unit') }}</label>
+          <input
+            v-model="toUnitSearch"
+            type="text"
+            :placeholder="$t('search.search')"
+            class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm
+                   text-on-surface focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+          />
+          <select
+            :value="toUnit?.id ?? ''"
+            size="4"
+            class="w-full rounded-lg border border-border bg-surface px-2 py-1 text-sm text-on-surface focus:outline-none"
+            @change="toUnit = unitStore?.find(u => u.id === ($event.target as HTMLSelectElement).value) ?? null"
+          >
+            <option v-for="u in filteredUnitsTo" :key="u.id" :value="u.id">{{ u.name }}</option>
+          </select>
+        </div>
+        <p v-if="canMerge && fromUnit && toUnit" class="text-center text-on-surface/70 italic">
+          {{ $t('data-pages.units.merging-unit-into-unit', [fromUnit.name, toUnit.name]) }}
+        </p>
+      </div>
     </BaseDialog>
 
     <!-- Alias Sub-Dialog -->
@@ -59,37 +78,28 @@
       can-confirm
       @confirm="seedDatabase"
     >
-      <v-card-text>
-        <div class="pb-2">
-          {{ $t("data-pages.units.seed-dialog-text") }}
+      <div class="px-4 py-3 space-y-3 text-sm text-on-surface">
+        <p>{{ $t("data-pages.units.seed-dialog-text") }}</p>
+        <div>
+          <label class="block text-xs text-on-surface/60 mb-1">{{ $t('data-pages.select-language') }}</label>
+          <select
+            v-model="locale"
+            class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm
+                   text-on-surface focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+          >
+            <option v-for="loc in locales" :key="loc.value" :value="loc.value">
+              {{ loc.name }} ({{ loc.progress }}% {{ $t("language-dialog.translated") }})
+            </option>
+          </select>
         </div>
-        <v-autocomplete
-          v-model="locale"
-          :items="locales"
-          item-title="name"
-          :label="$t('data-pages.select-language')"
-          class="my-3"
-          hide-details
-          variant="outlined"
-          offset
-        >
-          <template #item="{ item, props }">
-            <v-list-item v-bind="props">
-              <v-list-item-subtitle>
-                {{ item.raw.progress }}% {{ $t("language-dialog.translated") }}
-              </v-list-item-subtitle>
-            </v-list-item>
-          </template>
-        </v-autocomplete>
-
-        <v-alert
+        <div
           v-if="unitStore && unitStore.length > 0"
-          type="error"
-          class="mb-0 text-body-2"
+          class="flex items-start gap-2 rounded-lg bg-error/10 border border-error/30 px-3 py-2 text-sm text-error"
         >
-          {{ $t("data-pages.foods.seed-dialog-warning") }}
-        </v-alert>
-      </v-card-text>
+          <AppIcon :path="$globals.icons.alertCircle" size="sm" class="mt-0.5 shrink-0" />
+          <span>{{ $t("data-pages.foods.seed-dialog-warning") }}</span>
+        </div>
+      </div>
     </BaseDialog>
 
     <GroupDataPage
@@ -118,15 +128,19 @@
       </template>
 
       <template #[`item.useAbbreviation`]="{ item }">
-        <v-icon :color="item.useAbbreviation ? 'success' : undefined">
-          {{ item.useAbbreviation ? $globals.icons.check : $globals.icons.close }}
-        </v-icon>
+        <AppIcon
+          :path="item.useAbbreviation ? $globals.icons.check : $globals.icons.close"
+          size="sm"
+          :class="item.useAbbreviation ? 'text-success' : 'text-on-surface/30'"
+        />
       </template>
 
       <template #[`item.fraction`]="{ item }">
-        <v-icon :color="item.fraction ? 'success' : undefined">
-          {{ item.fraction ? $globals.icons.check : $globals.icons.close }}
-        </v-icon>
+        <AppIcon
+          :path="item.fraction ? $globals.icons.check : $globals.icons.close"
+          size="sm"
+          :class="item.fraction ? 'text-success' : 'text-on-surface/30'"
+        />
       </template>
 
       <template #[`item.createdAt`]="{ item }">
@@ -240,6 +254,16 @@ const tableHeaders: TableHeaders[] = [
 ];
 
 const { store: unitStore, actions: unitActions } = useUnitStore();
+
+// Unit search filters for merge dialog
+const fromUnitSearch = ref("");
+const toUnitSearch = ref("");
+const filteredUnitsFrom = computed(() =>
+  (unitStore.value ?? []).filter(u => u.name.toLowerCase().includes(fromUnitSearch.value.toLowerCase())),
+);
+const filteredUnitsTo = computed(() =>
+  (unitStore.value ?? []).filter(u => u.name.toLowerCase().includes(toUnitSearch.value.toLowerCase())),
+);
 
 // ============================================================
 // Form items (shared)

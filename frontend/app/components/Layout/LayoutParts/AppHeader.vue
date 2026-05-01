@@ -251,20 +251,82 @@
                 </NuxtLink>
               </MenuItem>
             </template>
+            <!-- User section -->
+            <hr class="my-1 border-t border-border" />
+            <MenuItem v-slot="{ active }">
+              <NuxtLink
+                to="/user/profile"
+                :class="['flex items-center gap-2 px-3 py-2 text-sm text-on-surface no-underline transition-colors', active ? 'bg-gray-100 dark:bg-gray-700' : '']"
+              >
+                <AppIcon :path="$globals.icons.user" size="sm" class="text-primary" />
+                {{ $t('sidebar.profile') }}
+              </NuxtLink>
+            </MenuItem>
+            <MenuItem v-if="isAdmin" v-slot="{ active }">
+              <NuxtLink
+                to="/admin/site-settings"
+                :class="['flex items-center gap-2 px-3 py-2 text-sm text-on-surface no-underline transition-colors', active ? 'bg-gray-100 dark:bg-gray-700' : '']"
+              >
+                <AppIcon :path="$globals.icons.cog" size="sm" class="text-primary" />
+                {{ $t('user.admin') }}
+              </NuxtLink>
+            </MenuItem>
           </MenuItems>
         </Transition>
       </Menu>
 
-      <!-- Logout -->
-      <button
-        v-if="loggedIn"
-        type="button"
-        class="bs-btn bs-btn-sm text-white rounded-full hover:bg-white/20 transition-colors"
-        @click="logout()"
-      >
-        <AppIcon :path="$globals.icons.logout" size="md" />
-        <span v-if="lgAndUp" class="text-sm">{{ $t('user.logout') }}</span>
-      </button>
+      <!-- User menu (logged in) -->
+      <Menu v-if="loggedIn" as="div" class="relative">
+        <MenuButton
+          class="bs-btn bs-btn-sm text-white rounded-full hover:bg-white/20 transition-colors"
+          :aria-label="$t('sidebar.profile')"
+        >
+          <AppIcon :path="$globals.icons.user" size="md" />
+        </MenuButton>
+        <Transition
+          enter-active-class="transition duration-100 ease-out"
+          enter-from-class="opacity-0 scale-95"
+          enter-to-class="opacity-100 scale-100"
+          leave-active-class="transition duration-75 ease-in"
+          leave-from-class="opacity-100 scale-100"
+          leave-to-class="opacity-0 scale-95"
+        >
+          <MenuItems
+            class="absolute right-0 top-full mt-1 w-48 z-50 bg-surface border border-border
+                   rounded-lg shadow-lg py-1 focus:outline-none"
+          >
+            <MenuItem v-slot="{ active }">
+              <NuxtLink
+                to="/user/profile"
+                :class="['flex items-center gap-2 px-3 py-2 text-sm text-on-surface no-underline transition-colors', active ? 'bg-gray-100 dark:bg-gray-700' : '']"
+              >
+                <AppIcon :path="$globals.icons.user" size="sm" class="text-primary" />
+                {{ $t('sidebar.profile') }}
+              </NuxtLink>
+            </MenuItem>
+            <MenuItem v-if="isAdmin" v-slot="{ active }">
+              <NuxtLink
+                to="/admin/site-settings"
+                :class="['flex items-center gap-2 px-3 py-2 text-sm text-on-surface no-underline transition-colors', active ? 'bg-gray-100 dark:bg-gray-700' : '']"
+              >
+                <AppIcon :path="$globals.icons.cog" size="sm" class="text-primary" />
+                {{ $t('user.admin') }}
+              </NuxtLink>
+            </MenuItem>
+            <hr class="my-1 border-t border-border" />
+            <MenuItem v-slot="{ active }">
+              <button
+                type="button"
+                :class="['w-full flex items-center gap-2 px-3 py-2 text-sm text-on-surface transition-colors', active ? 'bg-gray-100 dark:bg-gray-700' : '']"
+                @click="logout()"
+              >
+                <AppIcon :path="$globals.icons.logout" size="sm" class="text-error" />
+                {{ $t('user.logout') }}
+              </button>
+            </MenuItem>
+          </MenuItems>
+        </Transition>
+      </Menu>
 
       <!-- Login -->
       <NuxtLink
@@ -291,6 +353,7 @@ defineProps({
 const { $appInfo, $globals } = useNuxtApp();
 const auth = useMealieAuth();
 const { loggedIn, isOwnGroup } = useLoggedInState();
+const isAdmin = computed(() => auth.user.value?.admin ?? false);
 const route = useRoute();
 const groupSlug = computed(() => (route.params.groupSlug as string) || auth.user.value?.groupSlug || "");
 const { xs, mdAndUp, lgAndUp } = useDisplay();

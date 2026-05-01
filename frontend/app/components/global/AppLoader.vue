@@ -1,40 +1,13 @@
 <template>
-  <div
-    class="mx-auto my-3 justify-center"
-    style="display: flex;"
-  >
-    <div style="display: inline;">
-      <v-progress-circular
-        :width="size.width"
-        :size="size.size"
-        color="primary-lighten-2"
-        indeterminate
-      >
-        <div class="text-center">
-          <v-icon
-            :size="size.icon"
-            color="primary-lighten-2"
-          >
-            {{ $globals.icons.primary }}
-          </v-icon>
-          <div
-            v-if="large"
-            class="text-small"
-          >
-            <slot>
-              {{ (small || tiny) ? "" : waitingText }}
-            </slot>
-          </div>
-        </div>
-      </v-progress-circular>
-      <div
-        v-if="!large"
-        class="text-small"
-      >
-        <slot>
-          {{ (small || tiny) ? "" : waitingTextCalculated }}
-        </slot>
-      </div>
+  <div class="flex flex-col items-center justify-center gap-2 my-3">
+    <!-- Spinner -->
+    <div
+      class="animate-spin rounded-full border-solid border-primary/30 border-t-primary"
+      :class="spinnerClass"
+    />
+    <!-- Waiting text -->
+    <div v-if="!small && !tiny" class="text-sm text-on-surface/60 text-center">
+      <slot>{{ waitingTextCalculated }}</slot>
     </div>
   </div>
 </template>
@@ -67,33 +40,11 @@ const props = defineProps({
   },
 });
 
-const size = computed(() => {
-  if (props.tiny) {
-    return {
-      width: 2,
-      icon: 0,
-      size: 25,
-    };
-  }
-  if (props.small) {
-    return {
-      width: 2,
-      icon: 30,
-      size: 50,
-    };
-  }
-  else if (props.large) {
-    return {
-      width: 4,
-      icon: 120,
-      size: 200,
-    };
-  }
-  return {
-    width: 3,
-    icon: 75,
-    size: 125,
-  };
+const spinnerClass = computed(() => {
+  if (props.tiny) return "w-6 h-6 border-2";
+  if (props.small) return "w-10 h-10 border-2";
+  if (props.large) return "w-24 h-24 border-4";
+  return "w-16 h-16 border-[3px]";
 });
 
 const i18n = useI18n();

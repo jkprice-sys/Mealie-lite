@@ -1,42 +1,34 @@
 <template>
-  <v-container
-    v-if="group"
-    class="narrow-container"
-  >
+  <div v-if="group" class="narrow-container mx-auto px-4 py-4">
     <BasePageTitle class="mb-5">
       <template #header>
-        <v-img
-          width="100%"
-          max-height="100"
-          max-width="100"
-          src="/svgs/manage-group-settings.svg"
-        />
+        <img width="100" height="100" src="/svgs/manage-group-settings.svg" class="object-contain" />
       </template>
       <template #title>
         {{ $t("profile.group-settings") }}
       </template>
       {{ $t("profile.group-description") }}
     </BasePageTitle>
-    <v-form ref="refGroupEditForm" @submit.prevent="handleSubmit">
-      <v-card variant="outlined" style="border-color: lightgray;">
-        <v-card-text>
+
+    <form @submit.prevent="handleSubmit">
+      <div class="bs-card border border-border/40">
+        <div class="bs-card-body">
           <GroupPreferencesEditor v-if="group.preferences" v-model="group.preferences" />
-        </v-card-text>
-      </v-card>
-      <div class="d-flex pa-2">
-        <BaseButton type="submit" edit class="ml-auto">
+        </div>
+      </div>
+      <div class="flex justify-end p-2">
+        <BaseButton type="submit" edit>
           {{ $t("general.update") }}
         </BaseButton>
       </div>
-    </v-form>
-  </v-container>
+    </form>
+  </div>
 </template>
 
 <script setup lang="ts">
 import GroupPreferencesEditor from "~/components/Domain/Group/GroupPreferencesEditor.vue";
 import { useGroupSelf } from "~/composables/use-groups";
 import { alert } from "~/composables/use-toast";
-import type { VForm } from "~/types/auto-forms";
 
 definePageMeta({
   middleware: ["can-manage-only"],
@@ -45,16 +37,10 @@ definePageMeta({
 const { group, actions: groupActions } = useGroupSelf();
 const i18n = useI18n();
 
-useSeoMeta({
-  title: i18n.t("group.group"),
-});
-
-const refGroupEditForm = ref<VForm | null>(null);
+useSeoMeta({ title: i18n.t("group.group") });
 
 async function handleSubmit() {
-  if (!refGroupEditForm.value?.validate() || !group.value?.preferences) {
-    return;
-  }
+  if (!group.value?.preferences) return;
 
   const data = await groupActions.updatePreferences();
   if (data) {
@@ -66,7 +52,7 @@ async function handleSubmit() {
 }
 </script>
 
-<style lang="css">
+<style>
 .preference-container {
   display: flex;
   flex-direction: column;

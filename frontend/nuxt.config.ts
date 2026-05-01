@@ -10,8 +10,7 @@ export default defineNuxtConfig({
     "@vite-pwa/nuxt",
     "@nuxtjs/i18n",
     "@nuxt/fonts",
-    "@nuxtjs/tailwindcss",  // must come before vuetify-nuxt-module
-    "vuetify-nuxt-module",
+    "@nuxtjs/tailwindcss",
     "@nuxt/eslint",
   ],
   ssr: false,
@@ -239,37 +238,5 @@ export default defineNuxtConfig({
     manifest: false, // This is served via the backend, see mealie/routes/spa/manifest.py
   },
 
-  // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
-  vuetify: {
-    moduleOptions: {},
-    vuetifyOptions: {
-      icons: {
-        defaultSet: "mdi-svg",
-      },
-      // Theme Config set at runtime by /plugins/theme.ts
-      // This config doesn't do anything.
-      theme: {},
-      locale: {
-        locale: "en-US",
-        fallback: "en-US",
-      },
-      defaults: {
-        VOverlay: {
-          scrollStrategy: "close",
-        },
-        VMenu: {
-          scrollStrategy: "close",
-        },
-        VAutocomplete: {
-          scrollStrategy: "close",
-        },
-        VCombobox: {
-          scrollStrategy: "close",
-        },
-        VSelect: {
-          scrollStrategy: "close",
-        },
-      },
-    },
-  },
 });
+

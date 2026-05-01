@@ -1,58 +1,40 @@
 <template>
-  <v-card
-    variant="outlined"
-    style="border-color: lightgrey;"
+  <NuxtLink
     :to="link.to"
-    height="100%"
-    class="d-flex flex-column mt-4"
+    class="flex flex-col h-full mt-4 rounded-xl border border-border bg-surface hover:bg-primary/5 transition-colors overflow-hidden no-underline"
   >
-    <div
-      v-if="$vuetify.display.smAndDown"
-      class="pa-2 mx-auto"
-    >
-      <v-img
-        width="150px"
-        height="125"
-        :src="image"
-      />
+    <!-- Mobile: image centered at top -->
+    <div v-if="smAndDown && image" class="p-3 flex justify-center border-b border-border">
+      <img :src="image" class="w-[150px] h-[125px] object-cover rounded" />
     </div>
-    <div class="d-flex justify-space-between">
-      <div>
-        <v-card-title class="text-subtitle-1 pb-0">
+
+    <!-- Main body -->
+    <div class="flex justify-between items-stretch flex-1">
+      <div class="flex flex-col">
+        <div class="px-4 pt-4 pb-1 font-medium text-on-surface">
           <slot name="title" />
-        </v-card-title>
-        <div class="d-flex justify-center align-center">
-          <v-card-text class="d-flex flex-row mb-auto">
-            <slot name="default" />
-          </v-card-text>
+        </div>
+        <div class="px-4 pb-4 text-sm text-on-surface/70 flex flex-row">
+          <slot name="default" />
         </div>
       </div>
-      <div
-        v-if="$vuetify.display.mdAndUp"
-        class="py-2 px-10 my-auto"
-      >
-        <v-img
-          width="150px"
-          height="125"
-          :src="image"
-        />
+      <!-- Desktop: image on right -->
+      <div v-if="!smAndDown && image" class="py-2 px-10 my-auto shrink-0">
+        <img :src="image" class="w-[150px] h-[125px] object-cover rounded" />
       </div>
     </div>
-    <v-spacer />
-    <v-divider />
-    <v-card-actions>
-      <v-btn
-        variant="text"
-        color="info"
-        :to="link.to"
-      >
-        {{ link.text }}
-      </v-btn>
-    </v-card-actions>
-  </v-card>
+
+    <hr class="border-border" />
+
+    <div class="px-4 py-2">
+      <span class="text-sm font-medium text-info">{{ link.text }}</span>
+    </div>
+  </NuxtLink>
 </template>
 
 <script setup lang="ts">
+import { useBreakpoints, breakpointsTailwind } from "@vueuse/core";
+
 interface LinkProp {
   text: string;
   url?: string;
@@ -70,4 +52,7 @@ defineProps({
     default: "",
   },
 });
+
+const bp = useBreakpoints(breakpointsTailwind);
+const smAndDown = bp.smallerOrEqual("sm");
 </script>

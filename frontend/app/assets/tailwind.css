@@ -26,10 +26,10 @@
   --bs-error:   #EF5350;
 
   /* Surface */
-  --bs-background: #f5f5f5;
-  --bs-surface:    #ffffff;
+  --bs-background: #f2f0eb;
+  --bs-surface:    #faf8f5;
   --bs-on-surface: #1c1c1e;
-  --bs-border:     #e0e0e0;
+  --bs-border:     #dedad4;
 }
 
 html.dark {

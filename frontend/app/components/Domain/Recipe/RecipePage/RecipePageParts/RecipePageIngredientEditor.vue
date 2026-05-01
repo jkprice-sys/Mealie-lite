@@ -1,13 +1,14 @@
 <template>
   <div>
     <div class="mb-4">
-      <h2 class="mb-4 text-h5 font-weight-medium opacity-80">
+      <h2 class="mb-4 text-xl font-medium opacity-80">
         {{ $t("recipe.ingredients") }}
       </h2>
       <BannerWarning v-if="!hasFoodOrUnit && !liteMode">
         {{ $t("recipe.ingredients-not-parsed-description", { parse: $t('recipe.parse') }) }}
       </BannerWarning>
     </div>
+
     <VueDraggable
       v-if="recipe.recipeIngredient.length > 0"
       v-model="recipe.recipeIngredient"
@@ -23,9 +24,7 @@
       @start="drag = true"
       @end="drag = false"
     >
-      <TransitionGroup
-        type="transition"
-      >
+      <TransitionGroup type="transition">
         <RecipeIngredientEditor
           v-for="(ingredient, index) in recipe.recipeIngredient"
           :key="ingredient.referenceId"
@@ -40,95 +39,104 @@
         />
       </TransitionGroup>
     </VueDraggable>
-    <v-skeleton-loader
+
+    <!-- Empty state -->
+    <div
       v-else
-      boilerplate
-      elevation="2"
-      type="list-item"
+      class="rounded-lg border border-dashed border-border bg-surface/50 h-12"
     />
-    <div class="d-flex flex-wrap justify-center justify-sm-end mt-3">
-      <v-tooltip
+
+    <!-- Action buttons -->
+    <div class="flex flex-wrap justify-center sm:justify-end gap-2 mt-3">
+      <!-- Parse button (non-lite only) -->
+      <button
         v-if="!liteMode"
-        location="top"
-        color="accent"
+        type="button"
+        :title="parserToolTip"
+        :disabled="hasFoodOrUnit"
+        class="bs-btn bs-btn-sm bs-btn-outline disabled:opacity-50 disabled:cursor-not-allowed"
+        @click="toggleIsParsing(true)"
       >
-        <template #activator="{ props }">
-          <span>
-            <BaseButton
-              class="mb-1"
-              :disabled="hasFoodOrUnit"
-              color="accent"
-              v-bind="props"
-              @click="toggleIsParsing(true)"
-            >
-              <template #icon>
-                {{ $globals.icons.foods }}
-              </template>
-              {{ $t('recipe.parse') }}
-            </BaseButton>
-          </span>
-        </template>
-        <span>{{ parserToolTip }}</span>
-      </v-tooltip>
+        <AppIcon :path="$globals.icons.foods" size="sm" />
+        {{ $t('recipe.parse') }}
+      </button>
+
+      <!-- Hidden bulk-add dialog trigger -->
       <RecipeDialogBulkAdd
         ref="domBulkAddDialog"
-        class="mx-1 mb-1"
         style="display: none"
         @bulk-data="addIngredient"
       />
-      <div class="d-inline-flex">
-        <!-- Main button: Add Food -->
-        <v-btn
-          color="success"
-          class="split-main ml-2"
-          @click="addIngredient"
+
+      <!-- Split "Add" button: main action + dropdown -->
+      <div class="flex">
+        <button
+          type="button"
+          class="bs-btn bs-btn-sm bs-btn-primary rounded-r-none"
+          @click="addIngredient()"
         >
-          <v-icon start>
-            {{ $globals.icons.createAlt }}
-          </v-icon>
-          {{ $t('general.add') || 'Add Food' }}
-        </v-btn>
-        <!-- Dropdown button -->
-        <v-menu>
-          <template #activator="{ props }">
-            <v-btn
-              color="success"
-              class="split-dropdown"
-              v-bind="props"
+          <AppIcon :path="$globals.icons.createAlt" size="sm" />
+          {{ $t('general.add') }}
+        </button>
+        <Menu as="div" class="relative">
+          <MenuButton class="bs-btn bs-btn-sm bs-btn-primary rounded-l-none border-l border-white/30 px-2">
+            <AppIcon :path="$globals.icons.chevronDown" size="sm" />
+          </MenuButton>
+          <Transition
+            enter-active-class="transition duration-100 ease-out"
+            enter-from-class="opacity-0 scale-95"
+            enter-to-class="opacity-100 scale-100"
+            leave-active-class="transition duration-75 ease-in"
+            leave-from-class="opacity-100 scale-100"
+            leave-to-class="opacity-0 scale-95"
+          >
+            <MenuItems
+              class="absolute right-0 bottom-full mb-1 z-50 w-48 rounded-lg border border-border
+                     bg-surface shadow-lg py-1 focus:outline-none"
             >
-              <v-icon>{{ $globals.icons.chevronDown }}</v-icon>
-            </v-btn>
-          </template>
-          <v-list>
-            <v-list-item
-              slim
-              density="comfortable"
-              :prepend-icon="$globals.icons.foods"
-              :title="$t('new-recipe.add-food')"
-              @click="addIngredient"
-            />
-            <v-list-item
-              slim
-              density="comfortable"
-              :prepend-icon="$globals.icons.silverwareForkKnife"
-              :title="$t('new-recipe.add-recipe')"
-              @click="addRecipe"
-            />
-            <v-list-item
-              slim
-              density="comfortable"
-              :prepend-icon="$globals.icons.create"
-              :title="$t('new-recipe.bulk-add')"
-              @click="showBulkAdd"
-            />
-          </v-list>
-        </v-menu>
+              <MenuItem v-slot="{ active }">
+                <button
+                  type="button"
+                  class="flex items-center gap-2 w-full px-3 py-2 text-sm text-on-surface text-left"
+                  :class="active ? 'bg-primary/10' : ''"
+                  @click="addIngredient()"
+                >
+                  <AppIcon :path="$globals.icons.foods" size="sm" class="text-on-surface/60" />
+                  {{ $t('new-recipe.add-food') }}
+                </button>
+              </MenuItem>
+              <MenuItem v-slot="{ active }">
+                <button
+                  type="button"
+                  class="flex items-center gap-2 w-full px-3 py-2 text-sm text-on-surface text-left"
+                  :class="active ? 'bg-primary/10' : ''"
+                  @click="addRecipe()"
+                >
+                  <AppIcon :path="$globals.icons.silverwareForkKnife" size="sm" class="text-on-surface/60" />
+                  {{ $t('new-recipe.add-recipe') }}
+                </button>
+              </MenuItem>
+              <MenuItem v-slot="{ active }">
+                <button
+                  type="button"
+                  class="flex items-center gap-2 w-full px-3 py-2 text-sm text-on-surface text-left"
+                  :class="active ? 'bg-primary/10' : ''"
+                  @click="showBulkAdd()"
+                >
+                  <AppIcon :path="$globals.icons.create" size="sm" class="text-on-surface/60" />
+                  {{ $t('new-recipe.bulk-add') }}
+                </button>
+              </MenuItem>
+            </MenuItems>
+          </Transition>
+        </Menu>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/vue";
 import { VueDraggable } from "vue-draggable-plus";
 import type { NoUndefinedField } from "~/lib/api/types/non-generated";
 import type { Recipe, RecipeIngredient } from "~/lib/api/types/recipe";
@@ -138,6 +146,7 @@ import { usePageState } from "~/composables/recipe-page/shared-state";
 import { uuid4 } from "~/composables/use-utils";
 import { useLiteMode } from "~/composables/use-lite-mode";
 
+const { $globals } = useNuxtApp();
 const recipe = defineModel<NoUndefinedField<Recipe>>({ required: true });
 const ingredientsWithRecipe = new Map<string, boolean>();
 const i18n = useI18n();
@@ -148,14 +157,10 @@ const { toggleIsParsing } = usePageState(recipe.value.slug);
 const liteMode = useLiteMode();
 
 const hasFoodOrUnit = computed(() => {
-  if (!recipe.value) {
-    return false;
-  }
+  if (!recipe.value) return false;
   if (recipe.value.recipeIngredient) {
     for (const ingredient of recipe.value.recipeIngredient) {
-      if (ingredient.food || ingredient.unit) {
-        return true;
-      }
+      if (ingredient.food || ingredient.unit) return true;
     }
   }
   return false;
@@ -173,32 +178,23 @@ function showBulkAdd() {
 }
 
 function ingredientIsRecipe(ingredient: RecipeIngredient): boolean {
-  if (ingredient.referencedRecipe) {
-    return true;
-  }
-
-  if (ingredient.referenceId) {
-    return !!ingredientsWithRecipe.get(ingredient.referenceId);
-  }
-
+  if (ingredient.referencedRecipe) return true;
+  if (ingredient.referenceId) return !!ingredientsWithRecipe.get(ingredient.referenceId);
   return false;
 }
 
 function addIngredient(ingredients: Array<string> | null = null) {
   if (ingredients?.length) {
-    const newIngredients = ingredients.map((x) => {
-      return {
-        referenceId: uuid4(),
-        title: "",
-        note: x,
-        unit: undefined,
-        food: undefined,
-        quantity: 0,
-      };
-    });
-
+    const newIngredients = ingredients.map(x => ({
+      referenceId: uuid4(),
+      title: "",
+      note: x,
+      unit: undefined,
+      food: undefined,
+      quantity: 0,
+    }));
     if (newIngredients) {
-      // @ts-expect-error - prop can be null-type by NoUndefinedField type forces it to be set
+      // @ts-expect-error - prop can be null-type but NoUndefinedField forces it to be set
       recipe.value.recipeIngredient.push(...newIngredients);
     }
   }
@@ -207,9 +203,9 @@ function addIngredient(ingredients: Array<string> | null = null) {
       referenceId: uuid4(),
       title: "",
       note: "",
-      // @ts-expect-error - prop can be null-type by NoUndefinedField type forces it to be set
+      // @ts-expect-error - prop can be null-type but NoUndefinedField forces it to be set
       unit: undefined,
-      // @ts-expect-error - prop can be null-type by NoUndefinedField type forces it to be set
+      // @ts-expect-error - prop can be null-type but NoUndefinedField forces it to be set
       food: undefined,
       quantity: 0,
     });
@@ -221,19 +217,16 @@ function addRecipe(recipes: Array<string> | null = null) {
   ingredientsWithRecipe.set(refId, true);
 
   if (recipes?.length) {
-    const newRecipes = recipes.map((x) => {
-      return {
-        referenceId: refId,
-        title: "",
-        note: x,
-        unit: undefined,
-        referencedRecipe: undefined,
-        quantity: 1,
-      };
-    });
-
+    const newRecipes = recipes.map(x => ({
+      referenceId: refId,
+      title: "",
+      note: x,
+      unit: undefined,
+      referencedRecipe: undefined,
+      quantity: 1,
+    }));
     if (newRecipes) {
-      // @ts-expect-error - prop can be null-type by NoUndefinedField type forces it to be set
+      // @ts-expect-error - prop can be null-type but NoUndefinedField forces it to be set
       recipe.value.recipeIngredient.push(...newRecipes);
     }
   }
@@ -242,9 +235,9 @@ function addRecipe(recipes: Array<string> | null = null) {
       referenceId: refId,
       title: "",
       note: "",
-      // @ts-expect-error - prop can be null-type by NoUndefinedField type forces it to be set
+      // @ts-expect-error - prop can be null-type but NoUndefinedField forces it to be set
       unit: undefined,
-      // @ts-expect-error - prop can be null-type by NoUndefinedField type forces it to be set
+      // @ts-expect-error - prop can be null-type but NoUndefinedField forces it to be set
       referencedRecipe: undefined,
       quantity: 1,
     });
@@ -256,25 +249,11 @@ function insertNewIngredient(dest: number) {
     referenceId: uuid4(),
     title: "",
     note: "",
-    // @ts-expect-error - prop can be null-type by NoUndefinedField type forces it to be set
+    // @ts-expect-error - prop can be null-type but NoUndefinedField forces it to be set
     unit: undefined,
-    // @ts-expect-error - prop can be null-type by NoUndefinedField type forces it to be set
+    // @ts-expect-error - prop can be null-type but NoUndefinedField forces it to be set
     food: undefined,
     quantity: 0,
   });
 }
 </script>
-
-<style scoped>
-.split-main {
-  border-top-right-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
-}
-.split-dropdown {
-  border-top-left-radius: 0 !important;
-  border-bottom-left-radius: 0 !important;
-  min-width: 30px;
-  padding-left: 0;
-  padding-right: 0;
-}
-</style>

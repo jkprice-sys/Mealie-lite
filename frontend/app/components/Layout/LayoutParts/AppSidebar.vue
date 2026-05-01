@@ -269,6 +269,7 @@ import { useLoggedInState } from "~/composables/use-logged-in-state";
 import type { SidebarLinks } from "~/types/application-types";
 import AnnouncementDialog from "~/components/Domain/Announcement/AnnouncementDialog.vue";
 import UserAvatar from "~/components/Domain/User/UserAvatar.vue";
+import { useDark } from "@vueuse/core";
 import { useToggleDarkMode } from "~/composables/use-utils";
 import { useAnnouncements } from "~/composables/use-announcements";
 
@@ -295,9 +296,7 @@ const { lgAndUp } = useDisplay();
 
 const toggleDark = useToggleDarkMode();
 
-// Track dark mode from Vuetify theme (still present during migration)
-const { $vuetify } = useNuxtApp() as any;
-const isDark = computed(() => $vuetify?.theme?.current?.value?.dark ?? false);
+const isDark = useDark();
 
 const showAnnouncementsDialog = ref(false);
 const { announcementsEnabled, newAnnouncements } = useAnnouncements();

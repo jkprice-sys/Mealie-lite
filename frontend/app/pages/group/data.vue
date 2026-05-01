@@ -1,13 +1,8 @@
 <template>
-  <v-container>
+  <div class="px-4 py-4">
     <BasePageTitle>
       <template #header>
-        <v-img
-          width="100%"
-          max-height="175"
-          max-width="175"
-          src="/svgs/manage-recipes.svg"
-        />
+        <img width="175" height="175" src="/svgs/manage-recipes.svg" class="object-contain" />
       </template>
       <template #title>
         {{ $t('data-pages.data-management') }}
@@ -25,13 +20,11 @@
       </template>
     </BasePageTitle>
     <section>
-      <v-scroll-x-transition>
-        <div>
-          <NuxtPage />
-        </div>
-      </v-scroll-x-transition>
+      <div>
+        <NuxtPage />
+      </div>
     </section>
-  </v-container>
+  </div>
 </template>
 
 <script setup lang="ts">

@@ -1,7 +1,6 @@
 <template>
-  <div class="d-flex justify-start align-top flex-wrap">
+  <div class="flex flex-wrap items-start justify-start gap-2 my-2">
     <RecipeImageUploadBtn
-      class="my-2"
       :slug="recipe.slug"
       @upload="uploadImage"
       @refresh="imageKey++"
@@ -9,29 +8,28 @@
     />
     <RecipeSettingsMenu
       v-model="recipe.settings"
-      class="my-2 mx-1"
       :is-owner="recipe.userId == user.id"
-      @upload="uploadImage"
     />
-    <v-spacer />
-    <v-select
-      v-model="recipe.userId"
-      class="my-2"
-      max-width="300"
-      :items="allUsers"
-      :item-props="itemsProps"
-      :label="$t('general.owner')"
-      :disabled="!canEditOwner"
-      variant="outlined"
-      density="compact"
-    >
-      <template #prepend>
-        <UserAvatar
-          :user-id="recipe.userId"
-          :tooltip="false"
-        />
-      </template>
-    </v-select>
+
+    <!-- spacer + owner select pushed to right -->
+    <div class="ml-auto flex items-center gap-2">
+      <UserAvatar :user-id="recipe.userId" :tooltip="false" class="shrink-0" />
+      <select
+        v-model="recipe.userId"
+        :disabled="!canEditOwner"
+        class="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface
+               focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
+               transition-colors disabled:opacity-50 disabled:cursor-not-allowed max-w-[220px]"
+      >
+        <option
+          v-for="u in allUsers"
+          :key="u.id"
+          :value="u.id"
+        >
+          {{ u.fullName }}
+        </option>
+      </select>
+    </div>
   </div>
 </template>
 
@@ -45,34 +43,19 @@ import RecipeImageUploadBtn from "~/components/Domain/Recipe/RecipeImageUploadBt
 import RecipeSettingsMenu from "~/components/Domain/Recipe/RecipeSettingsMenu.vue";
 import { useUserStore } from "~/composables/store/use-user-store";
 import UserAvatar from "~/components/Domain/User/UserAvatar.vue";
-import { useHouseholdStore } from "~/composables/store";
 
 const recipe = defineModel<NoUndefinedField<Recipe>>({ required: true });
 
-const { user } = usePageUser();
-const api = useUserApi();
+const { user }    = usePageUser();
+const api         = useUserApi();
 const { imageKey } = usePageState(recipe.value.slug);
 
-const canEditOwner = computed(() => {
-  return user.id === recipe.value.userId || user.admin;
-});
+const canEditOwner = computed(() => user.id === recipe.value.userId || user.admin);
 
 const { store: allUsers } = useUserStore();
-const { store: households } = useHouseholdStore();
-
-function itemsProps(item: any) {
-  const owner = allUsers.value.find(u => u.id === item.id);
-  return {
-    value: item.id,
-    title: item.fullName,
-    subtitle: owner ? households.value.find(h => h.id === owner.householdId)?.name || "" : "",
-  };
-}
 
 async function uploadImage(fileObject: File) {
-  if (!recipe.value || !recipe.value.slug) {
-    return;
-  }
+  if (!recipe.value?.slug) return;
   const newVersion = await api.recipes.updateImage(recipe.value.slug, fileObject);
   if (newVersion?.data?.image) {
     recipe.value.image = newVersion.data.image;
@@ -81,7 +64,6 @@ async function uploadImage(fileObject: File) {
 }
 
 async function deleteImage() {
-  // The image is already deleted on the backend, just need to update the UI
   recipe.value.image = "";
   imageKey.value++;
 }

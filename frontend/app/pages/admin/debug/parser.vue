@@ -1,114 +1,103 @@
 <template>
-  <v-container class="pa-0">
-    <v-container>
+  <div class="px-4 py-4">
+    <div>
       <BaseCardSectionTitle :title="$t('admin.ingredients-natural-language-processor')">
         {{ $t('admin.ingredients-natural-language-processor-explanation') }}
-
         <p class="pt-3">
           {{ $t('admin.ingredients-natural-language-processor-explanation-2') }}
         </p>
       </BaseCardSectionTitle>
 
-      <div class="d-flex align-center justify-center justify-md-start flex-wrap">
-        <v-btn-toggle
-          v-model="state.parser"
-          density="compact"
-          mandatory="force"
-          @change="processIngredient"
-        >
-          <v-btn value="nlp">
-            {{ $t('admin.nlp') }}
-          </v-btn>
-          <v-btn value="brute">
-            {{ $t('admin.brute') }}
-          </v-btn>
-          <v-btn value="openai">
-            {{ $t('admin.openai') }}
-          </v-btn>
-        </v-btn-toggle>
-        <v-spacer />
-        <v-checkbox
-          v-model="showConfidence"
-          class="ml-5"
-          :label="$t('admin.show-individual-confidence')"
-          hide-details
-        />
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <!-- Parser toggle button group -->
+        <div class="inline-flex rounded-lg border border-border overflow-hidden">
+          <button
+            v-for="p in ['nlp', 'brute', 'openai']"
+            :key="p"
+            type="button"
+            class="px-3 py-1.5 text-sm font-medium transition-colors"
+            :class="state.parser === p ? 'bg-primary text-on-primary' : 'bg-surface text-on-surface hover:bg-primary/10'"
+            @click="state.parser = p as typeof state.parser; processIngredient()"
+          >
+            {{ $t(`admin.${p}`) }}
+          </button>
+        </div>
+
+        <label class="flex items-center gap-2 cursor-pointer ml-2">
+          <input v-model="showConfidence" type="checkbox" class="accent-primary" />
+          <span class="text-sm text-on-surface">{{ $t('admin.show-individual-confidence') }}</span>
+        </label>
       </div>
 
-      <v-card flat>
-        <v-card-text>
-          <v-text-field
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs text-on-surface/60 mb-1">{{ $t('admin.ingredient-text') }}</label>
+          <input
             v-model="state.ingredient"
-            :label="$t('admin.ingredient-text')"
+            type="text"
+            class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
           />
-        </v-card-text>
-        <v-card-actions>
-          <BaseButton
-            class="ml-auto"
-            @click="processIngredient"
-          >
+        </div>
+        <div class="flex justify-end">
+          <BaseButton @click="processIngredient">
             <template #icon>
               {{ $globals.icons.check }}
             </template>
             {{ $t("general.submit") }}
           </BaseButton>
-        </v-card-actions>
-      </v-card>
-    </v-container>
-    <v-container v-if="state.results">
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div v-if="state.results" class="mt-6">
       <div
         v-if="state.parser !== 'brute' && getConfidence('average')"
-        class="d-flex"
+        class="flex justify-center mb-4"
       >
-        <v-chip
-          dark
-          :color="getColor('average')"
-          class="mx-auto mb-2"
+        <span
+          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white"
+          :class="`bg-${getColor('average')}`"
         >
           {{ $t('admin.average-confident', [getConfidence("average")]) }}
-        </v-chip>
+        </span>
       </div>
-      <div
-        class="d-flex justify-center flex-wrap"
-        style="gap: 1.5rem"
-      >
-        <template v-for="(prop, index) in properties">
-          <div
-            v-if="prop.value"
-            :key="index"
-            class="flex-grow-1"
-          >
-            <v-card min-width="200px">
-              <v-card-title> {{ prop.value }} </v-card-title>
-              <v-card-text>
-                {{ prop.subtitle }}
-              </v-card-text>
-            </v-card>
-            <v-chip
-              v-if="prop.confidence && showConfidence"
-              dark
-              :color="prop.color!"
-              class="mt-2"
-            >
-              {{ $t('admin.average-confident', [prop.confidence]) }}
-            </v-chip>
+
+      <div class="flex flex-wrap justify-center gap-6">
+        <template v-for="(prop, index) in properties" :key="index">
+          <div v-if="prop.value" class="flex-grow min-w-[200px] max-w-[280px]">
+            <div class="rounded-xl border border-border bg-surface p-4">
+              <p class="text-base font-semibold text-on-surface">{{ prop.value }}</p>
+              <p class="text-sm text-on-surface/60 mt-1">{{ prop.subtitle }}</p>
+            </div>
+            <div v-if="prop.confidence && showConfidence" class="mt-2">
+              <span
+                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                :class="`bg-${prop.color}`"
+              >
+                {{ $t('admin.average-confident', [prop.confidence]) }}
+              </span>
+            </div>
           </div>
         </template>
       </div>
-    </v-container>
-    <v-container class="narrow-container">
-      <v-card-title> {{ $t('admin.try-an-example') }} </v-card-title>
-      <v-card
-        v-for="(text, idx) in tryText"
-        :key="idx"
-        class="my-2"
-        hover
-        @click="processTryText(text)"
-      >
-        <v-card-text> {{ text }} </v-card-text>
-      </v-card>
-    </v-container>
-  </v-container>
+    </div>
+
+    <!-- Try an example -->
+    <div class="mt-6 max-w-2xl mx-auto">
+      <h3 class="text-base font-semibold text-on-surface mb-3">{{ $t('admin.try-an-example') }}</h3>
+      <div class="space-y-2">
+        <div
+          v-for="(text, idx) in tryText"
+          :key="idx"
+          class="rounded-xl border border-border bg-surface px-4 py-3 text-sm text-on-surface cursor-pointer hover:bg-primary/5 transition-colors"
+          @click="processTryText(text)"
+        >
+          {{ text }}
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -124,6 +113,7 @@ definePageMeta({
 });
 
 const api = useUserApi();
+const { $globals } = useNuxtApp();
 
 const state = reactive({
   loading: false,
@@ -134,7 +124,6 @@ const state = reactive({
 
 const i18n = useI18n();
 
-// Set page title
 useSeoMeta({
   title: i18n.t("admin.parser"),
 });
@@ -143,26 +132,17 @@ const confidence = ref<IngredientConfidence>({});
 
 function getColor(attribute: ConfidenceAttribute) {
   const percentage = getConfidence(attribute);
-  if (percentage === undefined) return;
+  if (percentage === undefined) return "warning";
 
   const p_as_num = parseFloat(percentage.replace("%", ""));
 
-  // Set color based off range
-  if (p_as_num > 75) {
-    return "success";
-  }
-  else if (p_as_num > 60) {
-    return "warning";
-  }
-  else {
-    return "error";
-  }
+  if (p_as_num > 75) return "success";
+  else if (p_as_num > 60) return "warning";
+  else return "error";
 }
 
 function getConfidence(attribute: ConfidenceAttribute) {
-  if (!confidence.value) {
-    return;
-  }
+  if (!confidence.value) return;
 
   const property = confidence.value[attribute];
   if (property !== undefined && property !== null) {
@@ -185,9 +165,7 @@ function processTryText(str: string) {
 }
 
 async function processIngredient() {
-  if (state.ingredient === "") {
-    return;
-  }
+  if (state.ingredient === "") return;
 
   state.loading = true;
 
@@ -198,9 +176,6 @@ async function processIngredient() {
 
     if (data.confidence) confidence.value = data.confidence;
 
-    // TODO: Remove ts-ignore
-    // ts-ignore because data will likely change significantly once I figure out how to return results
-    // for the parser. For now we'll leave it like this
     properties.comment.value = data.ingredient.note || "";
     properties.quantity.value = data.ingredient.quantity || "";
     properties.unit.value = data.ingredient?.unit?.name || "";
@@ -208,13 +183,9 @@ async function processIngredient() {
 
     (["comment", "quantity", "unit", "food"] as ConfidenceAttribute[]).forEach((property) => {
       const color = getColor(property);
-      const confidence = getConfidence(property);
-      if (color) {
-        properties[property].color = color;
-      }
-      if (confidence) {
-        properties[property].confidence = confidence;
-      }
+      const conf = getConfidence(property);
+      if (color) properties[property].color = color;
+      if (conf) properties[property].confidence = conf;
     });
   }
   else {
@@ -228,30 +199,28 @@ const properties = reactive({
   quantity: {
     subtitle: i18n.t("recipe.quantity"),
     value: "" as string | number,
-    color: null,
-    confidence: null,
+    color: null as string | null,
+    confidence: null as string | null,
   },
   unit: {
     subtitle: i18n.t("recipe.unit"),
     value: "",
-    color: null,
-    confidence: null,
+    color: null as string | null,
+    confidence: null as string | null,
   },
   food: {
     subtitle: i18n.t("shopping-list.food"),
     value: "",
-    color: null,
-    confidence: null,
+    color: null as string | null,
+    confidence: null as string | null,
   },
   comment: {
     subtitle: i18n.t("recipe.comment"),
     value: "",
-    color: null,
-    confidence: null,
+    color: null as string | null,
+    confidence: null as string | null,
   },
 });
 
 const showConfidence = ref(false);
 </script>
-
-<style scoped></style>

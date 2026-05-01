@@ -1,24 +1,18 @@
 <template>
-  <v-app dark>
+  <div class="min-h-screen bg-background">
     <TheSnackbar />
 
-    <v-banner
+    <div
       v-if="$appInfo.demoStatus"
-      sticky
+      class="sticky top-0 z-50 w-full bg-warning/20 border-b border-warning py-2 text-center text-sm font-semibold text-on-surface"
     >
-      <div class="text-center">
-        <b> {{ $t("demo.info_message_with_version", { version: $appInfo.version }) }} </b>
-      </div>
-    </v-banner>
+      {{ $t("demo.info_message_with_version", { version: $appInfo.version }) }}
+    </div>
 
-    <v-main>
-      <v-scroll-x-transition>
-        <div>
-          <NuxtPage />
-        </div>
-      </v-scroll-x-transition>
-    </v-main>
-  </v-app>
+    <main>
+      <NuxtPage />
+    </main>
+  </div>
 </template>
 
 <script setup lang="ts">

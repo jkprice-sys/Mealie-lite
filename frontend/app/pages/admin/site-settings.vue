@@ -1,44 +1,29 @@
 <template>
-  <v-container
-    fluid
-    class="narrow-container"
-  >
-    <!-- Image -->
+  <div class="px-4 py-4 max-w-4xl mx-auto">
     <BasePageTitle divider>
       <template #header>
-        <v-img
-          width="100%"
-          max-height="200"
-          max-width="150"
-          src="/svgs/admin-site-settings.svg"
-        />
+        <img width="150" height="150" src="/svgs/admin-site-settings.svg" class="object-contain" />
       </template>
       <template #title>
         {{ $t("settings.site-settings") }}
       </template>
     </BasePageTitle>
 
-    <!-- Bug Report -->
+    <!-- Bug Report Dialog -->
     <BaseDialog
       v-model="bugReportDialog"
       :title="$t('settings.bug-report')"
-      :width="800"
       :icon="$globals.icons.github"
     >
-      <v-card-text>
-        <div class="pb-4">
-          {{ $t('settings.bug-report-information') }}
-        </div>
-        <v-textarea
+      <div class="px-4 py-3 space-y-3">
+        <p class="text-sm text-on-surface/70">{{ $t('settings.bug-report-information') }}</p>
+        <textarea
           v-model="bugReportText"
-          variant="outlined"
           rows="18"
           readonly
+          class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-on-surface font-mono focus:outline-none resize-none"
         />
-        <div
-          class="d-flex justify-end"
-          style="gap: 5px"
-        >
+        <div class="flex justify-end gap-2">
           <BaseButton
             color="gray"
             secondary
@@ -50,22 +35,13 @@
             </template>
             {{ $t('settings.tracker') }}
           </BaseButton>
-          <AppButtonCopy
-            :copy-text="bugReportText"
-            color="info"
-            :icon="false"
-          />
+          <AppButtonCopy :copy-text="bugReportText" color="info" :icon="false" />
         </div>
-      </v-card-text>
+      </div>
     </BaseDialog>
 
-    <div class="d-flex justify-end">
-      <BaseButton
-        color="info"
-        @click="
-          bugReportDialog = true;
-        "
-      >
+    <div class="flex justify-end mb-4">
+      <BaseButton color="info" @click="bugReportDialog = true">
         <template #icon>
           {{ $globals.icons.github }}
         </template>
@@ -73,70 +49,66 @@
       </BaseButton>
     </div>
 
-    <!-- Configuration -->
+    <!-- Configuration section -->
     <section>
-      <BaseCardSectionTitle
-        class="pb-0"
-        :icon="$globals.icons.cog"
-        :title="$t('settings.configuration')"
-      />
-      <v-card class="mb-4">
-        <template
+      <BaseCardSectionTitle class="pb-0" :icon="$globals.icons.cog" :title="$t('settings.configuration')" />
+      <div class="rounded-xl border border-border bg-surface mb-4 divide-y divide-border">
+        <div
           v-for="(check, idx) in simpleChecks"
-          :key="`list-item-${idx}`"
+          :key="`check-${idx}`"
+          class="flex items-start gap-3 px-4 py-3"
         >
-          <v-list-item :title="check.text">
-            <template #prepend>
-              <v-icon :color="check.color" class="opacity-100">
-                {{ check.icon }}
-              </v-icon>
-            </template>
-            <v-list-item-subtitle class="wrap-word">
+          <AppIcon
+            :path="check.icon"
+            size="sm"
+            :class="check.color === 'success' ? 'text-success' : check.color === 'error' ? 'text-error' : 'text-warning'"
+            class="flex-shrink-0 mt-0.5"
+          />
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-on-surface">{{ check.text }}</p>
+            <p class="text-xs text-on-surface/60 mt-0.5 break-words">
               {{ check.status ? check.successText : check.errorText }}
-            </v-list-item-subtitle>
-          </v-list-item>
-          <v-divider />
-        </template>
-      </v-card>
+            </p>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- Email -->
+    <!-- Email section -->
     <section>
-      <BaseCardSectionTitle
-        class="pt-2"
-        :icon="$globals.icons.email"
-        :title="$t('user.email')"
-      />
-      <v-alert
-        border="start"
-        :border-color="appConfig.emailReady ? 'success' : 'error'"
-        variant="text"
-        elevation="2"
+      <BaseCardSectionTitle class="pt-2" :icon="$globals.icons.email" :title="$t('user.email')" />
+      <div
+        class="rounded-xl border bg-surface p-4 mb-4"
+        :class="appConfig.emailReady ? 'border-l-4 border-l-success' : 'border-l-4 border-l-error'"
       >
-        <template #prepend>
-          <v-icon :color="appConfig.emailReady ? 'success' : 'warning'">
-            {{ appConfig.emailReady ? $globals.icons.checkboxMarkedCircle : $globals.icons.alertCircle }}
-          </v-icon>
-        </template>
-        <div class="font-weight-medium">
-          {{ $t('settings.email-configuration-status') }}
-        </div>
-        <div>
-          {{ appConfig.emailReady ? $t('settings.ready') : $t('settings.not-ready') }}
-        </div>
-        <div>
-          <v-text-field
-            v-model="state.address"
-            class="mr-4"
-            :label="$t('user.email')"
-            :rules="[validators.email]"
+        <div class="flex items-start gap-3 mb-3">
+          <AppIcon
+            :path="appConfig.emailReady ? $globals.icons.checkboxMarkedCircle : $globals.icons.alertCircle"
+            size="sm"
+            :class="appConfig.emailReady ? 'text-success' : 'text-warning'"
+            class="flex-shrink-0 mt-0.5"
           />
+          <div>
+            <p class="text-sm font-medium text-on-surface">{{ $t('settings.email-configuration-status') }}</p>
+            <p class="text-xs text-on-surface/60">
+              {{ appConfig.emailReady ? $t('settings.ready') : $t('settings.not-ready') }}
+            </p>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <div>
+            <label class="block text-xs text-on-surface/60 mb-1">{{ $t('user.email') }}</label>
+            <input
+              v-model="state.address"
+              type="email"
+              class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
           <BaseButton
             color="info"
-            variant="elevated"
             :disabled="!appConfig.emailReady || !validEmail"
             :loading="state.loading"
-            class="opacity-100"
             @click="testEmail"
           >
             <template #icon>
@@ -144,89 +116,75 @@
             </template>
             {{ $t("general.test") }}
           </BaseButton>
-          <template v-if="state.tested">
-            <v-divider class="my-x mt-6" />
-            <v-card-text class="px-0">
-              <h4> {{ $t("settings.email-test-results") }}</h4>
-              <span class="pl-4">
-                {{ state.success ? $t('settings.succeeded') : $t('settings.failed') }}
-              </span>
-            </v-card-text>
-          </template>
         </div>
-      </v-alert>
+
+        <template v-if="state.tested">
+          <hr class="border-border my-4" />
+          <div>
+            <h4 class="text-sm font-medium text-on-surface">{{ $t("settings.email-test-results") }}</h4>
+            <p class="text-sm text-on-surface/70 pl-4 mt-1">
+              {{ state.success ? $t('settings.succeeded') : $t('settings.failed') }}
+            </p>
+          </div>
+        </template>
+      </div>
     </section>
 
-    <!-- General App Info -->
+    <!-- General App Info section -->
     <section class="mt-4">
-      <BaseCardSectionTitle
-        class="pb-0"
-        :icon="$globals.icons.cog"
-        :title="$t('settings.general-about')"
-      />
-      <v-card class="mb-4">
+      <BaseCardSectionTitle class="pb-0" :icon="$globals.icons.cog" :title="$t('settings.general-about')" />
+      <div class="rounded-xl border border-border bg-surface mb-4">
         <template v-if="appInfo && appInfo.length">
-          <template
+          <div
             v-for="(property, idx) in appInfo"
             :key="property.name"
+            class="flex items-start gap-3 px-4 py-3"
+            :class="{ 'border-t border-border': idx > 0 }"
           >
-            <v-list-item
-              :title="property.name"
-              :prepend-icon="property.icon || $globals.icons.user"
-            >
-              <template v-if="property.slot === 'recipe-scraper'">
-                <v-list-item-subtitle>
+            <AppIcon
+              :path="property.icon || $globals.icons.user"
+              size="sm"
+              class="flex-shrink-0 mt-0.5 text-on-surface/60"
+            />
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-on-surface">{{ property.name }}</p>
+              <div class="text-xs text-on-surface/60 mt-0.5 break-all">
+                <template v-if="property.slot === 'recipe-scraper'">
                   <a
-                    class="text-primary"
+                    class="text-primary hover:underline"
                     target="_blank"
                     :href="`https://github.com/hhursev/recipe-scrapers/releases/tag/${property.value}`"
-                  >
-                    {{ property.value }}
-                  </a>
-                </v-list-item-subtitle>
-              </template>
-              <template v-else-if="property.slot === 'build'">
-                <v-list-item-subtitle>
+                  >{{ property.value }}</a>
+                </template>
+                <template v-else-if="property.slot === 'build'">
                   <a
-                    class="text-primary"
+                    class="text-primary hover:underline"
                     target="_blank"
                     :href="`https://github.com/mealie-recipes/mealie/commit/${property.value}`"
-                  >
-                    {{ property.value }}
-                  </a>
-                </v-list-item-subtitle>
-              </template>
-              <template v-else-if="property.slot === 'version' && property.value !== 'develop' && property.value !== 'nightly'">
-                <v-list-item-subtitle>
+                  >{{ property.value }}</a>
+                </template>
+                <template v-else-if="property.slot === 'version' && property.value !== 'develop' && property.value !== 'nightly'">
                   <a
-                    class="text-primary"
+                    class="text-primary hover:underline"
                     target="_blank"
                     :href="`https://github.com/mealie-recipes/mealie/releases/tag/${property.value}`"
-                  >
-                    {{ property.value }}
-                  </a>
-                </v-list-item-subtitle>
-              </template>
-              <template v-else>
-                <v-list-item-subtitle>
+                  >{{ property.value }}</a>
+                </template>
+                <template v-else>
                   {{ property.value }}
-                </v-list-item-subtitle>
-              </template>
-            </v-list-item>
-            <v-divider
-              v-if="appInfo && idx !== appInfo.length - 1"
-              :key="`divider-${property.name}`"
-            />
-          </template>
+                </template>
+              </div>
+            </div>
+          </div>
         </template>
         <template v-else>
-          <div class="mb-3 text-center">
+          <div class="py-6 text-center">
             <AppLoader :waiting-text="$t('general.loading')" />
           </div>
         </template>
-      </v-card>
+      </div>
     </section>
-  </v-container>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -255,8 +213,6 @@ definePageMeta({
   layout: "admin",
 });
 
-// For some reason the layout is not set automatically, so we set it here,
-// even though it's defined above in the page meta.
 onMounted(() => {
   setPageLayout("admin");
 });
@@ -272,7 +228,6 @@ const state = reactive({
   tested: false,
 });
 
-// Set page title
 useSeoMeta({
   title: i18n.t("settings.site-settings"),
 });
@@ -286,11 +241,16 @@ const appConfig = ref<CheckApp>({
   oidcReady: false,
   enableOpenai: false,
 });
+// Note: ldapReady, oidcReady, enableOpenai are kept in the type for API compatibility
+// but are not displayed in the ByteSized lite UI.
+
 function isLocalHostOrHttps() {
   return window.location.hostname === "localhost" || window.location.protocol === "https:";
 }
+
 const api = useUserApi();
 const adminApi = useAdminApi();
+
 onMounted(async () => {
   const { data } = await adminApi.about.checkApp();
   if (data) {
@@ -298,6 +258,7 @@ onMounted(async () => {
   }
   appConfig.value.isSiteSecure = isLocalHostOrHttps();
 });
+
 const simpleChecks = computed<SimpleCheck[]>(() => {
   const goodIcon = $globals.icons.checkboxMarkedCircle;
   const badIcon = $globals.icons.alert;
@@ -333,36 +294,10 @@ const simpleChecks = computed<SimpleCheck[]>(() => {
       color: appConfig.value.baseUrlSet ? goodColor : badColor,
       icon: appConfig.value.baseUrlSet ? goodIcon : badIcon,
     },
-    {
-      id: "ldap-ready",
-      text: appConfig.value.ldapReady ? i18n.t("settings.ldap-ready") : i18n.t("settings.ldap-not-ready"),
-      status: appConfig.value.ldapReady,
-      errorText: i18n.t("settings.ldap-ready-error-text"),
-      successText: i18n.t("settings.ldap-ready-success-text"),
-      color: appConfig.value.ldapReady ? goodColor : warningColor,
-      icon: appConfig.value.ldapReady ? goodIcon : warningIcon,
-    },
-    {
-      id: "oidc-ready",
-      text: appConfig.value.oidcReady ? i18n.t("settings.oidc-ready") : i18n.t("settings.oidc-not-ready"),
-      status: appConfig.value.oidcReady,
-      errorText: i18n.t("settings.oidc-ready-error-text"),
-      successText: i18n.t("settings.oidc-ready-success-text"),
-      color: appConfig.value.oidcReady ? goodColor : warningColor,
-      icon: appConfig.value.oidcReady ? goodIcon : warningIcon,
-    },
-    {
-      id: "openai-ready",
-      text: appConfig.value.enableOpenai ? i18n.t("settings.openai-ready") : i18n.t("settings.openai-not-ready"),
-      status: appConfig.value.enableOpenai,
-      errorText: i18n.t("settings.openai-ready-error-text"),
-      successText: i18n.t("settings.openai-ready-success-text"),
-      color: appConfig.value.enableOpenai ? goodColor : warningColor,
-      icon: appConfig.value.enableOpenai ? goodIcon : warningIcon,
-    },
   ];
   return data;
 });
+
 async function testEmail() {
   state.loading = true;
   state.tested = false;
@@ -379,23 +314,18 @@ async function testEmail() {
   state.loading = false;
   state.tested = true;
 }
+
 const validEmail = computed(() => {
-  if (state.address === "") {
-    return false;
-  }
+  if (state.address === "") return false;
   const valid = validators.email(state.address);
-  // Explicit bool check because validators.email sometimes returns a string
-  if (valid === true) {
-    return true;
-  }
-  return false;
+  return valid === true;
 });
-// ============================================================
-// General About Info
+
 const rawAppInfo = ref({
   version: "null",
   versionLatest: "null",
 });
+
 function getAppInfo() {
   const { data: statistics } = useAsyncData(useAsyncKey(), async () => {
     const { data } = await adminApi.about.about();
@@ -468,6 +398,7 @@ function getAppInfo() {
   });
   return statistics;
 }
+
 const appInfo = getAppInfo();
 const bugReportDialog = ref(false);
 const bugReportText = computed(() => {
@@ -477,21 +408,15 @@ const bugReportText = computed(() => {
   };
   let text = "**Details**\n";
   appInfo.value?.forEach((item) => {
-    if (ignore[item.name as string]) {
-      return;
-    }
+    if (ignore[item.name as string]) return;
     text += `${item.name as string}: ${item.value as string}\n`;
   });
-  const ignoreChecks: {
-    [key: string]: boolean;
-  } = {
+  const ignoreChecks: { [key: string]: boolean } = {
     "application-version": true,
   };
   text += "\n**Checks**\n";
   simpleChecks.value.forEach((item) => {
-    if (ignoreChecks[item.id]) {
-      return;
-    }
+    if (ignoreChecks[item.id]) return;
     const status = item.status ? i18n.t("general.yes") : i18n.t("general.no");
     text += `${item.text.toString()}: ${status}\n`;
   });
@@ -499,10 +424,3 @@ const bugReportText = computed(() => {
   return text;
 });
 </script>
-
-<style scoped>
-.wrap-word {
-  white-space: normal;
-  word-wrap: break-word;
-}
-</style>

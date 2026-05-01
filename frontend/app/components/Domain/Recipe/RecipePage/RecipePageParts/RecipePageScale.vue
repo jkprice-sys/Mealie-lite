@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex justify-space-between align-center pt-2 pb-3">
+  <div class="flex justify-between items-center pt-2 pb-3">
     <RecipeScaleEditButton
       v-if="!isEditMode"
       v-model.number="scale"

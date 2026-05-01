@@ -5,86 +5,63 @@
       :title="$t('recipe-share.share-recipe')"
       :icon="$globals.icons.link"
     >
-      <v-card-text>
-        <v-menu
-          v-model="datePickerMenu"
-          :close-on-content-click="false"
-          transition="scale-transition"
-          offset-y
-          max-width="290px"
-          min-width="auto"
-        >
-          <template #activator="{ props: activatorProps }">
-            <v-text-field
-              :model-value="$d(expirationDate)"
-              :label="$t('recipe-share.expiration-date')"
-              :hint="$t('recipe-share.default-30-days')"
-              persistent-hint
-              :prepend-icon="$globals.icons.calendar"
-              v-bind="activatorProps"
-              readonly
+      <div class="px-4 py-3 space-y-3">
+        <!-- Expiration date field -->
+        <div>
+          <label class="block text-xs text-on-surface/60 mb-1">{{ $t('recipe-share.expiration-date') }}</label>
+          <div class="flex items-center gap-2">
+            <AppIcon :path="$globals.icons.calendar" size="sm" class="text-on-surface/40 shrink-0" />
+            <input
+              :value="expirationDate.toISOString().slice(0, 10)"
+              type="date"
+              class="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface
+                     focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+              @change="expirationDate = new Date(($event.target as HTMLInputElement).value)"
             />
-          </template>
-          <v-date-picker
-            v-model="expirationDate"
-            hide-header
-            :first-day-of-week="firstDayOfWeek"
-            :local="$i18n.locale"
-            @update:model-value="datePickerMenu = false"
-          />
-        </v-menu>
-      </v-card-text>
-      <v-card-actions class="justify-end">
-        <BaseButton
-          size="small"
-          @click="createNewToken"
-        >
-          {{ $t("general.new") }}
-        </BaseButton>
-      </v-card-actions>
-
-      <v-list-item
-        v-for="token in tokens"
-        :key="token.id"
-        class="px-2"
-        style="padding-top: 8px; padding-bottom: 8px;"
-        @click="shareRecipe(token.id)"
-      >
-        <div class="d-flex align-center" style="width: 100%;">
-          <v-avatar color="grey">
-            <v-icon>
-              {{ $globals.icons.link }}
-            </v-icon>
-          </v-avatar>
-
-          <div class="pl-3 flex-grow-1">
-            <v-list-item-title>
-              {{ $t("recipe-share.expires-at") + ' ' + $d(new Date(token.expiresAt!), "short") }}
-            </v-list-item-title>
           </div>
-
-          <v-btn
-            icon
-            variant="text"
-            class="ml-2"
-            @click.stop="deleteToken(token.id)"
-          >
-            <v-icon color="error-lighten-1">
-              {{ $globals.icons.delete }}
-            </v-icon>
-          </v-btn>
-          <v-btn
-            icon
-            variant="text"
-            class="ml-2"
-            @click.stop="copyTokenLink(token.id)"
-          >
-            <v-icon color="info-lighten-1">
-              {{ $globals.icons.contentCopy }}
-            </v-icon>
-          </v-btn>
+          <p class="mt-1 text-xs text-on-surface/50">{{ $t('recipe-share.default-30-days') }}</p>
         </div>
-      </v-list-item>
+
+        <!-- Create new token button -->
+        <div class="flex justify-end">
+          <BaseButton @click="createNewToken">{{ $t("general.new") }}</BaseButton>
+        </div>
+
+        <!-- Token list -->
+        <div v-if="tokens.length" class="divide-y divide-border rounded-lg border border-border overflow-hidden">
+          <div
+            v-for="token in tokens"
+            :key="token.id"
+            class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-primary/5 transition-colors"
+            @click="shareRecipe(token.id)"
+          >
+            <!-- Icon avatar -->
+            <div class="w-8 h-8 rounded-full bg-on-surface/10 flex items-center justify-center shrink-0">
+              <AppIcon :path="$globals.icons.link" size="sm" />
+            </div>
+            <!-- Expiry info -->
+            <span class="flex-1 text-sm text-on-surface">
+              {{ $t("recipe-share.expires-at") + ' ' + $d(new Date(token.expiresAt!), "short") }}
+            </span>
+            <!-- Delete button -->
+            <button
+              type="button"
+              class="p-1 rounded hover:bg-error/10 text-on-surface/40 hover:text-error transition-colors"
+              @click.stop="deleteToken(token.id)"
+            >
+              <AppIcon :path="$globals.icons.delete" size="sm" />
+            </button>
+            <!-- Copy button -->
+            <button
+              type="button"
+              class="p-1 rounded hover:bg-info/10 text-on-surface/40 hover:text-info transition-colors"
+              @click.stop="copyTokenLink(token.id)"
+            >
+              <AppIcon :path="$globals.icons.contentCopy" size="sm" />
+            </button>
+          </div>
+        </div>
+      </div>
     </BaseDialog>
   </div>
 </template>

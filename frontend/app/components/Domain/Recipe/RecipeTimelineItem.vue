@@ -1,95 +1,92 @@
 <template>
-  <v-timeline-item :class="attrs.class" fill-dot :small="attrs.small" :icon="icon" dot-color="primary">
-    <template v-if="!useMobileFormat" #opposite>
-      <v-chip v-if="event.timestamp" label large>
-        <v-icon class="mr-1">
-          {{ $globals.icons.calendar }}
-        </v-icon>
+  <div
+    class="rounded-lg border border-border bg-surface shadow-sm overflow-hidden"
+    :class="[$attrs.class]"
+    @click="handleCardClick"
+  >
+    <!-- Card header: avatar + date chip + subject (desktop) + context menu -->
+    <div class="px-4 py-3 flex items-center gap-3 flex-wrap">
+      <!-- Avatar -->
+      <UserAvatar
+        :user-id="event.userId"
+        :size="smAndDown ? '30px' : '42px'"
+        class="shrink-0"
+      />
+
+      <!-- Date chip -->
+      <span
+        v-if="event.timestamp"
+        class="inline-flex items-center gap-1 rounded border border-border px-2 py-0.5 text-xs text-on-surface/70 shrink-0"
+      >
+        <AppIcon :path="$globals.icons.calendar" size="xs" />
         {{ $d(new Date(event.timestamp)) }}
-      </v-chip>
-    </template>
-    <v-card
-      hover
-      :to="$attrs.selected || !recipe ? undefined : `/g/${groupSlug}/r/${recipe.slug}`"
-      class="elevation-12"
-      @click="$emit('selected')"
+      </span>
+
+      <!-- Subject (desktop) -->
+      <span v-if="!smAndDown" class="flex-1 text-sm font-medium text-on-surface text-center">
+        {{ event.subject }}
+      </span>
+
+      <!-- Context menu (stop propagation so card click doesn't fire) -->
+      <div
+        v-if="currentUser && currentUser.id == event.userId && event.eventType != 'system'"
+        class="ml-auto shrink-0"
+        @click.stop
+      >
+        <RecipeTimelineContextMenu
+          :menu-top="false"
+          :event="event"
+          :menu-icon="$globals.icons.dotsVertical"
+          :use-items="{ edit: true, delete: true }"
+          @update="$emit('update', $event)"
+          @delete="$emit('delete')"
+        />
+      </div>
+    </div>
+
+    <!-- Recipe card section -->
+    <div v-if="showRecipeCards && recipe" class="px-4 py-3 border-t border-border">
+      <RecipeCardMobile
+        disable-highlight
+        :vertical="smAndDown"
+        :name="recipe.name"
+        :slug="recipe.slug"
+        :description="recipe.description"
+        :rating="recipe.rating"
+        :image="recipe.image"
+        :recipe-id="recipe.id"
+        :is-flat="true"
+      />
+    </div>
+
+    <!-- Body: subject (mobile), image, message -->
+    <div
+      v-if="smAndDown || (eventImageUrl && !hideImage) || event.eventMessage"
+      class="px-4 py-3 border-t border-border"
     >
-      <v-card-title class="background">
-        <v-row>
-          <v-col align-self="center" :cols="useMobileFormat ? 'auto' : '2'" :class="attrs.avatar.class">
-            <UserAvatar :user-id="event.userId" :size="attrs.avatar.size" />
-          </v-col>
-          <v-col v-if="useMobileFormat" align-self="center" class="pr-0">
-            <v-chip label>
-              <v-icon> {{ $globals.icons.calendar }} </v-icon>
-              {{ $d(new Date(event.timestamp || "")) }}
-            </v-chip>
-          </v-col>
-          <v-col v-else cols="9" style="margin: auto; text-align: center">
-            {{ event.subject }}
-          </v-col>
-          <v-col :cols="useMobileFormat ? 'auto' : '1'" class="px-0 pt-0">
-            <RecipeTimelineContextMenu
-              v-if="currentUser && currentUser.id == event.userId && event.eventType != 'system'"
-              :menu-top="false"
-              :event="event"
-              :menu-icon="$globals.icons.dotsVertical"
-              color="transparent"
-              :elevation="0"
-              :card-menu="false"
-              :use-items="{
-                edit: true,
-                delete: true,
-              }"
-              @update="$emit('update', $event)"
-              @delete="$emit('delete')"
-            />
-          </v-col>
-        </v-row>
-      </v-card-title>
-      <v-card-text v-if="showRecipeCards && recipe" class="background">
-        <v-row :class="useMobileFormat ? 'py-3 mx-0' : 'py-3 mx-0'" style="max-width: 100%">
-          <v-col align-self="center" class="pa-0">
-            <RecipeCardMobile
-              disable-highlight
-              :vertical="useMobileFormat"
-              :name="recipe.name"
-              :slug="recipe.slug"
-              :description="recipe.description"
-              :rating="recipe.rating"
-              :image="recipe.image"
-              :recipe-id="recipe.id"
-              :is-flat="true"
-            />
-          </v-col>
-        </v-row>
-      </v-card-text>
-      <v-divider v-if="showRecipeCards && recipe && (useMobileFormat || event.eventMessage)" />
-      <v-card-text class="background">
-        <v-row>
-          <v-col>
-            <strong v-if="useMobileFormat">{{ event.subject }}</strong>
-            <v-img
-              v-if="eventImageUrl"
-              :src="eventImageUrl"
-              min-height="50"
-              :height="hideImage ? undefined : 'auto'"
-              :max-height="attrs.image.maxHeight"
-              contain
-              :class="attrs.image.class"
-              @error="hideImage = true"
-            />
-            <div v-if="event.eventMessage" :class="useMobileFormat ? 'text-caption' : ''">
-              <SafeMarkdown :source="event.eventMessage" />
-            </div>
-          </v-col>
-        </v-row>
-      </v-card-text>
-    </v-card>
-  </v-timeline-item>
+      <!-- Subject (mobile only) -->
+      <strong v-if="smAndDown" class="block mb-2 text-sm">{{ event.subject }}</strong>
+
+      <!-- Event image -->
+      <img
+        v-if="eventImageUrl && !hideImage"
+        :src="eventImageUrl"
+        class="w-full rounded object-contain mb-3"
+        :class="smAndDown ? 'max-h-64' : 'max-h-80'"
+        alt=""
+        @error="hideImage = true"
+      />
+
+      <!-- Event message (markdown) -->
+      <div v-if="event.eventMessage" :class="smAndDown ? 'text-xs' : 'text-sm'">
+        <SafeMarkdown :source="event.eventMessage" />
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
+import { useBreakpoints, breakpointsTailwind } from "@vueuse/core";
 import RecipeCardMobile from "./RecipeCardMobile.vue";
 import RecipeTimelineContextMenu from "./RecipeTimelineContextMenu.vue";
 import { useStaticRoutes } from "~/composables/api";
@@ -109,74 +106,40 @@ const props = withDefaults(defineProps<Props>(), {
   showRecipeCards: false,
 });
 
-defineEmits<{
+const emit = defineEmits<{
   selected: [];
   update: [event: RecipeTimelineEventUpdate];
   delete: [];
 }>();
 
 const { $globals } = useNuxtApp();
-const display = useDisplay();
+const bp = useBreakpoints(breakpointsTailwind);
+const smAndDown = bp.smallerOrEqual("sm");
+
 const { recipeTimelineEventSmallImage } = useStaticRoutes();
 const { eventTypeOptions } = useTimelineEventTypes();
-
 const { user: currentUser } = useMealieAuth();
 
 const route = useRoute();
 const groupSlug = computed(() => (route.params.groupSlug as string) || currentUser?.value?.groupSlug || "");
 
-const useMobileFormat = computed(() => {
-  return display.smAndDown.value;
-});
+const router = useRouter();
 
-const attrs = computed(() => {
-  if (useMobileFormat.value) {
-    return {
-      class: "px-0",
-      small: false,
-      avatar: {
-        size: "30px",
-        class: "pr-0",
-      },
-      image: {
-        maxHeight: "250",
-        class: "my-3",
-      },
-    };
+function handleCardClick() {
+  emit("selected");
+  if (props.recipe && groupSlug.value) {
+    router.push(`/g/${groupSlug.value}/r/${props.recipe.slug}`);
   }
-  else {
-    return {
-      class: "px-3",
-      small: false,
-      avatar: {
-        size: "42px",
-        class: "",
-      },
-      image: {
-        maxHeight: "300",
-        class: "mb-5",
-      },
-    };
-  }
-});
+}
 
 const icon = computed(() => {
-  const option = eventTypeOptions.value.find(option => option.value === props.event.eventType);
+  const option = eventTypeOptions.value.find(o => o.value === props.event.eventType);
   return option ? option.icon : $globals.icons.informationVariant;
 });
 
 const hideImage = ref(false);
 const eventImageUrl = computed<string>(() => {
-  if (props.event.image !== "has image") {
-    return "";
-  }
-
+  if (props.event.image !== "has image") return "";
   return recipeTimelineEventSmallImage(props.event.recipeId, props.event.id);
 });
 </script>
-
-<style>
-.v-card::after {
-  display: none;
-}
-</style>

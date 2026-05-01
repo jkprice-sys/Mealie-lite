@@ -6,31 +6,24 @@
       :is-cook-mode="isCookMode"
     />
     <div v-if="!isEditMode && recipe.tools && recipe.tools.length > 0">
-      <h2 class="mt-4 text-h5 font-weight-medium opacity-80">
+      <h2 class="mt-4 text-xl font-medium opacity-80">
         {{ $t('tool.required-tools') }}
       </h2>
-      <v-list density="compact">
-        <v-list-item
+      <ul class="mt-2 space-y-1">
+        <li
           v-for="(tool, index) in recipe.tools"
           :key="index"
-          density="compact"
-          class="px-1"
+          class="flex items-center gap-2 px-1 py-1"
         >
-          <template #prepend>
-            <v-checkbox
-              v-model="recipeTools[index].onHand"
-              hide-details
-              class="pt-0 py-auto"
-              color="secondary"
-              density="compact"
-              @change="updateTool(index)"
-            />
-          </template>
-          <v-list-item-title>
-            {{ tool.name }}
-          </v-list-item-title>
-        </v-list-item>
-      </v-list>
+          <input
+            v-model="recipeTools[index].onHand"
+            type="checkbox"
+            class="w-4 h-4 shrink-0 rounded border-border accent-secondary"
+            @change="updateTool(index)"
+          />
+          <span class="text-sm text-on-surface">{{ tool.name }}</span>
+        </li>
+      </ul>
     </div>
   </div>
 </template>
@@ -87,7 +80,7 @@ function updateTool(index: number) {
       }
     }
     else if (!tool.onHand && tool.householdsWithTool?.includes(user.householdSlug)) {
-      tool.householdsWithTool = tool.householdsWithTool.filter(household => household !== user.householdSlug);
+      tool.householdsWithTool = tool.householdsWithTool.filter(h => h !== user.householdSlug);
     }
 
     toolStore.actions.updateOne(tool);

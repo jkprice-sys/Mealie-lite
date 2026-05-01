@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid>
+  <div class="px-4 py-4">
     <BaseDialog
       v-model="state.createDialog"
       :title="$t('group.create-group')"
@@ -8,13 +8,13 @@
       @submit="createGroup(state.createGroupForm.data)"
     >
       <template #activator />
-      <v-card-text>
+      <div class="px-4 py-3">
         <AutoForm
           v-model="state.createGroupForm.data"
           :update-mode="state.updateMode"
           :items="state.createGroupForm.items"
         />
-      </v-card-text>
+      </div>
     </BaseDialog>
 
     <BaseDialog
@@ -26,71 +26,60 @@
       @confirm="deleteGroup(state.deleteTarget)"
     >
       <template #activator />
-      <v-card-text>
-        {{ $t("general.confirm-delete-generic") }}
-      </v-card-text>
+      <div class="px-4 py-3">
+        <p class="text-sm text-on-surface">{{ $t("general.confirm-delete-generic") }}</p>
+      </div>
     </BaseDialog>
 
     <BaseCardSectionTitle :title="$t('group.group-management')" />
+
     <section>
-      <v-toolbar
-        flat
-        color="transparent"
-        class="justify-between"
-      >
+      <div class="flex items-center gap-2 mb-4">
         <BaseButton @click="openDialog">
           {{ $t("general.create") }}
         </BaseButton>
-      </v-toolbar>
+      </div>
 
-      <v-data-table
-        :headers="state.headers"
-        :items="groups || []"
-        item-key="id"
-        class="elevation-0"
-        :items-per-page="-1"
-        hide-default-footer
-        disable-pagination
-        :search="state.search"
-        @click:row="($event, { item }) => handleRowClick(item)"
-      >
-        <template #[`item.households`]="{ item }">
-          {{ item.households!.length }}
-        </template>
-        <template #[`item.users`]="{ item }">
-          {{ item.users!.length }}
-        </template>
-        <template #[`item.actions`]="{ item }">
-          <v-tooltip
-            location="bottom"
-            :disabled="!(item && (item.households!.length > 0 || item.users!.length > 0))"
-          >
-            <template #activator="{ props }">
-              <div v-bind="props">
-                <v-btn
-                  :disabled="item && (item.households!.length > 0 || item.users!.length > 0)"
-                  class="mr-1"
-                  icon
-                  color="error"
-                  variant="text"
-                  @click.stop="
-                    state.confirmDialog = true;
-                    state.deleteTarget = item.id;
-                  "
+      <div class="overflow-x-auto rounded-xl border border-border">
+        <table class="w-full text-sm text-on-surface">
+          <thead>
+            <tr class="border-b border-border bg-surface">
+              <th class="px-3 py-2 text-left font-medium text-on-surface/60">{{ $t('group.group') }}</th>
+              <th class="px-3 py-2 text-left font-medium text-on-surface/60">{{ $t('general.name') }}</th>
+              <th class="px-3 py-2 text-left font-medium text-on-surface/60">{{ $t('group.total-households') }}</th>
+              <th class="px-3 py-2 text-left font-medium text-on-surface/60">{{ $t('user.total-users') }}</th>
+              <th class="px-3 py-2 text-center font-medium text-on-surface/60">{{ $t('general.delete') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="g in groups || []"
+              :key="g.id"
+              class="border-b border-border hover:bg-primary/5 cursor-pointer transition-colors"
+              @click="handleRowClick(g)"
+            >
+              <td class="px-3 py-2 text-xs text-on-surface/60">{{ g.id }}</td>
+              <td class="px-3 py-2">{{ g.name }}</td>
+              <td class="px-3 py-2">{{ g.households!.length }}</td>
+              <td class="px-3 py-2">{{ g.users!.length }}</td>
+              <td class="px-3 py-2 text-center">
+                <button
+                  type="button"
+                  :disabled="g.households!.length > 0 || g.users!.length > 0"
+                  :title="(g.households!.length > 0 || g.users!.length > 0) ? $t('admin.group-delete-note') : undefined"
+                  class="p-1 rounded text-error hover:bg-error/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  @click.stop="state.confirmDialog = true; state.deleteTarget = g.id"
                 >
-                  <v-icon>
-                    {{ $globals.icons.delete }}
-                  </v-icon>
-                </v-btn>
-              </div>
-            </template>
-            <span>{{ $t("admin.group-delete-note") }}</span>
-          </v-tooltip>
-        </template>
-      </v-data-table>
-      <v-divider />
+                  <AppIcon :path="$globals.icons.delete" size="sm" />
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <hr class="border-border mt-2" />
     </section>
-  </v-container>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -104,12 +93,12 @@ definePageMeta({
 });
 
 const i18n = useI18n();
+const { $globals } = useNuxtApp();
 
 useHead({
   title: i18n.t("group.manage-groups"),
 });
 
-// Set page title
 useSeoMeta({
   title: i18n.t("group.manage-groups"),
 });
@@ -121,18 +110,6 @@ const state = reactive({
   confirmDialog: false,
   deleteTarget: "",
   search: "",
-  headers: [
-    {
-      title: i18n.t("group.group"),
-      align: "start",
-      sortable: false,
-      value: "id",
-    },
-    { title: i18n.t("general.name"), value: "name" },
-    { title: i18n.t("group.total-households"), value: "households" },
-    { title: i18n.t("user.total-users"), value: "users" },
-    { title: i18n.t("general.delete"), value: "actions" },
-  ],
   updateMode: false,
   createGroupForm: {
     items: [

@@ -1,38 +1,36 @@
 <template>
   <div>
-    <BasePageTitle
-      v-if="groupName"
-      class="mt-n4 pt-8"
-    >
+    <BasePageTitle v-if="groupName">
       <template #header>
-        <v-img
-          width="100%"
-          max-height="200"
-          max-width="150"
+        <img
           src="/svgs/manage-members.svg"
+          class="w-full max-w-[150px] max-h-[200px] object-contain"
+          alt=""
         />
       </template>
       <template #title>
         {{ $t("recipe.group-global-timeline", { groupName }) }}
       </template>
     </BasePageTitle>
-    <v-sheet
-      :class="$vuetify.display.smAndDown ? 'pa-0' : 'px-3 py-0'"
-      style="background-color: transparent;"
-    >
+
+    <div :class="smAndDown ? '' : 'px-3'">
       <RecipeTimeline
         v-if="queryFilter"
         v-model="ready"
         show-recipe-cards
         :query-filter="queryFilter"
       />
-    </v-sheet>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useBreakpoints, breakpointsTailwind } from "@vueuse/core";
 import { useUserApi } from "~/composables/api";
 import RecipeTimeline from "~/components/Domain/Recipe/RecipeTimeline.vue";
+
+const bp = useBreakpoints(breakpointsTailwind);
+const smAndDown = bp.smallerOrEqual("sm");
 
 definePageMeta({
   middleware: ["group-only", "lite-mode"],

@@ -1,9 +1,6 @@
 <template>
   <div>
-    <div
-      v-if="displayPreview"
-      class="d-flex justify-end"
-    >
+    <div v-if="displayPreview" class="flex justify-end mb-2">
       <BaseButtonGroup
         :buttons="[
           {
@@ -15,16 +12,15 @@
         @toggle="previewState = !previewState"
       />
     </div>
-    <v-textarea
+    <textarea
       v-if="!previewState"
-      v-bind="textarea"
       v-model="modelValue"
-      :class="label == '' ? '' : 'mt-5'"
-      :label="label"
-      auto-grow
-      density="compact"
+      v-bind="textarea"
       rows="4"
-      variant="underlined"
+      class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface
+             focus:outline-none focus:ring-2 focus:ring-primary transition-colors resize-y"
+      :class="label ? 'mt-5' : ''"
+      :placeholder="label"
     />
     <SafeMarkdown
       v-else
@@ -52,6 +48,8 @@ const props = defineProps({
     default: () => ({}),
   },
 });
+
+const { $globals } = useNuxtApp();
 
 const emit = defineEmits<{
   (e: "input:preview", value: boolean): void;

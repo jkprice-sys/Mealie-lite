@@ -6,9 +6,7 @@
     v-model:require-all="state.requireAllCategories"
     :items="categories"
   >
-    <v-icon start>
-      {{ $globals.icons.categories }}
-    </v-icon>
+    <AppIcon :path="$globals.icons.categories" size="sm" class="mr-1" />
     {{ $t("category.categories") }}
   </SearchFilter>
 
@@ -19,9 +17,7 @@
     v-model:require-all="state.requireAllTags"
     :items="tags"
   >
-    <v-icon start>
-      {{ $globals.icons.tags }}
-    </v-icon>
+    <AppIcon :path="$globals.icons.tags" size="sm" class="mr-1" />
     {{ $t("tag.tags") }}
   </SearchFilter>
 
@@ -32,9 +28,7 @@
     v-model:require-all="state.requireAllTools"
     :items="tools"
   >
-    <v-icon start>
-      {{ $globals.icons.potSteam }}
-    </v-icon>
+    <AppIcon :path="$globals.icons.potSteam" size="sm" class="mr-1" />
     {{ $t("tool.tools") }}
   </SearchFilter>
 
@@ -45,9 +39,7 @@
     v-model:require-all="state.requireAllFoods"
     :items="foods"
   >
-    <v-icon start>
-      {{ $globals.icons.foods }}
-    </v-icon>
+    <AppIcon :path="$globals.icons.foods" size="sm" class="mr-1" />
     {{ $t("general.foods") }}
   </SearchFilter>
 
@@ -58,9 +50,7 @@
     :items="households"
     radio
   >
-    <v-icon start>
-      {{ $globals.icons.household }}
-    </v-icon>
+    <AppIcon :path="$globals.icons.household" size="sm" class="mr-1" />
     {{ $t("household.households") }}
   </SearchFilter>
 </template>

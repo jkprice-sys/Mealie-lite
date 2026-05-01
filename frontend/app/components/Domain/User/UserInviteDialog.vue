@@ -5,61 +5,69 @@
     :icon="$globals.icons.accountPlusOutline"
     color="primary"
   >
-    <v-container>
-      <v-form class="mt-5">
-        <v-select
-          v-if="groups && groups.length"
+    <div class="px-4 py-3 space-y-3">
+      <!-- Group select (admin only) -->
+      <div v-if="groups && groups.length">
+        <label class="block text-xs text-on-surface/60 mb-1">{{ $t('group.user-group') }}</label>
+        <select
           v-model="selectedGroup"
-          :items="groups"
-          item-title="name"
-          item-value="id"
-          :return-object="false"
-          variant="filled"
-          :label="$t('group.user-group')"
-          :rules="[validators.required]"
-        />
-        <v-select
-          v-if="households && households.length"
+          required
+          class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface
+                 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+        >
+          <option value="" disabled>{{ $t('group.user-group') }}</option>
+          <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
+        </select>
+      </div>
+
+      <!-- Household select (admin only) -->
+      <div v-if="households && households.length">
+        <label class="block text-xs text-on-surface/60 mb-1">{{ $t('household.user-household') }}</label>
+        <select
           v-model="selectedHousehold"
-          :items="filteredHouseholds"
-          item-title="name"
-          item-value="id"
-          :return-object="false"
-          variant="filled"
-          :label="$t('household.user-household')"
-          :rules="[validators.required]"
-        />
-        <v-row>
-          <v-col cols="9">
-            <v-text-field
-              v-model="generatedSignupLink"
-              :label="$t('profile.invite-link')"
-              type="text"
-              readonly
-              variant="filled"
-            />
-          </v-col>
-          <v-col
-            cols="3"
-            class="pl-1 mt-3"
-          >
-            <AppButtonCopy
-              :icon="false"
-              color="info"
-              :copy-text="generatedSignupLink"
-              :disabled="generatedSignupLink"
-            />
-          </v-col>
-        </v-row>
-        <v-text-field
+          required
+          :disabled="!selectedGroup"
+          class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface
+                 focus:outline-none focus:ring-2 focus:ring-primary transition-colors disabled:opacity-50"
+        >
+          <option value="" disabled>{{ $t('household.user-household') }}</option>
+          <option v-for="h in filteredHouseholds" :key="h.id" :value="h.id">{{ h.name }}</option>
+        </select>
+      </div>
+
+      <!-- Generated link -->
+      <div>
+        <label class="block text-xs text-on-surface/60 mb-1">{{ $t('profile.invite-link') }}</label>
+        <div class="flex items-center gap-2">
+          <input
+            :value="generatedSignupLink"
+            type="text"
+            readonly
+            class="flex-1 rounded-lg border border-border bg-surface/50 px-3 py-2 text-sm text-on-surface/70
+                   focus:outline-none"
+          />
+          <AppButtonCopy
+            :icon="false"
+            color="info"
+            :copy-text="generatedSignupLink"
+            :disabled="!generatedSignupLink"
+          />
+        </div>
+      </div>
+
+      <!-- Email field -->
+      <div>
+        <label class="block text-xs text-on-surface/60 mb-1">{{ $t('user.email') }}</label>
+        <input
           v-model="sendTo"
-          :label="$t('user.email')"
-          :rules="[validators.email]"
-          variant="outlined"
+          type="email"
+          class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface
+                 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
           @keydown.enter="sendInvite"
         />
-      </v-form>
-    </v-container>
+      </div>
+    </div>
+
     <template #custom-card-action>
       <BaseButton
         :disabled="!validEmail"
@@ -88,6 +96,7 @@ import { useAdminHouseholds } from "~/composables/use-households";
 const inviteDialog = defineModel<boolean>("modelValue", { type: Boolean, default: false });
 
 const i18n = useI18n();
+const { $globals } = useNuxtApp();
 const auth = useMealieAuth();
 
 const isAdmin = computed(() => auth.user.value?.admin);

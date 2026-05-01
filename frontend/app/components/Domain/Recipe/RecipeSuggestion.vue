@@ -1,42 +1,37 @@
 <template>
-  <v-container class="elevation-3">
-    <v-row no-gutters>
-      <v-col cols="12">
-        <RecipeCardMobile
-          :name="recipe.name"
-          :description="recipe.description"
-          :slug="recipe.slug"
-          :rating="recipe.rating"
-          :image="recipe.image"
-          :recipe-id="recipe.id"
-        />
-      </v-col>
-      <div v-for="(organizer, idx) in missingOrganizers" :key="idx">
-        <v-col v-if="organizer.show" cols="12">
-          <div class="d-flex flex-row flex-wrap align-center pt-2">
-            <v-icon class="ma-0 pa-0" />
-            <v-card-text class="mr-0 my-0 pl-1 py-0" style="width: min-content">
-              {{ $t("recipe-finder.missing") }}:
-            </v-card-text>
-            <v-chip
-              v-for="item in organizer.items"
-              :key="item.item.id"
-              label
-              color="secondary custom-transparent"
-              class="mr-2 my-1 pl-1"
-              variant="flat"
-            >
-              <v-checkbox dark :ripple="false" hide-details @click="handleCheckbox(item)">
-                <template #label>
-                  {{ organizer.getLabel(item.item) }}
-                </template>
-              </v-checkbox>
-            </v-chip>
-          </div>
-        </v-col>
+  <div class="rounded-lg border border-border bg-surface shadow-md p-3">
+    <RecipeCardMobile
+      :name="recipe.name"
+      :description="recipe.description"
+      :slug="recipe.slug"
+      :rating="recipe.rating"
+      :image="recipe.image"
+      :recipe-id="recipe.id"
+    />
+
+    <div
+      v-for="(organizer, idx) in missingOrganizers"
+      :key="idx"
+    >
+      <div v-if="organizer.show" class="flex flex-row flex-wrap items-center gap-2 pt-2">
+        <span class="text-xs text-on-surface/60">{{ $t("recipe-finder.missing") }}:</span>
+        <label
+          v-for="item in organizer.items"
+          :key="item.item.id"
+          class="inline-flex items-center gap-1.5 rounded border border-border px-2 py-1 text-xs cursor-pointer hover:bg-primary/5 transition-colors"
+          :class="item.selected ? 'bg-primary/10 border-primary' : ''"
+        >
+          <input
+            type="checkbox"
+            :checked="item.selected"
+            class="accent-primary"
+            @change="handleCheckbox(item)"
+          />
+          {{ organizer.getLabel(item.item) }}
+        </label>
       </div>
-    </v-row>
-  </v-container>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -75,9 +70,7 @@ const missingOrganizers = computed(() => [
     show: props.missingFoods?.length,
     icon: $globals.icons.foods,
     items: props.missingFoods
-      ? props.missingFoods.map((food) => {
-          return reactive({ type: "food", item: food, selected: false } as Organizer);
-        })
+      ? props.missingFoods.map(food => reactive({ type: "food", item: food, selected: false } as Organizer))
       : [],
     getLabel: (item: IngredientFood) => item.pluralName || item.name,
   },
@@ -86,35 +79,22 @@ const missingOrganizers = computed(() => [
     show: props.missingTools?.length,
     icon: $globals.icons.tools,
     items: props.missingTools
-      ? props.missingTools.map((tool) => {
-          return reactive({ type: "tool", item: tool, selected: false } as Organizer);
-        })
+      ? props.missingTools.map(tool => reactive({ type: "tool", item: tool, selected: false } as Organizer))
       : [],
     getLabel: (item: RecipeTool) => item.name,
   },
 ]);
 
 function handleCheckbox(organizer: Organizer) {
-  if (props.disableCheckbox) {
-    return;
-  }
-
+  if (props.disableCheckbox) return;
   organizer.selected = !organizer.selected;
   if (organizer.selected) {
-    if (organizer.type === "food") {
-      emit("add-food", organizer.item as IngredientFood);
-    }
-    else {
-      emit("add-tool", organizer.item as RecipeTool);
-    }
+    if (organizer.type === "food") emit("add-food", organizer.item as IngredientFood);
+    else emit("add-tool", organizer.item as RecipeTool);
   }
   else {
-    if (organizer.type === "food") {
-      emit("remove-food", organizer.item as IngredientFood);
-    }
-    else {
-      emit("remove-tool", organizer.item as RecipeTool);
-    }
+    if (organizer.type === "food") emit("remove-food", organizer.item as IngredientFood);
+    else emit("remove-tool", organizer.item as RecipeTool);
   }
 }
 </script>

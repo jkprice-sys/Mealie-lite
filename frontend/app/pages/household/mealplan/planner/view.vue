@@ -1,39 +1,27 @@
 <template>
-  <v-container class="mx-0 my-3 pa">
-    <v-row>
-      <v-col
+  <div class="mx-0 my-3">
+    <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+      <div
         v-for="(day, index) in plan"
         :key="index"
-        cols="12"
-        sm="12"
-        md="6"
-        lg="4"
-        xl="3"
-        xxl="2"
-        class="col-borders my-1 d-flex flex-column"
+        class="flex flex-col"
       >
-        <v-card class="mb-2 border-left-primary rounded-sm px-2">
-          <v-container class="px-0 d-flex align-center" height="56px">
-            <v-row no-gutters style="width: 100%;">
-              <v-col cols="10" class="d-flex align-center">
-                <p class="pl-2 my-1" :class="{ 'text-primary': isToday(day.date) }">
-                  {{ $d(day.date, "short") }}
-                </p>
-              </v-col>
-              <v-col class="d-flex align-center" cols="2">
-                <GroupMealPlanDayContextMenu v-if="day.recipes.length" :recipes="day.recipes" />
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card>
+        <!-- Day header card -->
+        <div class="mb-2 border-l-4 border-l-primary rounded-lg border border-border bg-surface px-3 py-2 flex items-center justify-between">
+          <p class="text-sm font-medium my-1" :class="{ 'text-primary': isToday(day.date) }">
+            {{ $d(day.date, "short") }}
+          </p>
+          <GroupMealPlanDayContextMenu v-if="day.recipes.length" :recipes="day.recipes" />
+        </div>
+
+        <!-- Meal sections -->
         <div v-for="section in day.sections" :key="section.title">
-          <div class="py-2 d-flex flex-column">
-            <div class="primary" style="width: 50px; height: 2.5px" />
-            <p class="text-overline my-0">
+          <div class="py-2 flex flex-col">
+            <div class="bg-primary h-0.5 w-12" />
+            <p class="text-xs uppercase tracking-wide font-medium text-on-surface/60 mt-0.5">
               {{ section.title }}
             </p>
           </div>
-
           <RecipeCardMobile
             v-for="mealplan in section.meals"
             :key="mealplan.id"
@@ -46,14 +34,13 @@
             :tags="mealplan.recipe ? mealplan.recipe.tags! : []"
           />
         </div>
-      </v-col>
-    </v-row>
-  </v-container>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { isSameDay } from "date-fns";
-
 import type { ReadPlanEntry } from "~/lib/api/types/meal-plan";
 import GroupMealPlanDayContextMenu from "~/components/Domain/Household/GroupMealPlanDayContextMenu.vue";
 import RecipeCardMobile from "~/components/Domain/Recipe/RecipeCardMobile.vue";
@@ -68,16 +55,8 @@ const props = defineProps<{
   mealplans: MealsByDate[];
 }>();
 
-type DaySection = {
-  title: string;
-  meals: ReadPlanEntry[];
-};
-
-type Days = {
-  date: Date;
-  sections: DaySection[];
-  recipes: RecipeSummary[];
-};
+type DaySection = { title: string; meals: ReadPlanEntry[] };
+type Days = { date: Date; sections: DaySection[]; recipes: RecipeSummary[] };
 
 const i18n = useI18n();
 
@@ -98,43 +77,22 @@ const plan = computed<Days[]>(() => {
     };
 
     for (const meal of day.meals) {
-      if (meal.entryType === "breakfast") {
-        out.sections[0].meals.push(meal);
-      }
-      else if (meal.entryType === "lunch") {
-        out.sections[1].meals.push(meal);
-      }
-      else if (meal.entryType === "dinner") {
-        out.sections[2].meals.push(meal);
-      }
-      else if (meal.entryType === "side") {
-        out.sections[3].meals.push(meal);
-      }
-      else if (meal.entryType === "snack") {
-        out.sections[4].meals.push(meal);
-      }
-      else if (meal.entryType === "drink") {
-        out.sections[5].meals.push(meal);
-      }
-      else if (meal.entryType === "dessert") {
-        out.sections[6].meals.push(meal);
-      }
+      if (meal.entryType === "breakfast") out.sections[0].meals.push(meal);
+      else if (meal.entryType === "lunch") out.sections[1].meals.push(meal);
+      else if (meal.entryType === "dinner") out.sections[2].meals.push(meal);
+      else if (meal.entryType === "side") out.sections[3].meals.push(meal);
+      else if (meal.entryType === "snack") out.sections[4].meals.push(meal);
+      else if (meal.entryType === "drink") out.sections[5].meals.push(meal);
+      else if (meal.entryType === "dessert") out.sections[6].meals.push(meal);
 
-      if (meal.recipe) {
-        out.recipes.push(meal.recipe);
-      }
+      if (meal.recipe) out.recipes.push(meal.recipe);
     }
 
-    // Drop empty sections
     out.sections = out.sections.filter(section => section.meals.length > 0);
-
     acc.push(out);
-
     return acc;
   }, [] as Days[]);
 });
 
-const isToday = (date: Date) => {
-  return isSameDay(date, new Date());
-};
+const isToday = (date: Date) => isSameDay(date, new Date());
 </script>

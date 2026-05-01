@@ -60,7 +60,7 @@ defineProps({
   menuTop: { type: Boolean, default: true },
 });
 
-defineEmits<Record<string, []>>();
+defineEmits(["click"]);
 
 const { $globals } = useNuxtApp();
 </script>

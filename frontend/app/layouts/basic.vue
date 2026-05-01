@@ -1,16 +1,11 @@
 <template>
-  <v-app dark>
+  <div class="min-h-screen bg-background">
     <TheSnackbar />
-
     <AppHeader :menu="false" />
-    <v-main>
-      <v-scroll-x-transition>
-        <div>
-          <NuxtPage />
-        </div>
-      </v-scroll-x-transition>
-    </v-main>
-  </v-app>
+    <main>
+      <NuxtPage />
+    </main>
+  </div>
 </template>
 
 <script setup lang="ts">

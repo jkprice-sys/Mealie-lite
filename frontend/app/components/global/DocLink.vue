@@ -1,21 +1,18 @@
 <template>
-  <v-btn
-    size="x-small"
+  <a
     :href="href"
-    color="primary"
     target="_blank"
+    rel="noopener noreferrer"
+    class="inline-flex items-center gap-1 rounded-lg bg-primary px-2 py-1 text-xs font-medium text-on-primary hover:bg-primary/90 transition-colors"
   >
-    <v-icon
-      start
-      size="small"
-    >
-      {{ $globals.icons.folderOutline }}
-    </v-icon>
+    <AppIcon :path="$globals.icons.folderOutline" size="xs" />
     {{ $t("about.docs") }}
-  </v-btn>
+  </a>
 </template>
 
 <script setup lang="ts">
+const { $globals } = useNuxtApp();
+
 const props = defineProps({
   link: {
     type: String,
@@ -23,8 +20,5 @@ const props = defineProps({
   },
 });
 
-const href = computed(() => {
-  // TODO: dynamically set docs link based off env
-  return `https://docs.mealie.io${props.link}`;
-});
+const href = computed(() => `https://docs.mealie.io${props.link}`);
 </script>

@@ -1,32 +1,19 @@
 <template>
-  <div
-    v-if="yieldDisplay"
-    class="d-flex align-center"
-  >
-    <v-row
-      no-gutters
-      class="d-flex flex-wrap align-center"
-      style="font-size: larger;"
-    >
-      <v-icon
-        size="x-large"
-        start
-        color="primary"
-      >
-        {{ $globals.icons.bread }}
-      </v-icon>
-      <p class="my-0 opacity-80">
-        <span class="font-weight-bold">{{ $t("recipe.yield") }}</span><br>
-        <!-- eslint-disable-next-line vue/no-v-html -->
-        <span v-html="yieldDisplay" />
-      </p>
-    </v-row>
+  <div v-if="yieldDisplay" class="flex flex-nowrap items-center gap-2 text-base">
+    <AppIcon :path="$globals.icons.bread" size="lg" class="text-primary shrink-0" />
+    <p class="my-0 opacity-80">
+      <span class="font-semibold">{{ $t("recipe.yield") }}</span><br>
+      <!-- eslint-disable-next-line vue/no-v-html -->
+      <span v-html="yieldDisplay" />
+    </p>
   </div>
 </template>
 
 <script setup lang="ts">
 import DOMPurify from "dompurify";
 import { useScaledAmount } from "~/composables/recipes/use-scaled-amount";
+
+const { $globals } = useNuxtApp();
 
 interface Props {
   yieldQuantity?: number;
@@ -50,17 +37,9 @@ function sanitizeHTML(rawHtml: string) {
 
 const yieldDisplay = computed<string>(() => {
   const components: string[] = [];
-
   const { scaledAmountDisplay } = useScaledAmount(props.yieldQuantity, props.scale);
-  if (scaledAmountDisplay) {
-    components.push(scaledAmountDisplay);
-  }
-
-  const text = props.yieldText;
-  if (text) {
-    components.push(text);
-  }
-
+  if (scaledAmountDisplay) components.push(scaledAmountDisplay);
+  if (props.yieldText) components.push(props.yieldText);
   return sanitizeHTML(components.join(" "));
 });
 </script>

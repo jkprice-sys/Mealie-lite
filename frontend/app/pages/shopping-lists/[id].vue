@@ -1,8 +1,6 @@
 <template>
-  <v-container
-    v-if="shoppingList"
-    class="md-container"
-  >
+  <div v-if="shoppingList" class="container mx-auto px-4 py-4">
+    <!-- Confirm: check all -->
     <BaseDialog
       v-model="state.checkAllDialog"
       :title="$t('general.confirm')"
@@ -10,11 +8,12 @@
       can-confirm
       @confirm="checkAll"
     >
-      <v-card-text>
+      <div class="px-4 py-3 text-sm text-on-surface">
         {{ $t('shopping-list.are-you-sure-you-want-to-check-all-items') }}
-      </v-card-text>
+      </div>
     </BaseDialog>
 
+    <!-- Confirm: uncheck all -->
     <BaseDialog
       v-model="state.uncheckAllDialog"
       :title="$t('general.confirm')"
@@ -22,11 +21,12 @@
       can-confirm
       @confirm="uncheckAll"
     >
-      <v-card-text>
+      <div class="px-4 py-3 text-sm text-on-surface">
         {{ $t('shopping-list.are-you-sure-you-want-to-uncheck-all-items') }}
-      </v-card-text>
+      </div>
     </BaseDialog>
 
+    <!-- Confirm: delete checked -->
     <BaseDialog
       v-model="state.deleteCheckedDialog"
       :title="$t('general.confirm')"
@@ -34,12 +34,12 @@
       can-confirm
       @confirm="deleteChecked"
     >
-      <v-card-text>
+      <div class="px-4 py-3 text-sm text-on-surface">
         {{ $t('shopping-list.are-you-sure-you-want-to-delete-checked-items') }}
-      </v-card-text>
+      </div>
     </BaseDialog>
 
-    <!-- Reorder Labels -->
+    <!-- Reorder Labels dialog -->
     <BaseDialog
       v-model="reorderLabelsDialog"
       :icon="$globals.icons.tagArrowUp"
@@ -50,116 +50,109 @@
       @submit="saveLabelOrder"
       @close="cancelLabelOrder"
     >
-      <v-card height="fit-content" max-height="70vh" style="overflow-y: auto;">
+      <div class="px-4 py-3 max-h-[70vh] overflow-y-auto">
         <VueDraggable
           v-if="localLabels"
           v-model="localLabels"
           handle=".handle"
           :delay="250"
           :delay-on-touch-only="true"
-          class="my-2"
+          class="space-y-1"
           @update:model-value="updateLabelOrder"
         >
           <div v-for="(labelSetting, index) in localLabels" :key="labelSetting.id">
             <MultiPurposeLabelSection v-model="localLabels[index]" use-color />
           </div>
         </VueDraggable>
-      </v-card>
+      </div>
     </BaseDialog>
 
+    <!-- ── Page header ──────────────────────────────────────────── -->
     <BasePageTitle divider>
       <template #header>
-        <v-container class="px-0">
-          <v-row no-gutters>
-            <v-col
-              class="text-left"
-            >
-              <ButtonLink
-                :to="`/shopping-lists?disableRedirect=true`"
-                :text="$t('shopping-list.all-lists')"
-                :icon="$globals.icons.backArrow"
-              />
-            </v-col>
-            <v-col
-              v-if="mdAndUp"
-              cols="6"
-              class="d-none d-sm-flex justify-center"
-            >
-              <v-img
-                max-height="100"
-                max-width="100"
-                src="/svgs/shopping-cart.svg"
-              />
-            </v-col>
-            <v-col class="d-flex justify-end">
-              <BaseButtonGroup
-                class="d-flex"
-                :buttons="[
+        <div class="flex items-center justify-between w-full">
+          <!-- Back link -->
+          <ButtonLink
+            :to="`/shopping-lists?disableRedirect=true`"
+            :text="$t('shopping-list.all-lists')"
+            :icon="$globals.icons.backArrow"
+          />
+
+          <!-- Center illustration (md+) -->
+          <img
+            v-if="mdAndUp"
+            src="/svgs/shopping-cart.svg"
+            class="h-24 w-24 object-contain hidden md:block"
+            alt=""
+          />
+
+          <!-- Action buttons -->
+          <BaseButtonGroup
+            :buttons="[
+              {
+                icon: $globals.icons.contentCopy,
+                text: '',
+                event: 'edit',
+                children: [
                   {
                     icon: $globals.icons.contentCopy,
-                    text: '',
-                    event: 'edit',
-                    children: [
-                      {
-                        icon: $globals.icons.contentCopy,
-                        text: $t('shopping-list.copy-as-text'),
-                        event: 'copy-plain',
-                      },
-                      {
-                        icon: $globals.icons.contentCopy,
-                        text: $t('shopping-list.copy-as-markdown'),
-                        event: 'copy-markdown',
-                      },
-                    ],
+                    text: $t('shopping-list.copy-as-text'),
+                    event: 'copy-plain',
                   },
                   {
-                    icon: $globals.icons.checkboxOutline,
-                    text: $t('shopping-list.check-all-items'),
-                    event: 'check',
+                    icon: $globals.icons.contentCopy,
+                    text: $t('shopping-list.copy-as-markdown'),
+                    event: 'copy-markdown',
+                  },
+                ],
+              },
+              {
+                icon: $globals.icons.checkboxOutline,
+                text: $t('shopping-list.check-all-items'),
+                event: 'check',
+              },
+              {
+                icon: $globals.icons.dotsVertical,
+                text: '',
+                event: 'three-dot',
+                children: [
+                  {
+                    icon: $globals.icons.tags,
+                    text: $t('shopping-list.reorder-labels'),
+                    event: 'reorder-labels',
                   },
                   {
-                    icon: $globals.icons.dotsVertical,
-                    text: '',
-                    event: 'three-dot',
-                    children: [
-                      {
-                        icon: $globals.icons.tags,
-                        text: $t('shopping-list.reorder-labels'),
-                        event: 'reorder-labels',
-                      },
-                      {
-                        icon: $globals.icons.tags,
-                        text: $t('shopping-list.manage-labels'),
-                        event: 'manage-labels',
-                      },
-                    ],
+                    icon: $globals.icons.tags,
+                    text: $t('shopping-list.manage-labels'),
+                    event: 'manage-labels',
                   },
-                ]"
-                @edit="edit = true"
-                @three-dot="threeDot = true"
-                @check="openCheckAll"
-                @copy-plain="copyListItems('plain')"
-                @copy-markdown="copyListItems('markdown')"
-                @reorder-labels="toggleReorderLabelsDialog()"
-                @manage-labels="$router.push(`/group/data/labels`)"
-              />
-            </v-col>
-          </v-row>
-        </v-container>
+                ],
+              },
+            ]"
+            @edit="edit = true"
+            @three-dot="threeDot = true"
+            @check="openCheckAll"
+            @copy-plain="copyListItems('plain')"
+            @copy-markdown="copyListItems('markdown')"
+            @reorder-labels="toggleReorderLabelsDialog()"
+            @manage-labels="$router.push('/group/data/labels')"
+          />
+        </div>
       </template>
       <template #title>
         {{ shoppingList.name }}
       </template>
     </BasePageTitle>
+
     <BannerWarning
       v-if="isOffline"
       :title="$t('shopping-list.you-are-offline')"
       :description="$t('shopping-list.you-are-offline-description')"
     />
 
-    <!-- Viewer -->
-    <section v-if="!edit" class="py-2 d-flex flex-column ga-4">
-      <!-- Create Item -->
+    <!-- ── Viewer ───────────────────────────────────────────────── -->
+    <section v-if="!edit" class="py-2 flex flex-col gap-4">
+      <!-- Create item -->
       <div v-if="createEditorOpen">
         <ShoppingListItemEditor
           v-model="createListItemData"
@@ -173,170 +166,179 @@
           @save="createListItem"
         />
       </div>
-      <div v-else class="d-flex justify-end">
-        <BaseButton
-          create
-          @click="createEditorOpen = true"
-        >
+      <div v-else class="flex justify-end">
+        <BaseButton create @click="createEditorOpen = true">
           {{ $t('general.add') }}
         </BaseButton>
       </div>
 
-      <TransitionGroup name="scroll-x-transition">
-        <BaseExpansionPanels v-for="(value, key) in itemsByLabel" :key="key" :v-model="0" start-open>
-          <v-expansion-panel class="shopping-list-section">
-            <v-expansion-panel-title
-              :color="getLabelColor(key)"
-              class="body-1 font-weight-bold section-title"
+      <!-- Label sections (accordion per label group) -->
+      <TransitionGroup name="list-fade">
+        <div
+          v-for="(value, key) in itemsByLabel"
+          :key="key"
+          class="rounded-lg border border-border overflow-hidden"
+        >
+          <!-- Section header -->
+          <button
+            type="button"
+            class="w-full flex items-center justify-between px-4 py-3 bg-surface hover:bg-primary/5 transition-colors text-left font-semibold text-sm"
+            :style="getLabelColor(key) ? `border-left: 4px solid ${getLabelColor(key)}` : ''"
+            @click="toggleLabelSection(String(key))"
+          >
+            <span>{{ key }}</span>
+            <AppIcon
+              :path="$globals.icons.chevronDown"
+              size="sm"
+              class="shrink-0 text-on-surface/40 transition-transform duration-200"
+              :class="openLabelSections.has(String(key)) ? '' : '-rotate-90'"
+            />
+          </button>
+
+          <!-- Section body with draggable items -->
+          <div v-show="openLabelSections.has(String(key))" class="border-t border-border">
+            <VueDraggable
+              :model-value="value"
+              handle=".handle"
+              :delay="250"
+              :delay-on-touch-only="true"
+              @start="loadingCounter += 1"
+              @end="loadingCounter -= 1"
+              @update:model-value="updateIndexUncheckedByLabel(key.toString(), $event)"
             >
-              {{ key }}
-            </v-expansion-panel-title>
-            <v-expansion-panel-text eager>
-              <VueDraggable
-                :model-value="value"
-                handle=".handle"
-                :delay="250"
-                :delay-on-touch-only="true"
-                @start="loadingCounter += 1"
-                @end="loadingCounter -= 1"
-                @update:model-value="updateIndexUncheckedByLabel(key.toString(), $event)"
+              <div
+                v-for="(item, index) in value"
+                :key="item.id"
+                class="px-4 py-2 border-b border-border/50 last:border-0"
               >
-                <TransitionGroup name="scroll-x-transition">
-                  <ShoppingListItem
-                    v-for="(item, index) in value"
-                    :key="item.id"
-                    v-model="value[index]"
-                    class="ml-2 my-2 w-auto"
-                    :labels="allLabels || []"
-                    :units="allUnits || []"
-                    :foods="allFoods || []"
-                    :recipes="recipeMap"
-                    @checked="saveListItem"
-                    @save="saveListItem"
-                    @delete="deleteListItem(item)"
-                  />
-                </TransitionGroup>
-              </VueDraggable>
-            </v-expansion-panel-text>
-          </v-expansion-panel>
-        </BaseExpansionPanels>
-      </TransitionGroup>
-      <!-- Checked Items -->
-      <v-expansion-panels flat>
-        <v-expansion-panel v-if="listItems.checked && listItems.checked.length > 0">
-          <v-expansion-panel-title class="border-solid border-thin py-1">
-            <div class="d-flex align-center flex-0-1-100">
-              <div class="flex-1-0">
-                {{ $t('shopping-list.items-checked-count', listItems.checked ? listItems.checked.length : 0) }}
-              </div>
-              <div class="justify-end">
-                <BaseButtonGroup
-                  :buttons="[
-                    {
-                      icon: $globals.icons.checkboxBlankOutline,
-                      text: $t('shopping-list.uncheck-all-items'),
-                      event: 'uncheck',
-                    },
-                    {
-                      icon: $globals.icons.delete,
-                      text: $t('shopping-list.delete-checked'),
-                      event: 'delete',
-                    },
-                  ]"
-                  @uncheck="openUncheckAll"
-                  @delete="openDeleteChecked"
-                />
-              </div>
-            </div>
-          </v-expansion-panel-title>
-          <v-expansion-panel-text eager>
-            <TransitionGroup name="scroll-x-transition">
-              <div v-for="(item, idx) in listItems.checked" :key="item.id">
                 <ShoppingListItem
-                  v-model="listItems.checked[idx]"
-                  class="strike-through-note"
+                  v-model="value[index]"
                   :labels="allLabels || []"
                   :units="allUnits || []"
                   :foods="allFoods || []"
+                  :recipes="recipeMap"
                   @checked="saveListItem"
                   @save="saveListItem"
                   @delete="deleteListItem(item)"
                 />
               </div>
-            </TransitionGroup>
-          </v-expansion-panel-text>
-        </v-expansion-panel>
-      </v-expansion-panels>
+            </VueDraggable>
+          </div>
+        </div>
+      </TransitionGroup>
+
+      <!-- Checked items accordion -->
+      <div
+        v-if="listItems.checked && listItems.checked.length > 0"
+        class="rounded-lg border border-border overflow-hidden"
+      >
+        <button
+          type="button"
+          class="w-full flex items-center justify-between px-4 py-2 bg-surface hover:bg-primary/5 transition-colors text-left"
+          @click="checkedOpen = !checkedOpen"
+        >
+          <span class="text-sm font-medium text-on-surface/70">
+            {{ $t('shopping-list.items-checked-count', listItems.checked ? listItems.checked.length : 0) }}
+          </span>
+          <div class="flex items-center gap-2">
+            <BaseButtonGroup
+              :buttons="[
+                {
+                  icon: $globals.icons.checkboxBlankOutline,
+                  text: $t('shopping-list.uncheck-all-items'),
+                  event: 'uncheck',
+                },
+                {
+                  icon: $globals.icons.delete,
+                  text: $t('shopping-list.delete-checked'),
+                  event: 'delete',
+                },
+              ]"
+              @uncheck="openUncheckAll"
+              @delete="openDeleteChecked"
+            />
+            <AppIcon
+              :path="$globals.icons.chevronDown"
+              size="sm"
+              class="shrink-0 text-on-surface/40 transition-transform duration-200"
+              :class="checkedOpen ? '' : '-rotate-90'"
+            />
+          </div>
+        </button>
+
+        <div v-show="checkedOpen" class="border-t border-border">
+          <div
+            v-for="(item, idx) in listItems.checked"
+            :key="item.id"
+            class="px-4 py-2 border-b border-border/50 last:border-0"
+          >
+            <ShoppingListItem
+              v-model="listItems.checked[idx]"
+              class="opacity-60"
+              :labels="allLabels || []"
+              :units="allUnits || []"
+              :foods="allFoods || []"
+              @checked="saveListItem"
+              @save="saveListItem"
+              @delete="deleteListItem(item)"
+            />
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- Recipe References -->
-    <v-lazy
+    <!-- ── Recipe references ────────────────────────────────────── -->
+    <section
       v-if="shoppingList.recipeReferences && shoppingList.recipeReferences.length > 0"
       class="mt-6"
     >
-      <section>
-        <div>
-          <span>
-            <v-icon start class="mb-1">
-              {{ $globals.icons.primary }}
-            </v-icon>
-          </span>
-          {{ $t('shopping-list.linked-recipes-count', shoppingList.recipeReferences
-            ? shoppingList.recipeReferences.length
-            : 0) }}
-        </div>
-        <v-divider />
-        <RecipeList
-          :recipes="recipeList"
-          show-description
-          :disabled="isOffline"
+      <div class="flex items-center gap-2 mb-2 text-sm text-on-surface font-medium">
+        <AppIcon :path="$globals.icons.primary" size="sm" />
+        {{ $t('shopping-list.linked-recipes-count', shoppingList.recipeReferences?.length ?? 0) }}
+      </div>
+      <hr class="border-border mb-3" />
+      <RecipeList
+        :recipes="recipeList"
+        show-description
+        :disabled="isOffline"
+      >
+        <template
+          v-for="(recipe, index) in recipeList"
+          #[`actions-${recipe.id}`]
+          :key="'item-actions-decrease' + recipe.id"
         >
-          <template
-            v-for="(recipe, index) in recipeList"
-            #[`actions-${recipe.id}`]
-            :key="'item-actions-decrease' + recipe.id"
+          <button
+            v-if="recipe"
+            type="button"
+            class="p-1 rounded text-on-surface/40 hover:text-error transition-colors"
+            :disabled="isOffline"
+            @click.prevent="removeRecipeReferenceToList(recipe.id!)"
           >
-            <v-list-item-action>
-              <v-btn
-                v-if="recipe"
-                icon
-                flat
-                class="bg-transparent"
-                :disabled="isOffline"
-                @click.prevent="removeRecipeReferenceToList(recipe.id!)"
-              >
-                <v-icon color="grey-lighten-1">
-                  {{ $globals.icons.minus }}
-                </v-icon>
-              </v-btn>
-            </v-list-item-action>
-            <div class="pl-3">
-              {{ shoppingList.recipeReferences[index].recipeQuantity }}
-            </div>
-            <v-list-item-action>
-              <v-btn
-                icon
-                :disabled="isOffline"
-                flat
-                class="bg-transparent"
-                @click.prevent="addRecipeReferenceToList(recipe.id!)"
-              >
-                <v-icon color="grey-lighten-1">
-                  {{ $globals.icons.createAlt }}
-                </v-icon>
-              </v-btn>
-            </v-list-item-action>
-          </template>
-        </RecipeList>
-      </section>
-    </v-lazy>
+            <AppIcon :path="$globals.icons.minus" size="sm" />
+          </button>
+          <div class="px-1 text-xs text-on-surface/60">
+            {{ shoppingList.recipeReferences[index].recipeQuantity }}
+          </div>
+          <button
+            type="button"
+            class="p-1 rounded text-on-surface/40 hover:text-primary transition-colors"
+            :disabled="isOffline"
+            @click.prevent="addRecipeReferenceToList(recipe.id!)"
+          >
+            <AppIcon :path="$globals.icons.createAlt" size="sm" />
+          </button>
+        </template>
+      </RecipeList>
+    </section>
+
     <WakelockSwitch />
-  </v-container>
+  </div>
 </template>
 
 <script setup lang="ts">
 definePageMeta({ middleware: ["lite-mode"] });
 import { VueDraggable } from "vue-draggable-plus";
+import { useBreakpoints, breakpointsTailwind } from "@vueuse/core";
 import RecipeList from "~/components/Domain/Recipe/RecipeList.vue";
 import MultiPurposeLabelSection from "~/components/Domain/ShoppingList/MultiPurposeLabelSection.vue";
 import ShoppingListItem from "~/components/Domain/ShoppingList/ShoppingListItem.vue";
@@ -344,20 +346,21 @@ import ShoppingListItemEditor from "~/components/Domain/ShoppingList/ShoppingLis
 import { useShoppingListPage } from "~/composables/shopping-list-page/use-shopping-list-page";
 import { useFoodStore, useLabelStore, useUnitStore } from "~/composables/store";
 
-const { mdAndUp } = useDisplay();
-const i18n = useI18n();
+const bp     = useBreakpoints(breakpointsTailwind);
+const mdAndUp = bp.greaterOrEqual("md");
 
-useSeoMeta({
-  title: i18n.t("shopping-list.shopping-list"),
-});
+const i18n = useI18n();
+const { $globals } = useNuxtApp();
+
+useSeoMeta({ title: i18n.t("shopping-list.shopping-list") });
 
 const route = useRoute();
 const id = route.params.id as string;
 
 const shoppingListPage = useShoppingListPage(id);
 const { store: allLabels } = useLabelStore();
-const { store: allUnits } = useUnitStore();
-const { store: allFoods } = useFoodStore();
+const { store: allUnits }  = useUnitStore();
+const { store: allFoods }  = useFoodStore();
 
 const {
   shoppingList,
@@ -393,21 +396,35 @@ const {
   removeRecipeReferenceToList,
   addRecipeReferenceToList,
 } = shoppingListPage;
+
+// ── Label section accordion state ─────────────────────────────
+const openLabelSections = reactive(new Set<string>());
+
+// Open all sections by default when itemsByLabel changes
+watch(
+  itemsByLabel,
+  (labels) => {
+    Object.keys(labels).forEach(key => openLabelSections.add(key));
+  },
+  { immediate: true },
+);
+
+function toggleLabelSection(key: string) {
+  if (openLabelSections.has(key)) openLabelSections.delete(key);
+  else openLabelSections.add(key);
+}
+
+// Checked items accordion state
+const checkedOpen = ref(false);
 </script>
 
 <style>
-.number-input-container {
-  max-width: 50px;
+.list-fade-enter-active,
+.list-fade-leave-active {
+  transition: opacity 0.2s ease;
 }
-
-.shopping-list-section {
-  .section-title {
-    font-size: 1rem;
-    min-height: 48px !important;
-  }
-
-  .v-expansion-panel-text__wrapper {
-    padding: 0;
-  }
+.list-fade-enter-from,
+.list-fade-leave-to {
+  opacity: 0;
 }
 </style>

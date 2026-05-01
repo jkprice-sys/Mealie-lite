@@ -1,54 +1,60 @@
 <template>
-  <v-list :class="tile ? 'd-flex flex-wrap background' : 'background'" style="background-color: transparent;">
-    <v-sheet
-      v-for="recipe, index in recipes"
+  <ul
+    class="space-y-1"
+    :class="tile ? 'flex flex-wrap gap-1' : ''"
+    style="background-color: transparent;"
+  >
+    <li
+      v-for="(recipe, index) in recipes"
       :key="recipe.id"
-      :elevation="2"
-      :class="attrs.class.sheet"
-      :style="tile ? 'max-width: 100%; width: fit-content;' : 'width: 100%;'"
+      class="rounded-lg shadow-sm border border-border bg-surface"
+      :class="tile ? 'w-fit' : 'w-full'"
     >
-      <v-list-item
-        :to="disabled ? '' : '/g/' + groupSlug + '/r/' + recipe.slug"
-        :class="attrs.class.listItem"
+      <component
+        :is="disabled ? 'div' : 'NuxtLink'"
+        :to="disabled ? undefined : '/g/' + groupSlug + '/r/' + recipe.slug"
+        class="flex items-center gap-3 px-3 py-2 no-underline text-on-surface hover:bg-primary/5 rounded-lg transition-colors"
       >
-        <template #prepend>
-          <v-avatar color="primary" :class="attrs.class.avatar">
-            <v-icon
-              :class="attrs.class.icon"
-              dark
-              :size="small ? 'small' : 'default'"
-            >
-              {{ $globals.icons.primary }}
-            </v-icon>
-          </v-avatar>
-        </template>
-        <div :class="attrs.class.text">
-          <v-list-item-title
-            :class="listItem && listItemDescriptions[index] ? '' : 'pr-4'"
-            :style="attrs.style.text.title"
+        <!-- Avatar icon -->
+        <div
+          class="shrink-0 rounded-full bg-primary flex items-center justify-center"
+          :class="small ? 'w-7 h-7' : 'w-9 h-9'"
+        >
+          <AppIcon
+            :path="$globals.icons.primary"
+            size="sm"
+            class="text-white"
+          />
+        </div>
+
+        <!-- Text -->
+        <div class="flex-1 min-w-0">
+          <p
+            class="font-medium text-on-surface truncate"
+            :class="small ? 'text-xs' : 'text-sm'"
+            :style="listItem && listItemDescriptions[index] ? '' : 'padding-right: 1rem'"
           >
             {{ recipe.name }}
-          </v-list-item-title>
-          <v-list-item-subtitle v-if="showDescription">
+          </p>
+          <p v-if="showDescription && recipe.description" class="text-xs text-on-surface/60 truncate mt-0.5">
             {{ recipe.description }}
-          </v-list-item-subtitle>
-          <v-list-item-subtitle
+          </p>
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <p
             v-if="listItem && listItemDescriptions[index]"
-            :style="attrs.style.text.subTitle"
-          >
-            <!-- eslint-disable-next-line vue/no-v-html -->
-            <div v-html="listItemDescriptions[index]" />
-          </v-list-item-subtitle>
-        </div>
-        <template #append>
-          <slot
-            :name="'actions-' + recipe.id"
-            :v-bind="{ item: recipe }"
+            class="text-on-surface/60 mt-0.5"
+            :class="small ? 'text-[10px]' : 'text-xs'"
+            v-html="listItemDescriptions[index]"
           />
-        </template>
-      </v-list-item>
-    </v-sheet>
-  </v-list>
+        </div>
+
+        <!-- Actions slot -->
+        <div class="flex items-center gap-1 shrink-0">
+          <slot :name="'actions-' + recipe.id" :v-bind="{ item: recipe }" />
+        </div>
+      </component>
+    </li>
+  </ul>
 </template>
 
 <script setup lang="ts">
@@ -65,6 +71,7 @@ interface Props {
   showDescription?: boolean;
   disabled?: boolean;
 }
+
 const props = withDefaults(defineProps<Props>(), {
   listItem: undefined,
   small: false,
@@ -73,99 +80,56 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
 });
 
+const { $globals } = useNuxtApp();
 const auth = useMealieAuth();
 const { frac } = useFraction();
 const route = useRoute();
 const groupSlug = computed(() => route.params.groupSlug || auth.user?.value?.groupSlug || "");
 
-const attrs = computed(() => {
-  return props.small
-    ? {
-        class: {
-          sheet: props.tile ? "mb-1 me-1 justify-center align-center" : "mb-1 justify-center align-center",
-          listItem: "px-0",
-          avatar: "ma-0",
-          icon: "ma-0 pa-0 primary",
-          text: "pa-0",
-        },
-        style: {
-          text: {
-            title: "font-size: small;",
-            subTitle: "font-size: x-small;",
-          },
-        },
-      }
-    : {
-        class: {
-          sheet: props.tile ? "mx-1 justify-center align-center" : "mb-1 justify-center align-center",
-          listItem: "px-4",
-          avatar: "",
-          icon: "pa-1 primary",
-          text: "",
-        },
-        style: {
-          text: {
-            title: "",
-            subTitle: "",
-          },
-        },
-      };
-});
-
 function sanitizeHTML(rawHtml: string) {
   return DOMPurify.sanitize(rawHtml, {
     USE_PROFILES: { html: true },
-    ALLOWED_TAGS: ["strong", "sup"],
+    ALLOWED_TAGS: ["strong", "sup", "sub"],
   });
 }
 
 const listItemDescriptions = computed<string[]>(() => {
   if (
-    props.recipes.length === 1 // we don't need to specify details if there's only one recipe ref
+    props.recipes.length === 1
     || !props.listItem?.recipeReferences
     || props.listItem.recipeReferences.length !== props.recipes.length
   ) {
     return props.recipes.map(_ => "");
   }
 
-  const listItemDescriptions: string[] = [];
+  const descriptions: string[] = [];
   for (let i = 0; i < props.recipes.length; i++) {
-    const itemRef = props.listItem?.recipeReferences[i];
+    const itemRef = props.listItem.recipeReferences[i];
     const quantity = (itemRef.recipeQuantity || 1) * (itemRef.recipeScale || 1);
 
-    let listItemDescription = "";
+    let desc = "";
     if (props.listItem.unit?.fraction) {
       const fraction = frac(quantity, 10, true);
-      if (fraction[0] !== undefined && fraction[0] > 0) {
-        listItemDescription += fraction[0];
-      }
-
-      if (fraction[1] > 0) {
-        listItemDescription += ` <sup>${fraction[1]}</sup>&frasl;<sub>${fraction[2]}</sub>`;
-      }
-      else {
-        listItemDescription = (quantity).toString();
-      }
+      if (fraction[0] !== undefined && fraction[0] > 0) desc += fraction[0];
+      if (fraction[1] > 0) desc += ` <sup>${fraction[1]}</sup>&frasl;<sub>${fraction[2]}</sub>`;
+      else desc = quantity.toString();
     }
     else {
-      listItemDescription = (Math.round(quantity * 100) / 100).toString();
+      desc = (Math.round(quantity * 100) / 100).toString();
     }
 
     if (props.listItem.unit) {
       const unitDisplay = props.listItem.unit.useAbbreviation && props.listItem.unit.abbreviation
         ? props.listItem.unit.abbreviation
         : props.listItem.unit.name;
-
-      listItemDescription += ` ${unitDisplay}`;
+      desc += ` ${unitDisplay}`;
     }
 
-    if (itemRef.recipeNote) {
-      listItemDescription += `, ${itemRef.recipeNote}`;
-    }
+    if (itemRef.recipeNote) desc += `, ${itemRef.recipeNote}`;
 
-    listItemDescriptions.push(sanitizeHTML(listItemDescription));
+    descriptions.push(sanitizeHTML(desc));
   }
 
-  return listItemDescriptions;
+  return descriptions;
 });
 </script>

@@ -1,29 +1,69 @@
 <template>
   <div>
-    <v-card-text>
-      <v-switch
-        v-model="webhookCopy.enabled"
-        color="primary"
-        :label="$t('general.enabled')"
-      />
-      <v-text-field
-        v-model="webhookCopy.name"
-        :label="$t('settings.webhooks.webhook-name')"
-        variant="underlined"
-      />
-      <v-text-field
-        v-model="webhookCopy.url"
-        :label="$t('settings.webhooks.webhook-url')"
-        variant="underlined"
-      />
-      <v-text-field
-        v-model="scheduledTime"
-        type="time"
-        clearable
-        variant="underlined"
-      />
-    </v-card-text>
-    <v-card-actions class="py-0 justify-end">
+    <div class="px-4 py-3 space-y-3">
+      <!-- Enabled toggle -->
+      <label class="flex items-center gap-3 cursor-pointer">
+        <button
+          type="button"
+          role="switch"
+          :aria-checked="webhookCopy.enabled"
+          class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none shrink-0"
+          :class="webhookCopy.enabled ? 'bg-primary' : 'bg-on-surface/20'"
+          @click="webhookCopy.enabled = !webhookCopy.enabled"
+        >
+          <span
+            class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform"
+            :class="webhookCopy.enabled ? 'translate-x-4' : 'translate-x-0.5'"
+          />
+        </button>
+        <span class="text-sm text-on-surface">{{ $t('general.enabled') }}</span>
+      </label>
+
+      <!-- Webhook name -->
+      <div>
+        <label class="block text-xs text-on-surface/60 mb-1">{{ $t('settings.webhooks.webhook-name') }}</label>
+        <input
+          v-model="webhookCopy.name"
+          type="text"
+          class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface
+                 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+        />
+      </div>
+
+      <!-- Webhook URL -->
+      <div>
+        <label class="block text-xs text-on-surface/60 mb-1">{{ $t('settings.webhooks.webhook-url') }}</label>
+        <input
+          v-model="webhookCopy.url"
+          type="text"
+          class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface
+                 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+        />
+      </div>
+
+      <!-- Scheduled time -->
+      <div>
+        <label class="block text-xs text-on-surface/60 mb-1">{{ $t('settings.webhooks.scheduled-time') }}</label>
+        <div class="flex items-center gap-2">
+          <input
+            v-model="scheduledTime"
+            type="time"
+            class="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface
+                   focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+          />
+          <button
+            v-if="scheduledTime"
+            type="button"
+            class="p-2 rounded-lg hover:bg-on-surface/10 text-on-surface/40 transition-colors"
+            @click="scheduledTime = ''"
+          >
+            <AppIcon :path="$globals.icons.close" size="sm" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-end px-4 py-2">
       <BaseButtonGroup
         :buttons="[
           {
@@ -46,7 +86,7 @@
         @save="handleSave"
         @test="$emit('test', webhookCopy.id)"
       />
-    </v-card-actions>
+    </div>
   </div>
 </template>
 
@@ -65,6 +105,7 @@ const emit = defineEmits<{
 }>();
 
 const i18n = useI18n();
+const { $globals } = useNuxtApp();
 const itemUTC = ref<string>(props.webhook.scheduledTime);
 const itemLocal = ref<string>(timeUTCToLocal(props.webhook.scheduledTime));
 

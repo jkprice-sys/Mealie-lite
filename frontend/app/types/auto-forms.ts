@@ -1,5 +1,3 @@
-import type { VForm as VuetifyForm } from "vuetify/components/VForm";
-
 type FormFieldType
   = | "text"
     | "textarea"
@@ -43,4 +41,7 @@ export interface FormField {
 
 export type AutoFormItems = FormField[];
 
-export type VForm = InstanceType<typeof VuetifyForm>;
+/** Minimal form interface — compatible with native HTMLFormElement validate semantics. */
+export interface VForm {
+  validate: () => Promise<{ valid: boolean }>;
+}

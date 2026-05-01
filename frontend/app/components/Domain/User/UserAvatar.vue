@@ -1,38 +1,23 @@
 <template>
-  <v-tooltip
+  <div
     v-if="userId"
-    :disabled="!user || !tooltip"
-    location="end"
+    class="relative inline-flex items-center justify-center rounded-full overflow-hidden bg-surface border border-border shrink-0"
+    :style="{ width: sizeStr, height: sizeStr }"
+    :title="tooltip && user ? user.fullName : undefined"
   >
-    <template #activator="{ props: tooltipProps }">
-      <v-avatar
-        v-if="list"
-        v-bind="tooltipProps"
-      >
-        <v-img
-          :src="imageURL"
-          :alt="userId"
-          @load="error = false"
-          @error="error = true"
-        />
-      </v-avatar>
-      <v-avatar
-        v-else
-        :size="size"
-        v-bind="tooltipProps"
-      >
-        <v-img
-          :src="imageURL"
-          :alt="userId"
-          @load="error = false"
-          @error="error = true"
-        />
-      </v-avatar>
-    </template>
-    <span v-if="user">
-      {{ user.fullName }}
+    <img
+      v-if="!error"
+      :src="imageURL"
+      :alt="userId"
+      class="w-full h-full object-cover"
+      @load="error = false"
+      @error="error = true"
+    />
+    <!-- Fallback: initial letter -->
+    <span v-else class="text-xs font-medium text-on-surface/60 select-none">
+      {{ user?.fullName?.[0]?.toUpperCase() || '?' }}
     </span>
-  </v-tooltip>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -49,7 +34,7 @@ const props = defineProps({
   },
   size: {
     type: String,
-    default: "42",
+    default: "42px",
   },
   tooltip: {
     type: Boolean,
@@ -61,12 +46,15 @@ const error = ref(false);
 
 const auth = useMealieAuth();
 const { store: users } = useUserStore();
-const user = computed(() => {
-  return users.value.find(user => user.id === props.userId);
+const user = computed(() => users.value.find(u => u.id === props.userId));
+
+// Normalize size to include px if numeric
+const sizeStr = computed(() => {
+  const s = String(props.size);
+  return /^\d+$/.test(s) ? `${s}px` : s;
 });
 
 const imageURL = computed(() => {
-  // Note: auth.user is a ref now
   const authUser = auth.user.value;
   const key = authUser?.cacheKey ?? "";
   return `/api/media/users/${props.userId}/profile.webp?cacheKey=${key}`;

@@ -56,6 +56,7 @@
             <RecipeFavoriteBadge
               v-if="isOwnGroup && showRecipeContent"
               :recipe-id="recipeId"
+              :slug="slug"
               show-always
             />
             <div v-else class="px-1" />

@@ -23,34 +23,27 @@ import { useUserSelfRatings } from "~/composables/use-users";
 
 interface Props {
   recipeId?:   string;
+  slug?:       string;
   showAlways?: boolean;
   buttonStyle?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   recipeId: "",
+  slug: "",
   showAlways: false,
   buttonStyle: false,
 });
 
 const { $globals } = useNuxtApp();
-const { userRatings, refreshUserRatings } = useUserSelfRatings();
+const { userRatings, setRating } = useUserSelfRatings();
 
 const isFavorite = computed(() =>
   userRatings.value.find(r => r.recipeId === props.recipeId)?.isFavorite ?? false
 );
 
 async function toggleFavorite() {
-  const api = useUserApi();
-  const auth = useMealieAuth();
-  if (!auth.user.value) return;
-
-  if (!isFavorite.value) {
-    await api.users.addFavorite(auth.user.value.id, props.recipeId);
-  }
-  else {
-    await api.users.removeFavorite(auth.user.value.id, props.recipeId);
-  }
-  await refreshUserRatings();
+  if (!props.slug) return;
+  await setRating(props.slug, null, !isFavorite.value);
 }
 </script>

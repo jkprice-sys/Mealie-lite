@@ -1,32 +1,30 @@
 <template>
-  <v-container>
+  <div class="px-4 py-4">
     <BasePageTitle divider>
       <template #header>
-        <v-img
-          width="100%"
-          max-height="200"
-          max-width="200"
-          class="mb-2"
-          src="/svgs/manage-data-migrations.svg"
-        />
+        <img width="200" height="200" class="mb-2 object-contain" src="/svgs/manage-data-migrations.svg" />
       </template>
       <template #title>
         {{ $t('migration.recipe-data-migrations') }}
       </template>
       {{ $t('migration.recipe-data-migrations-explanation') }}
     </BasePageTitle>
-    <v-container :class="$vuetify.display.smAndDown ? 'px-0': ''">
+
+    <div class="mt-6">
       <BaseCardSectionTitle :title="$t('migration.new-migration')" />
-      <v-card
-        variant="outlined"
-        :loading="state.loading"
-        style="border-color: lightgrey;"
-      >
-        <v-card-title> {{ $t('migration.choose-migration-type') }} </v-card-title>
-        <v-card-text
-          v-if="content"
-          class="pb-0"
-        >
+
+      <!-- New migration card -->
+      <div class="rounded-xl border border-border bg-surface overflow-hidden relative">
+        <!-- Loading bar -->
+        <div v-if="state.loading" class="absolute top-0 left-0 right-0 h-1 bg-primary/20">
+          <div class="h-full bg-primary animate-pulse w-full" />
+        </div>
+
+        <div class="px-4 pt-4 pb-2">
+          <h2 class="text-base font-semibold text-on-surface">{{ $t('migration.choose-migration-type') }}</h2>
+        </div>
+
+        <div v-if="content" class="px-4 pb-3">
           <div class="mb-2">
             <BaseOverflowButton
               v-model="state.migrationType"
@@ -34,23 +32,26 @@
               :items="items"
             />
           </div>
-          {{ content.text }}
-          <v-treeview
-            v-if="content.tree && Array.isArray(content.tree)"
-            :key="state.migrationType"
-            density="compact"
-            :items="content.tree"
-          >
-            <template #prepend="{ item }">
-              <v-icon> {{ item.icon }}</v-icon>
-            </template>
-          </v-treeview>
-        </v-card-text>
+          <p class="text-sm text-on-surface/70 mb-2">{{ content.text }}</p>
 
-        <v-card-title class="mt-0">
-          {{ $t('general.upload-file') }}
-        </v-card-title>
-        <v-card-text>
+          <!-- Flat file tree -->
+          <div v-if="flatTree.length" class="mt-2 rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs text-on-surface/80">
+            <div
+              v-for="node in flatTree"
+              :key="node.id"
+              class="flex items-center gap-1.5 py-0.5"
+              :style="{ paddingLeft: `${node.depth * 16}px` }"
+            >
+              <AppIcon :path="node.icon" size="xs" class="flex-shrink-0 text-on-surface/60" />
+              <span>{{ node.title }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-4 pb-1 pt-2">
+          <h2 class="text-base font-semibold text-on-surface">{{ $t('general.upload-file') }}</h2>
+        </div>
+        <div class="px-4 pb-3">
           <AppButtonUpload
             :accept="content.acceptedFileType || '.zip'"
             class="mb-2"
@@ -59,22 +60,27 @@
             :text-btn="false"
             @uploaded="setFileObject"
           />
-          {{ state.fileObject.name || $t('migration.no-file-selected') }}
-        </v-card-text>
+          <p class="text-sm text-on-surface/70">{{ state.fileObject.name || $t('migration.no-file-selected') }}</p>
+        </div>
 
-        <v-card-text>
-          <v-checkbox v-model="state.addMigrationTag">
-            <template #label>
+        <div class="px-4 pb-3">
+          <label class="flex items-start gap-2 cursor-pointer">
+            <input
+              v-model="state.addMigrationTag"
+              type="checkbox"
+              class="mt-0.5 accent-primary"
+            />
+            <span class="text-sm text-on-surface">
               <i18n-t keypath="migration.tag-all-recipes">
                 <template #tag-name>
-                  <b class="mx-1"> {{ state.migrationType }} </b>
+                  <b class="mx-1">{{ state.migrationType }}</b>
                 </template>
               </i18n-t>
-            </template>
-          </v-checkbox>
-        </v-card-text>
+            </span>
+          </label>
+        </div>
 
-        <v-card-actions class="justify-end">
+        <div class="flex justify-end px-4 pb-4">
           <BaseButton
             :disabled="!state.fileObject.name"
             submit
@@ -82,17 +88,18 @@
           >
             {{ $t("general.submit") }}
           </BaseButton>
-        </v-card-actions>
-      </v-card>
-    </v-container>
-    <v-container class="$vuetify.display.smAndDown ? 'px-0': ''">
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-10">
       <BaseCardSectionTitle :title="$t('migration.previous-migrations')" />
       <ReportTable
         :items="state.reports"
         @delete="deleteReport"
       />
-    </v-container>
-  </v-container>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -106,6 +113,13 @@ interface TreeNode {
   icon: string;
   title: string;
   children?: TreeNode[];
+}
+
+interface FlatTreeNode {
+  id: number;
+  title: string;
+  icon: string;
+  depth: number;
 }
 
 interface MigrationContent {
@@ -192,6 +206,7 @@ const items: MenuItem[] = [
     value: MIGRATIONS.cookn,
   },
 ];
+
 const _content: Record<string, MigrationContent> = {
   [MIGRATIONS.mealie]: {
     text: i18n.t("migration.mealie-pre-v1.description-long"),
@@ -358,7 +373,8 @@ const _content: Record<string, MigrationContent> = {
         children: [
           { title: "recipes.html", icon: $globals.icons.codeJson },
           {
-            title: "images", icon: $globals.icons.folderOutline,
+            title: "images",
+            icon: $globals.icons.folderOutline,
             children: [
               { title: "image1.jpg", icon: $globals.icons.fileImage },
               { title: "image2.jpg", icon: $globals.icons.fileImage },
@@ -455,7 +471,16 @@ for (const key in _content) {
   }
 }
 
-console.log(_content);
+function flattenTree(nodes: TreeNode[], depth = 0): FlatTreeNode[] {
+  const result: FlatTreeNode[] = [];
+  for (const node of nodes) {
+    result.push({ id: node.id ?? 0, title: node.title, icon: node.icon, depth });
+    if (node.children) {
+      result.push(...flattenTree(node.children, depth + 1));
+    }
+  }
+  return result;
+}
 
 function setFileObject(fileObject: File) {
   state.fileObject = fileObject;
@@ -505,10 +530,15 @@ const content = computed(() => {
     return {
       text: "",
       acceptedFileType: ".zip",
-      tree: false,
+      tree: false as false,
     };
   }
 });
-</script>
 
-<style lang="scss" scoped></style>
+const flatTree = computed<FlatTreeNode[]>(() => {
+  if (content.value.tree && Array.isArray(content.value.tree)) {
+    return flattenTree(content.value.tree);
+  }
+  return [];
+});
+</script>

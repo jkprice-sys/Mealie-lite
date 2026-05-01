@@ -1,57 +1,62 @@
 <template>
   <div v-if="preferences">
     <BaseCardSectionTitle :title="$t('household.household-preferences')" />
-    <div class="mb-6">
-      <v-checkbox v-model="local.privateHousehold" hide-details density="compact" :label="$t('household.private-household')" color="primary" />
-      <div class="ml-8">
-        <p class="text-subtitle-2 my-0 py-0">
-          {{ $t("household.private-household-description") }}
-        </p>
-        <DocLink class="mt-2" link="/documentation/getting-started/faq/#how-do-private-groups-and-recipes-work" />
+
+    <!-- Simple boolean preferences -->
+    <div class="space-y-4 mb-6">
+      <div>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input v-model="local.privateHousehold" type="checkbox" class="accent-primary" />
+          <span class="text-sm font-medium text-on-surface">{{ $t('household.private-household') }}</span>
+        </label>
+        <div class="ml-6 mt-1">
+          <p class="text-xs text-on-surface/60">{{ $t("household.private-household-description") }}</p>
+          <DocLink class="mt-2" link="/documentation/getting-started/faq/#how-do-private-groups-and-recipes-work" />
+        </div>
+      </div>
+
+      <div>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input v-model="local.lockRecipeEditsFromOtherHouseholds" type="checkbox" class="accent-primary" />
+          <span class="text-sm font-medium text-on-surface">{{ $t('household.lock-recipe-edits-from-other-households') }}</span>
+        </label>
+        <p class="ml-6 mt-1 text-xs text-on-surface/60">{{ $t("household.lock-recipe-edits-from-other-households-description") }}</p>
+      </div>
+
+      <div>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input v-model="local.showAnnouncements" type="checkbox" class="accent-primary" />
+          <span class="text-sm font-medium text-on-surface">{{ $t('announcements.show-announcements-from-mealie') }}</span>
+        </label>
+        <p class="ml-6 mt-1 text-xs text-on-surface/60">{{ $t("announcements.show-announcements-setting-description") }}</p>
       </div>
     </div>
-    <div class="mb-6">
-      <v-checkbox v-model="local.lockRecipeEditsFromOtherHouseholds" hide-details density="compact" :label="$t('household.lock-recipe-edits-from-other-households')" color="primary" />
-      <div class="ml-8">
-        <p class="text-subtitle-2 my-0 py-0">
-          {{ $t("household.lock-recipe-edits-from-other-households-description") }}
-        </p>
+
+    <!-- First day of week select -->
+    <div class="mb-6 max-w-[300px]">
+      <label class="block text-xs text-on-surface/60 mb-1">{{ $t('settings.first-day-of-week') }}</label>
+      <div class="flex items-center gap-2">
+        <AppIcon :path="$globals.icons.calendarWeekBegin" size="sm" class="text-on-surface/40 shrink-0" />
+        <select
+          v-model.number="local.firstDayOfWeek"
+          class="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface
+                 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+        >
+          <option v-for="day in allDays" :key="day.value" :value="day.value">{{ day.name }}</option>
+        </select>
       </div>
     </div>
-    <div class="mb-6">
-      <v-checkbox
-        v-model="local.showAnnouncements"
-        hide-details
-        density="compact"
-        color="primary"
-        :label="$t('announcements.show-announcements-from-mealie')"
-      />
-      <div class="ml-8">
-        <p class="text-subtitle-2 my-0 py-0">
-          {{ $t("announcements.show-announcements-setting-description") }}
-        </p>
-      </div>
-    </div>
-    <v-select
-      v-model="local.firstDayOfWeek"
-      :prepend-icon="$globals.icons.calendarWeekBegin"
-      :items="allDays"
-      item-title="name"
-      item-value="value"
-      :label="$t('settings.first-day-of-week')"
-      variant="underlined"
-      flat
-    />
 
     <BaseCardSectionTitle class="mt-5" :title="$t('household.household-recipe-preferences')">
       {{ $t("household.default-recipe-preferences-description") }}
     </BaseCardSectionTitle>
-    <div class="preference-container">
+    <div class="flex flex-col gap-3 max-w-[600px]">
       <div v-for="p in recipePreferences" :key="p.key">
-        <v-checkbox v-model="local[p.key]" hide-details density="compact" :label="p.label" color="primary" />
-        <p class="ml-8 text-subtitle-2 my-0 py-0">
-          {{ p.description }}
-        </p>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input v-model="local[p.key]" type="checkbox" class="accent-primary" />
+          <span class="text-sm font-medium text-on-surface">{{ p.label }}</span>
+        </label>
+        <p class="ml-6 mt-0.5 text-xs text-on-surface/60">{{ p.description }}</p>
       </div>
     </div>
   </div>

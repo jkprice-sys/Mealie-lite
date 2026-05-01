@@ -8,38 +8,28 @@
       can-confirm
       @confirm="seedDatabase"
     >
-      <v-card-text>
-        <div class="pb-2">
-          {{ $t("data-pages.labels.seed-dialog-text") }}
+      <div class="px-4 py-3 space-y-3 text-sm text-on-surface">
+        <p>{{ $t("data-pages.labels.seed-dialog-text") }}</p>
+        <div>
+          <label class="block text-xs text-on-surface/60 mb-1">{{ $t('data-pages.select-language') }}</label>
+          <select
+            v-model="locale"
+            class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm
+                   text-on-surface focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+          >
+            <option v-for="loc in locales" :key="loc.value" :value="loc.value">
+              {{ loc.name }} ({{ loc.progress }}% {{ $t("language-dialog.translated") }})
+            </option>
+          </select>
         </div>
-        <v-autocomplete
-          v-model="locale"
-          :items="locales"
-          :custom-filter="normalizeFilter"
-          item-title="name"
-          :label="$t('data-pages.select-language')"
-          class="my-3"
-          hide-details
-          variant="outlined"
-          offset
-        >
-          <template #item="{ item, props }">
-            <v-list-item v-bind="props">
-              <v-list-item-subtitle>
-                {{ item.raw.progress }}% {{ $t("language-dialog.translated") }}
-              </v-list-item-subtitle>
-            </v-list-item>
-          </template>
-        </v-autocomplete>
-
-        <v-alert
+        <div
           v-if="labelStore.store.value && labelStore.store.value.length > 0"
-          type="error"
-          class="mb-0 text-body-2"
+          class="flex items-start gap-2 rounded-lg bg-error/10 border border-error/30 px-3 py-2 text-sm text-error"
         >
-          {{ $t("data-pages.foods.seed-dialog-warning") }}
-        </v-alert>
-      </v-card-text>
+          <AppIcon :path="$globals.icons.alertCircle" size="sm" class="mt-0.5 shrink-0" />
+          <span>{{ $t("data-pages.foods.seed-dialog-warning") }}</span>
+        </div>
+      </div>
     </BaseDialog>
 
     <GroupDataPage

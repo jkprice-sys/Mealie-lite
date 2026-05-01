@@ -1,252 +1,150 @@
 <template>
-  <v-container
-    fluid
-    class="d-flex justify-center  align-start  fill-height"
-    :class="{
-      'bg-off-white': !$vuetify.theme.current.dark && !isDark,
-    }"
-  >
-    <!-- Header Toolbar -->
-    <v-card class="elevation-4" width="1200" :class="{ 'my-10': $vuetify.display.mdAndUp }">
-      <v-toolbar
-        color="primary"
-        class="d-flex justify-center"
-        dark
-      >
-        <v-toolbar-title class="headline text-h4 text-center mx-0">
-          Mealie
-        </v-toolbar-title>
-      </v-toolbar>
+  <div class="min-h-screen bg-background flex justify-center items-start py-0 md:py-10">
+    <div class="w-full max-w-5xl bg-surface shadow-lg rounded-none md:rounded-xl overflow-hidden">
+      <!-- Header bar -->
+      <div class="bg-primary px-6 py-4 flex justify-center">
+        <h1 class="text-2xl font-bold text-on-primary">Mealie</h1>
+      </div>
 
-      <!-- Stepper Wizard -->
-      <v-stepper v-model="currentPage" mobile-breakpoint="sm" alt-labels>
-        <v-stepper-header>
-          <v-stepper-item
-            :value="Pages.LANDING"
-            :icon="$globals.icons.wave"
-            :complete="currentPage > Pages.LANDING"
-            :color="getStepperColor(currentPage, Pages.LANDING)"
-            :title="$t('general.start')"
+      <!-- Step indicator -->
+      <div class="flex items-center justify-center gap-0 px-4 py-4 overflow-x-auto">
+        <template v-for="(step, idx) in steps" :key="step.page">
+          <div class="flex flex-col items-center flex-shrink-0">
+            <div
+              class="w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors"
+              :class="stepCircleClass(step.page)"
+            >
+              <AppIcon v-if="currentPage > step.page" :path="$globals.icons.check" size="sm" />
+              <AppIcon v-else :path="step.icon" size="sm" />
+            </div>
+            <span class="text-xs mt-1 text-on-surface/70 whitespace-nowrap">{{ step.label }}</span>
+          </div>
+          <div
+            v-if="idx < steps.length - 1"
+            class="h-0.5 w-8 mx-1 flex-shrink-0 mt-[-1rem] transition-colors"
+            :class="currentPage > step.page ? 'bg-success' : 'bg-border'"
           />
-          <v-divider />
-          <v-stepper-item
-            :value="Pages.USER_INFO"
-            :icon="$globals.icons.user"
-            :complete="currentPage > Pages.USER_INFO"
-            :color="getStepperColor(currentPage, Pages.USER_INFO)"
-            :title="$t('user-registration.account-details')"
-          />
-          <v-divider />
-          <v-stepper-item
-            :value="Pages.PAGE_2"
-            :icon="$globals.icons.cog"
-            :complete="currentPage > Pages.PAGE_2"
-            :color="getStepperColor(currentPage, Pages.PAGE_2)"
-            :title="$t('settings.site-settings')"
-          />
-          <v-divider />
-          <v-stepper-item
-            :value="Pages.CONFIRM"
-            :icon="$globals.icons.chefHat"
-            :complete="currentPage > Pages.CONFIRM"
-            :color="getStepperColor(currentPage, Pages.CONFIRM)"
-            :title="$t('admin.maintenance.summary-title')"
-          />
-          <v-divider />
-          <v-stepper-item
-            :value="Pages.END"
+        </template>
+      </div>
+
+      <!-- Progress bar (during submission) -->
+      <div v-if="isSubmitting && currentPage === Pages.CONFIRM" class="h-1 bg-primary/20 mb-2">
+        <div class="h-full bg-primary animate-pulse w-full" />
+      </div>
+
+      <!-- Step content -->
+      <div class="px-4 py-2 min-h-[400px]">
+        <!-- LANDING -->
+        <div v-show="currentPage === Pages.LANDING" class="flex flex-col items-center py-8 gap-6">
+          <AppLogo />
+          <h2 class="text-2xl font-bold text-on-surface text-center break-words max-w-xl">
+            {{ $t('admin.setup.welcome-to-mealie-get-started') }}
+          </h2>
+          <NuxtLink
+            :to="groupSlug ? `/g/${groupSlug}` : '/login'"
+            class="inline-flex items-center rounded-full border border-on-surface/20 px-4 py-2 text-sm font-medium text-on-surface/70 hover:bg-on-surface/5 transition-colors"
+          >
+            {{ $t('admin.setup.already-set-up-bring-to-homepage') }}
+          </NuxtLink>
+          <BaseButton
+            size="large"
+            color="primary"
+            rounded
+            :icon="$globals.icons.translate"
+            @click="langDialog = true"
+          >
+            {{ $t('language-dialog.choose-language') }}
+          </BaseButton>
+        </div>
+
+        <!-- USER INFO -->
+        <div v-show="currentPage === Pages.USER_INFO" class="max-w-2xl mx-auto py-4">
+          <UserRegistrationForm />
+        </div>
+
+        <!-- COMMON SETTINGS -->
+        <div v-show="currentPage === Pages.PAGE_2" class="max-w-2xl mx-auto py-4">
+          <h2 class="text-lg font-semibold text-on-surface mb-4">
+            {{ $t('admin.setup.common-settings-for-new-sites') }}
+          </h2>
+          <AutoForm v-model="commonSettings" :items="commonSettingsForm" />
+        </div>
+
+        <!-- CONFIRMATION -->
+        <div v-show="currentPage === Pages.CONFIRM" class="max-w-2xl mx-auto py-4">
+          <h2 class="text-lg font-semibold text-on-surface mb-4">
+            {{ $t('general.confirm-how-does-everything-look') }}
+          </h2>
+          <div class="rounded-xl border border-border bg-surface divide-y divide-border">
+            <template v-for="(item, idx) in confirmationData" :key="idx">
+              <div v-if="item.display" class="px-4 py-3">
+                <p class="text-sm font-medium text-on-surface">{{ item.text }}</p>
+                <p class="text-xs text-on-surface/60 mt-0.5">{{ item.value }}</p>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- END -->
+        <div v-show="currentPage === Pages.END" class="py-4">
+          <EndPageContent />
+        </div>
+      </div>
+
+      <!-- Navigation footer -->
+      <div class="flex items-center justify-between px-4 py-4 border-t border-border">
+        <button
+          v-if="currentPage > Pages.LANDING"
+          type="button"
+          :disabled="isSubmitting"
+          class="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-on-surface hover:bg-on-surface/5 transition-colors disabled:opacity-50"
+          @click="onPrev"
+        >
+          {{ $t('general.back') }}
+        </button>
+        <div v-else />
+
+        <template v-if="currentPage === Pages.CONFIRM">
+          <BaseButton
+            create
+            :disabled="isSubmitting"
+            :loading="isSubmitting"
             :icon="$globals.icons.check"
-            :complete="currentPage > Pages.END"
-            :color="getStepperColor(currentPage, Pages.END)"
-            :title="$t('admin.setup.setup-complete')"
-          />
-        </v-stepper-header>
-        <v-progress-linear
-          v-if="isSubmitting && currentPage === Pages.CONFIRM"
-          color="primary"
-          indeterminate
-          class="mb-2"
-        />
+            @click="onNext"
+          >
+            {{ $t('general.submit') }}
+          </BaseButton>
+        </template>
+        <template v-else-if="currentPage === Pages.END">
+          <BaseButton
+            color="primary"
+            :disabled="isSubmitting"
+            :loading="isSubmitting"
+            :icon="$globals.icons.home"
+            @click="onFinish"
+          >
+            {{ $t('general.home') }}
+          </BaseButton>
+        </template>
+        <template v-else>
+          <button
+            type="button"
+            :disabled="isSubmitting"
+            class="rounded-lg bg-success px-4 py-2 text-sm font-medium text-white hover:bg-success/90 transition-colors disabled:opacity-50"
+            @click="onNext"
+          >
+            {{ $t('general.next') }}
+          </button>
+        </template>
+      </div>
 
-        <v-stepper-window :transition="false" class="stepper-window">
-          <!-- LANDING -->
-          <v-stepper-window-item :value="Pages.LANDING">
-            <v-container class="mb-12">
-              <AppLogo />
-              <v-card-title class="text-h4 justify-center text-center text-break text-pre-wrap">
-                {{ $t('admin.setup.welcome-to-mealie-get-started') }}
-              </v-card-title>
-              <v-btn
-                :to="groupSlug ? `/g/${groupSlug}` : '/login'"
-                rounded
-                variant="outlined"
-                color="grey-lighten-1"
-                class="text-subtitle-2 d-flex mx-auto"
-                style="width: fit-content;"
-              >
-                {{ $t('admin.setup.already-set-up-bring-to-homepage') }}
-              </v-btn>
-            </v-container>
-
-            <v-card-actions class="justify-center flex-column py-8">
-              <BaseButton
-                size="large"
-                color="primary"
-                class="px-10"
-                rounded
-                :icon="$globals.icons.translate"
-                @click="langDialog = true"
-              >
-                {{ $t('language-dialog.choose-language') }}
-              </BaseButton>
-            </v-card-actions>
-
-            <v-stepper-actions
-              class="justify-end"
-              :disabled="isSubmitting"
-              next-text="general.next"
-              @click:next="onNext"
-            >
-              <template #next>
-                <v-btn
-                  variant="flat"
-                  color="success"
-                  :disabled="isSubmitting"
-                  :loading="isSubmitting"
-                  :text="$t('general.next')"
-                  @click="onNext"
-                />
-              </template>
-              <template #prev />
-            </v-stepper-actions>
-          </v-stepper-window-item>
-
-          <!-- USER INFO -->
-          <v-stepper-window-item :value="Pages.USER_INFO" eager>
-            <v-container max-width="880">
-              <UserRegistrationForm />
-            </v-container>
-            <v-stepper-actions
-              :disabled="isSubmitting"
-              prev-text="general.back"
-              @click:prev="onPrev"
-            >
-              <template #next>
-                <v-btn
-                  variant="flat"
-                  color="success"
-                  :disabled="isSubmitting"
-                  :loading="isSubmitting"
-                  :text="$t('general.next')"
-                  @click="onNext"
-                />
-              </template>
-            </v-stepper-actions>
-          </v-stepper-window-item>
-
-          <!-- COMMON SETTINGS -->
-          <v-stepper-window-item :value="Pages.PAGE_2">
-            <v-container max-width="880">
-              <v-card-title class="headline pa-0">
-                {{ $t('admin.setup.common-settings-for-new-sites') }}
-              </v-card-title>
-              <AutoForm
-                v-model="commonSettings"
-                :items="commonSettingsForm"
-              />
-            </v-container>
-            <v-stepper-actions
-              :disabled="isSubmitting"
-              prev-text="general.back"
-              @click:prev="onPrev"
-            >
-              <template #next>
-                <v-btn
-                  variant="flat"
-                  color="success"
-                  :disabled="isSubmitting"
-                  :loading="isSubmitting"
-                  :text="$t('general.next')"
-                  @click="onNext"
-                />
-              </template>
-            </v-stepper-actions>
-          </v-stepper-window-item>
-
-          <!-- CONFIRMATION -->
-          <v-stepper-window-item :value="Pages.CONFIRM">
-            <v-container max-width="880">
-              <v-card-title class="headline pa-0">
-                {{ $t('general.confirm-how-does-everything-look') }}
-              </v-card-title>
-              <v-list>
-                <template v-for="(item, idx) in confirmationData">
-                  <v-list-item
-                    v-if="item.display"
-                    :key="idx"
-                    class="px-0"
-                  >
-                    <v-list-item-title>{{ item.text }}</v-list-item-title>
-                    <v-list-item-subtitle>{{ item.value }}</v-list-item-subtitle>
-                  </v-list-item>
-                  <v-divider
-                    v-if="idx !== confirmationData.length - 1"
-                    :key="`divider-${idx}`"
-                  />
-                </template>
-              </v-list>
-            </v-container>
-            <v-stepper-actions
-              :disabled="isSubmitting"
-              prev-text="general.back"
-              @click:prev="onPrev"
-            >
-              <template #next>
-                <BaseButton
-                  create
-                  flat
-                  :disabled="isSubmitting"
-                  :loading="isSubmitting"
-                  :icon="$globals.icons.check"
-                  :text="$t('general.submit')"
-                  @click="onNext"
-                />
-              </template>
-            </v-stepper-actions>
-          </v-stepper-window-item>
-
-          <!-- END -->
-          <v-stepper-window-item :value="Pages.END">
-            <EndPageContent />
-            <v-stepper-actions
-              :disabled="isSubmitting"
-              prev-text="general.back"
-              @click:prev="onPrev"
-            >
-              <template #next>
-                <BaseButton
-                  flat
-                  color="primary"
-                  :disabled="isSubmitting"
-                  :loading="isSubmitting"
-                  :icon="$globals.icons.home"
-                  :text="$t('general.home')"
-                  @click="onFinish"
-                />
-              </template>
-            </v-stepper-actions>
-          </v-stepper-window-item>
-        </v-stepper-window>
-      </v-stepper>
-
-      <!-- Dialog Language -->
+      <!-- Language Dialog -->
       <LanguageDialog v-model="langDialog" />
-    </v-card>
-  </v-container>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { useDark } from "@vueuse/core";
 import { useAdminApi, useUserApi } from "~/composables/api";
 import { useLocales } from "~/composables/use-locales";
 import { alert } from "~/composables/use-toast";
@@ -259,19 +157,17 @@ definePageMeta({
   middleware: ["admin-only"],
 });
 
-// ================================================================
-// Setup
 const i18n = useI18n();
 const auth = useMealieAuth();
 const userApi = useUserApi();
 const adminApi = useAdminApi();
+const { $globals } = useNuxtApp();
 
 const groupSlug = computed(() => auth.user.value?.groupSlug);
 const { locale } = useLocales();
 const router = useRouter();
 const isSubmitting = ref(false);
 const langDialog = ref(false);
-const isDark = useDark();
 
 useSeoMeta({
   title: i18n.t("admin.setup.first-time-setup"),
@@ -285,17 +181,20 @@ enum Pages {
   END = 5,
 }
 
-function getStepperColor(currentPage: Pages, page: Pages) {
-  if (currentPage == page) {
-    return "info";
-  }
-  if (currentPage > page) {
-    return "success";
-  }
-  return "";
+const steps = [
+  { page: Pages.LANDING, icon: $globals.icons.wave, label: i18n.t("general.start") },
+  { page: Pages.USER_INFO, icon: $globals.icons.user, label: i18n.t("user-registration.account-details") },
+  { page: Pages.PAGE_2, icon: $globals.icons.cog, label: i18n.t("settings.site-settings") },
+  { page: Pages.CONFIRM, icon: $globals.icons.chefHat, label: i18n.t("admin.maintenance.summary-title") },
+  { page: Pages.END, icon: $globals.icons.check, label: i18n.t("admin.setup.setup-complete") },
+];
+
+function stepCircleClass(page: Pages) {
+  if (currentPage.value === page) return "border-info bg-info/10 text-info";
+  if (currentPage.value > page) return "border-success bg-success/10 text-success";
+  return "border-border bg-surface text-on-surface/40";
 }
 
-// ================================================================
 // Forms
 const { accountDetails, credentials } = useUserRegistrationForm();
 const { commonSettingsForm } = useCommonSettingsForm();
@@ -306,48 +205,18 @@ const commonSettings = ref({
 
 const confirmationData = computed(() => {
   return [
-    {
-      display: true,
-      text: i18n.t("user.email"),
-      value: accountDetails.email.value,
-    },
-    {
-      display: true,
-      text: i18n.t("user.username"),
-      value: accountDetails.username.value,
-    },
-    {
-      display: true,
-      text: i18n.t("user.full-name"),
-      value: accountDetails.fullName.value,
-    },
-    {
-      display: true,
-      text: i18n.t("user.enable-advanced-content"),
-      value: accountDetails.advancedOptions.value ? i18n.t("general.yes") : i18n.t("general.no"),
-    },
-    {
-      display: true,
-      text: i18n.t("group.enable-public-access"),
-      value: commonSettings.value.makeGroupRecipesPublic ? i18n.t("general.yes") : i18n.t("general.no"),
-    },
-    {
-      display: true,
-      text: i18n.t("user-registration.use-seed-data"),
-      value: commonSettings.value.useSeedData ? i18n.t("general.yes") : i18n.t("general.no"),
-    },
+    { display: true, text: i18n.t("user.email"), value: accountDetails.email.value },
+    { display: true, text: i18n.t("user.username"), value: accountDetails.username.value },
+    { display: true, text: i18n.t("user.full-name"), value: accountDetails.fullName.value },
+    { display: true, text: i18n.t("user.enable-advanced-content"), value: accountDetails.advancedOptions.value ? i18n.t("general.yes") : i18n.t("general.no") },
+    { display: true, text: i18n.t("group.enable-public-access"), value: commonSettings.value.makeGroupRecipesPublic ? i18n.t("general.yes") : i18n.t("general.no") },
+    { display: true, text: i18n.t("user-registration.use-seed-data"), value: commonSettings.value.useSeedData ? i18n.t("general.yes") : i18n.t("general.no") },
   ];
 });
 
-// ================================================================
-// Page Navigation
 const currentPage = ref(Pages.LANDING);
 
-// ================================================================
-// Page Submission
-
 async function updateUser() {
-  // Note: auth.user is now a ref
   const { response } = await userApi.users.updateOne(auth.user.value!.id, {
     ...auth.user.value,
     email: accountDetails.email.value,
@@ -355,7 +224,6 @@ async function updateUser() {
     fullName: accountDetails.fullName.value,
     advanced: accountDetails.advancedOptions.value,
   });
-
   if (!response || response.status !== 200) {
     alert.error(i18n.t("events.something-went-wrong"));
   }
@@ -369,36 +237,23 @@ async function updatePassword() {
     currentPassword: "MyPassword",
     newPassword: credentials.password1.value,
   });
-
   if (!response || response.status !== 200) {
     alert.error(i18n.t("events.something-went-wrong"));
   }
 }
 
 async function submitRegistration() {
-  // we update the password first, then update the user's details
   await updatePassword().then(updateUser);
 }
 
 async function updateGroup() {
-  // Note: auth.user is now a ref
   const { data } = await userApi.groups.getOne(auth.user.value!.groupId);
   if (!data || !data.preferences) {
     alert.error(i18n.t("events.something-went-wrong"));
     return;
   }
-
-  const preferences = {
-    ...data.preferences,
-    privateGroup: !commonSettings.value.makeGroupRecipesPublic,
-  };
-
-  const payload = {
-    ...data,
-    preferences,
-  };
-
-  // Note: auth.user is now a ref
+  const preferences = { ...data.preferences, privateGroup: !commonSettings.value.makeGroupRecipesPublic };
+  const payload = { ...data, preferences };
   const { response } = await userApi.groups.updateOne(auth.user.value!.groupId, payload);
   if (!response || response.status !== 200) {
     alert.error(i18n.t("events.something-went-wrong"));
@@ -406,25 +261,17 @@ async function updateGroup() {
 }
 
 async function updateHousehold() {
-  // Note: auth.user is now a ref
   const { data } = await adminApi.households.getOne(auth.user.value!.householdId);
   if (!data || !data.preferences) {
     alert.error(i18n.t("events.something-went-wrong"));
     return;
   }
-
   const preferences = {
     ...data.preferences,
     privateHousehold: !commonSettings.value.makeGroupRecipesPublic,
     recipePublic: commonSettings.value.makeGroupRecipesPublic,
   };
-
-  const payload = {
-    ...data,
-    preferences,
-  };
-
-  // Note: auth.user is now a ref
+  const payload = { ...data, preferences };
   const { response } = await adminApi.households.updateOne(auth.user.value!.householdId, payload);
   if (!response || response.status !== 200) {
     alert.error(i18n.t("events.something-went-wrong"));
@@ -453,38 +300,21 @@ async function seedLabels() {
 }
 
 async function seedData() {
-  if (!commonSettings.value.useSeedData) {
-    return;
-  }
-
+  if (!commonSettings.value.useSeedData) return;
   await seedLabels();
   await Promise.all([seedFoods(), seedUnits()]);
 }
 
 async function submitCommonSettings() {
-  const tasks = [
-    updateGroup(),
-    updateHousehold(),
-    seedData(),
-  ];
-
-  await Promise.all(tasks);
+  await Promise.all([updateGroup(), updateHousehold(), seedData()]);
 }
 
 async function submitAll() {
-  const tasks = [
-    submitRegistration(),
-    submitCommonSettings(),
-  ];
-
-  await Promise.all(tasks);
+  await Promise.all([submitRegistration(), submitCommonSettings()]);
 }
 
 async function handleSubmit(page: number) {
-  if (isSubmitting.value) {
-    return;
-  }
-
+  if (isSubmitting.value) return;
   isSubmitting.value = true;
   switch (page) {
     case Pages.USER_INFO:
@@ -503,8 +333,6 @@ async function handleSubmit(page: number) {
   isSubmitting.value = false;
 }
 
-// ================================================================
-// Stepper Navigation Handlers
 function onPrev() {
   if (isSubmitting.value) return;
   if (currentPage.value > Pages.LANDING) currentPage.value -= 1;
@@ -528,46 +356,3 @@ async function onFinish() {
   await handleSubmit(Pages.END);
 }
 </script>
-
-<style>
-.icon-white {
-  fill: white;
-}
-
-.icon-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  position: relative;
-  margin-top: 2.5rem;
-}
-
-.icon-divider {
-  width: 100%;
-  margin-bottom: -2.5rem;
-}
-
-.icon-avatar {
-  border-color: rgba(0, 0, 0, 0.12);
-  border: 2px;
-}
-
-.bg-off-white {
-  background: #f5f8fa;
-}
-
-.v-stepper-item__avatar.v-avatar.v-stepper-item__avatar.v-avatar {
-  width: 3rem !important; /** Override inline style :( */
-  height: 3rem !important; /** Override inline style :( */
-  margin-inline-end: 0; /** reset weird margin */
-
-  .v-icon {
-    font-size: 1.4rem;
-  }
-}
-
-.v-stepper--alt-labels .v-stepper-header .v-divider {
-  margin: 48px -42px 0 !important;
-}
-</style>

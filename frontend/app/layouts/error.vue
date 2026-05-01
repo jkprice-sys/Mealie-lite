@@ -1,51 +1,33 @@
 <template>
-  <v-app
-    v-if="ready"
-    dark
-  >
-    <v-card-title>
+  <div v-if="ready" class="min-h-screen flex flex-col items-center justify-center bg-background">
+    <div class="text-center mb-4">
       <slot>
-        <h1 class="mx-auto">
+        <h1 class="text-xl font-semibold text-on-surface">
           {{ $t("page.404-page-not-found") }}
         </h1>
       </slot>
-    </v-card-title>
-    <div class="d-flex justify-space-around">
-      <div class="d-flex align-center">
-        <p class="primary--text">
-          4
-        </p>
-        <v-icon
-          color="primary"
-          class="mx-auto mb-0"
-          size="200"
-        >
-          {{ $globals.icons.primary }}
-        </v-icon>
-        <p class="primary--text">
-          4
-        </p>
-      </div>
     </div>
-    <v-card-actions>
-      <v-spacer />
+
+    <div class="flex items-center justify-center gap-4 mb-8">
+      <span class="text-primary font-bold" style="font-size: 200px; line-height: 1">4</span>
+      <AppIcon :path="$globals.icons.primary" class="text-primary" style="font-size: 200px; width: 200px; height: 200px;" />
+      <span class="text-primary font-bold" style="font-size: 200px; line-height: 1">4</span>
+    </div>
+
+    <div class="flex items-center gap-3">
       <slot name="actions">
-        <v-btn
+        <NuxtLink
           v-for="(button, index) in buttons"
           :key="index"
-          nuxt
           :to="button.to"
-          color="primary"
+          class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary/90 transition-colors"
         >
-          <v-icon start>
-            {{ button.icon }}
-          </v-icon>
+          <AppIcon :path="button.icon" size="sm" />
           {{ button.text }}
-        </v-btn>
+        </NuxtLink>
       </slot>
-      <v-spacer />
-    </v-card-actions>
-  </v-app>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -136,11 +118,5 @@ const buttons = [
 <style scoped>
 h1 {
   font-size: 20px;
-}
-
-p {
-  padding-bottom: 0 !important;
-  margin-bottom: 0 !important;
-  font-size: 200px;
 }
 </style>

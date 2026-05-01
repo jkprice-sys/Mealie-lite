@@ -1,19 +1,26 @@
 <template>
   <div>
-    <div
-      class="d-md-flex"
-      style="gap: 10px"
-    >
-      <v-select
-        v-model="day"
-        :items="MEAL_DAY_OPTIONS"
-        :label="$t('meal-plan.rule-day')"
-      />
-      <v-select
-        v-model="entryType"
-        :items="MEAL_TYPE_OPTIONS"
-        :label="$t('meal-plan.meal-type')"
-      />
+    <div class="flex flex-col md:flex-row gap-3 mb-4">
+      <div class="flex-1">
+        <label class="block text-xs text-on-surface/60 mb-1">{{ $t('meal-plan.rule-day') }}</label>
+        <select
+          v-model="day"
+          class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface
+                 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+        >
+          <option v-for="opt in MEAL_DAY_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.title }}</option>
+        </select>
+      </div>
+      <div class="flex-1">
+        <label class="block text-xs text-on-surface/60 mb-1">{{ $t('meal-plan.meal-type') }}</label>
+        <select
+          v-model="entryType"
+          class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface
+                 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+        >
+          <option v-for="opt in MEAL_TYPE_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.title }}</option>
+        </select>
+      </div>
     </div>
 
     <div class="mb-5">
@@ -25,10 +32,12 @@
     </div>
 
     <!-- TODO: proper pluralization of inputDay -->
-    {{ $t('meal-plan.this-rule-will-apply', {
-      dayCriteria: day === "unset" ? $t('meal-plan.to-all-days') : $t('meal-plan.on-days', [day]),
-      mealTypeCriteria: entryType === "unset" ? $t('meal-plan.for-all-meal-types') : $t('meal-plan.for-type-meal-types', [entryType]),
-    }) }}
+    <p class="text-sm text-on-surface/70">
+      {{ $t('meal-plan.this-rule-will-apply', {
+        dayCriteria: day === "unset" ? $t('meal-plan.to-all-days') : $t('meal-plan.on-days', [day]),
+        mealTypeCriteria: entryType === "unset" ? $t('meal-plan.for-all-meal-types') : $t('meal-plan.for-type-meal-types', [entryType]),
+      }) }}
+    </p>
   </div>
 </template>
 

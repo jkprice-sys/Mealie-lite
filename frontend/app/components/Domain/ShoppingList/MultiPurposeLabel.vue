@@ -1,15 +1,14 @@
 <template>
-  <v-chip
+  <span
     v-bind="$attrs"
-    label
-    variant="flat"
-    :color="label.color || undefined"
-    :text-color="textColor"
+    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium truncate max-w-full"
+    :style="[
+      label.color ? { backgroundColor: label.color, color: textColor } : {},
+      !label.color ? { backgroundColor: 'var(--color-border)', color: 'var(--color-on-surface)' } : {},
+    ]"
   >
-    <span style="max-width: 100%; overflow: hidden; text-overflow: ellipsis;">
-      {{ label.name }}
-    </span>
-  </v-chip>
+    {{ label.name }}
+  </span>
 </template>
 
 <script setup lang="ts">

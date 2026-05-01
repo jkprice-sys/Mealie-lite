@@ -22,23 +22,32 @@
     <p>
       You can opt out of announcements in your user settings:
       <br>
-      <v-btn class="mt-2" color="primary" to="/user/profile/edit">
+      <NuxtLink
+        class="inline-flex items-center gap-1.5 mt-2 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-on-primary hover:bg-primary/90 transition-colors"
+        to="/user/profile/edit"
+      >
         {{ $t("profile.user-settings") }}
-      </v-btn>
+      </NuxtLink>
     </p>
     <p v-if="user?.canManageHousehold" class="mt-3">
       As {{ user?.admin ? "an admin" : "a household manager" }}, you can disable announcements for your entire household:
       <br>
-      <v-btn class="mt-2" color="primary" to="/household">
+      <NuxtLink
+        class="inline-flex items-center gap-1.5 mt-2 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-on-primary hover:bg-primary/90 transition-colors"
+        to="/household"
+      >
         {{ $t("profile.household-settings") }}
-      </v-btn>
+      </NuxtLink>
     </p>
     <p v-if="user?.canManage" class="mt-3">
       {{ user?.admin ? "You can also" : "As a group manager, you can" }} disable announcements for your entire group:
       <br>
-      <v-btn class="mt-2" color="primary" to="/group">
+      <NuxtLink
+        class="inline-flex items-center gap-1.5 mt-2 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-on-primary hover:bg-primary/90 transition-colors"
+        to="/group"
+      >
         {{ $t("profile.group-settings") }}
-      </v-btn>
+      </NuxtLink>
     </p>
   </div>
 </template>

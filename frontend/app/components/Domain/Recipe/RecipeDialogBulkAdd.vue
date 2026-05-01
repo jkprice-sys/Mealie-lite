@@ -13,47 +13,37 @@
       can-submit
       @submit="save"
     >
-      <v-card-text>
-        <v-textarea
+      <div class="px-4 py-3 space-y-3">
+        <textarea
           v-model="inputText"
-          variant="outlined"
           rows="12"
-          hide-details
           autofocus
           :placeholder="$t('new-recipe.paste-in-your-recipe-data-each-line-will-be-treated-as-an-item-in-a-list')"
+          class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-on-surface
+                 focus:outline-none focus:ring-2 focus:ring-primary transition-colors resize-none"
         />
 
-        <v-divider />
-        <v-list lines="two">
-          <template
-            v-for="(util) in utilities"
+        <hr class="border-border" />
+
+        <!-- Utilities list -->
+        <div class="divide-y divide-border rounded-lg border border-border overflow-hidden">
+          <div
+            v-for="util in utilities"
             :key="util.id"
+            class="flex items-center gap-3 px-3 py-2.5"
           >
-            <v-list-item
-              class="px-0"
+            <button
+              type="button"
+              :title="$t('general.run')"
+              class="w-9 h-9 rounded-full bg-info/10 flex items-center justify-center text-info hover:bg-info/20 transition-colors shrink-0"
+              @click="util.action"
             >
-              <template #prepend>
-                <v-avatar>
-                  <v-btn
-                    icon
-                    variant="tonal"
-                    base-color="info"
-                    :title="$t('general.run')"
-                    @click="util.action"
-                  >
-                    <v-icon>
-                      {{ $globals.icons.play }}
-                    </v-icon>
-                  </v-btn>
-                </v-avatar>
-              </template>
-              <v-list-item-title class="text-pre-wrap">
-                {{ util.description }}
-              </v-list-item-title>
-            </v-list-item>
-          </template>
-        </v-list>
-      </v-card-text>
+              <AppIcon :path="$globals.icons.play" size="sm" />
+            </button>
+            <span class="text-sm text-on-surface whitespace-pre-wrap">{{ util.description }}</span>
+          </div>
+        </div>
+      </div>
     </BaseDialog>
   </div>
 </template>
@@ -70,6 +60,7 @@ const emit = defineEmits<{
   "bulk-data": [data: string[]];
 }>();
 
+const { $globals } = useNuxtApp();
 const dialog = ref(false);
 const inputText = ref(props.inputTextProp);
 

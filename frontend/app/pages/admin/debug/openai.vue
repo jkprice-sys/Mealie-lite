@@ -1,86 +1,60 @@
 <template>
-  <v-container class="pa-0">
-    <v-container>
+  <div class="px-4 py-4">
+    <div>
       <BaseCardSectionTitle :title="$t('admin.debug-openai-services')">
         {{ $t('admin.debug-openai-services-description') }}
-        <br>
-        <DocLink
-          class="mt-2"
-          link="/documentation/getting-started/installation/open-ai"
-        />
+        <br />
+        <DocLink class="mt-2" link="/documentation/getting-started/installation/open-ai" />
       </BaseCardSectionTitle>
-    </v-container>
-    <v-form
-      ref="uploadForm"
-      @submit.prevent="testOpenAI"
-    >
-      <div>
-        <v-card-text>
-          <v-container class="pa-0">
-            <v-row>
-              <v-col
-                cols="auto"
-                align-self="center"
-              >
-                <AppButtonUpload
-                  v-if="!uploadedImage"
-                  class="ml-auto"
-                  url="none"
-                  file-name="image"
-                  accept="image/*"
-                  :text="$t('recipe.upload-image')"
-                  :text-btn="false"
-                  :post="false"
-                  @uploaded="uploadImage"
-                />
-                <v-btn
-                  v-if="!!uploadedImage"
-                  color="error"
-                  @click="clearImage"
-                >
-                  <v-icon start>
-                    {{ $globals.icons.close }}
-                  </v-icon>
-                  {{ $t("recipe.remove-image") }}
-                </v-btn>
-              </v-col>
-              <v-spacer />
-            </v-row>
-            <v-row
-              v-if="uploadedImage && uploadedImagePreviewUrl"
-              style="max-width: 25%;"
-            >
-              <v-spacer />
-              <v-col cols="12">
-                <v-img :src="uploadedImagePreviewUrl" />
-              </v-col>
-              <v-spacer />
-            </v-row>
-          </v-container>
-        </v-card-text>
-        <v-card-actions>
+    </div>
+
+    <form @submit.prevent="testOpenAI">
+      <div class="space-y-3">
+        <div class="flex items-center gap-3 flex-wrap">
+          <AppButtonUpload
+            v-if="!uploadedImage"
+            url="none"
+            file-name="image"
+            accept="image/*"
+            :text="$t('recipe.upload-image')"
+            :text-btn="false"
+            :post="false"
+            @uploaded="uploadImage"
+          />
+          <button
+            v-if="!!uploadedImage"
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-lg bg-error px-3 py-2 text-sm font-medium text-white hover:bg-error/90 transition-colors"
+            @click="clearImage"
+          >
+            <AppIcon :path="$globals.icons.close" size="sm" />
+            {{ $t("recipe.remove-image") }}
+          </button>
+        </div>
+
+        <div v-if="uploadedImage && uploadedImagePreviewUrl" class="max-w-xs">
+          <img :src="uploadedImagePreviewUrl" class="rounded-lg border border-border object-contain max-h-48" />
+        </div>
+
+        <div class="flex justify-end">
           <BaseButton
             type="submit"
             :text="$t('admin.run-test')"
             :icon="$globals.icons.check"
             :loading="loading"
-            class="ml-auto"
           />
-        </v-card-actions>
+        </div>
       </div>
-    </v-form>
-    <v-divider
-      v-if="response"
-      class="mt-4"
-    />
-    <v-container
-      v-if="response"
-      class="ma-0 pa-0"
-    >
-      <v-card-title> {{ $t('admin.test-results') }} </v-card-title>
-      <v-card-text> {{ response }} </v-card-text>
-    </v-container>
-  </v-container>
+    </form>
+
+    <template v-if="response">
+      <hr class="border-border mt-4" />
+      <div class="mt-4">
+        <h3 class="text-base font-semibold text-on-surface mb-2">{{ $t('admin.test-results') }}</h3>
+        <p class="text-sm text-on-surface/80 whitespace-pre-wrap">{{ response }}</p>
+      </div>
+    </template>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -93,8 +67,8 @@ definePageMeta({
 
 const api = useAdminApi();
 const i18n = useI18n();
+const { $globals } = useNuxtApp();
 
-// Set page title
 useSeoMeta({
   title: i18n.t("admin.debug-openai-services"),
 });
@@ -132,4 +106,7 @@ async function testOpenAI() {
     response.value = data.response || (data.success ? "Test Successful" : "Test Failed");
   }
 }
+
+// suppress unused
+void uploadedImageName;
 </script>

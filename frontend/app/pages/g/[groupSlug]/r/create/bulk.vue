@@ -1,178 +1,144 @@
 <template>
   <div>
-    <div>
-      <v-card-title class="headline">
-        {{ $t('recipe.recipe-bulk-importer') }}
-      </v-card-title>
-      <v-card-text>
-        {{ $t('recipe.recipe-bulk-importer-description') }}
-      </v-card-text>
-      <div class="px-4">
-        <section class="mt-2">
-          <v-row
-            v-for="(_, idx) in bulkUrls"
-            :key="'bulk-url' + idx"
-            class="my-1"
-            density="compact"
-          >
-            <v-col
-              cols="12"
-              xs="12"
-              sm="12"
-              md="12"
-            >
-              <v-text-field
-                v-model="bulkUrls[idx].url"
-                :label="$t('new-recipe.recipe-url')"
-                density="compact"
-                single-line
-                validate-on="blur"
-                autofocus
-                variant="solo-filled"
-                hide-details
-                clearable
-                :prepend-inner-icon="$globals.icons.link"
-                rounded
-                class="rounded-lg"
-              >
-                <template #append>
-                  <v-btn
-                    style="margin-top: -2px"
-                    icon
-                    size="small"
-                    @click="bulkUrls.splice(idx, 1)"
-                  >
-                    <v-icon>
-                      {{ $globals.icons.delete }}
-                    </v-icon>
-                  </v-btn>
-                </template>
-              </v-text-field>
-            </v-col>
-            <template v-if="state.showCatTags">
-              <v-col
-                cols="12"
-                xs="12"
-                sm="6"
-                class="py-0"
-              >
-                <RecipeOrganizerSelector
-                  v-model="bulkUrls[idx].categories"
-                  selector-type="categories"
-                  :input-attrs="{
-                    variant: 'filled',
-                    singleLine: true,
-                    density: 'compact',
-                    rounded: true,
-                    class: 'rounded-lg',
-                    hideDetails: true,
-                    clearable: true,
-                  }"
-                />
-              </v-col>
-              <v-col
-                cols="12"
-                xs="12"
-                sm="6"
-                class="pt-0 pb-4"
-              >
-                <RecipeOrganizerSelector
-                  v-model="bulkUrls[idx].tags"
-                  selector-type="tags"
-                  :input-attrs="{
-                    variant: 'filled',
-                    singleLine: true,
-                    density: 'compact',
-                    rounded: true,
-                    class: 'rounded-lg',
-                    hideDetails: true,
-                    clearable: true,
-                  }"
-                />
-              </v-col>
-            </template>
-          </v-row>
-          <v-card-actions class="justify-end flex-wrap mt-3 pa-0">
-            <BaseButton
-              class="mt-1 pr-4"
-              delete
-              @click="
-                bulkUrls = [];
-                lockBulkImport = false;
-              "
-            >
-              {{ $t('general.clear') }}
-            </BaseButton>
-            <v-spacer />
-            <BaseButton
-              class="mr-1 mb-1"
-              color="info"
-              @click="bulkUrls.push({ url: '', categories: [], tags: [] })"
-            >
-              <template #icon>
-                {{ $globals.icons.createAlt }}
-              </template>
-              {{ $t('general.new') }}
-            </BaseButton>
-            <RecipeDialogBulkAdd
-              v-model="state.bulkDialog"
-              class="mr-1 mr-sm-0 mb-1"
-              @bulk-data="assignUrls"
-            />
-          </v-card-actions>
-          <div class="px-0">
-            <v-checkbox
-              v-model="state.showCatTags"
-              hide-details
-              :label="$t('recipe.set-categories-and-tags')"
+    <h2 class="text-lg font-semibold text-on-surface mb-1">
+      {{ $t('recipe.recipe-bulk-importer') }}
+    </h2>
+    <p class="text-sm text-on-surface/70 mb-4">
+      {{ $t('recipe.recipe-bulk-importer-description') }}
+    </p>
+
+    <section>
+      <!-- URL rows -->
+      <div
+        v-for="(_, idx) in bulkUrls"
+        :key="'bulk-url' + idx"
+        class="mb-2"
+      >
+        <!-- URL input row -->
+        <div class="flex items-center gap-2">
+          <div class="relative flex-1">
+            <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <AppIcon :path="$globals.icons.link" size="sm" class="text-on-surface/40" />
+            </div>
+            <input
+              v-model="bulkUrls[idx].url"
+              type="url"
+              :placeholder="$t('new-recipe.recipe-url')"
+              class="w-full rounded-lg border border-border bg-surface pl-9 pr-4 py-2 text-sm
+                     text-on-surface placeholder-gray-400 focus:outline-none focus:ring-2
+                     focus:ring-primary focus:border-primary transition-colors"
             />
           </div>
-          <v-card-actions class="justify-center">
-            <div style="width: 250px">
-              <BaseButton
-                :disabled="bulkUrls.length === 0 || lockBulkImport"
-                rounded
-                block
-                @click="bulkCreate"
-              >
-                <template #icon>
-                  {{ $globals.icons.check }}
-                </template>
-              </BaseButton>
-            </div>
-          </v-card-actions>
-        </section>
-        <section class="mt-12">
-          <BaseCardSectionTitle :title="$t('recipe.bulk-imports')" />
-          <ReportTable
-            :items="reports"
-            @delete="deleteReport"
-          />
-        </section>
+          <button
+            type="button"
+            class="bs-btn bs-btn-sm bs-btn-ghost text-error shrink-0"
+            @click="bulkUrls.splice(idx, 1)"
+          >
+            <AppIcon :path="$globals.icons.delete" size="sm" />
+          </button>
+        </div>
+
+        <!-- Categories & Tags (optional, hidden by default) -->
+        <template v-if="state.showCatTags">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+            <RecipeOrganizerSelector
+              v-model="bulkUrls[idx].categories"
+              selector-type="categories"
+              :input-attrs="{
+                variant: 'filled',
+                singleLine: true,
+                density: 'compact',
+                rounded: true,
+                class: 'rounded-lg',
+                hideDetails: true,
+                clearable: true,
+              }"
+            />
+            <RecipeOrganizerSelector
+              v-model="bulkUrls[idx].tags"
+              selector-type="tags"
+              :input-attrs="{
+                variant: 'filled',
+                singleLine: true,
+                density: 'compact',
+                rounded: true,
+                class: 'rounded-lg',
+                hideDetails: true,
+                clearable: true,
+              }"
+            />
+          </div>
+        </template>
       </div>
-    </div>
+
+      <!-- Row actions -->
+      <div class="flex flex-wrap items-center gap-2 mt-3">
+        <BaseButton
+          delete
+          @click="bulkUrls = []; lockBulkImport = false;"
+        >
+          {{ $t('general.clear') }}
+        </BaseButton>
+        <div class="flex-1" />
+        <BaseButton
+          color="info"
+          @click="bulkUrls.push({ url: '', categories: [], tags: [] })"
+        >
+          <template #icon>
+            {{ $globals.icons.createAlt }}
+          </template>
+          {{ $t('general.new') }}
+        </BaseButton>
+        <RecipeDialogBulkAdd
+          v-model="state.bulkDialog"
+          @bulk-data="assignUrls"
+        />
+      </div>
+
+      <!-- Show categories/tags toggle -->
+      <label class="flex items-center gap-2 cursor-pointer text-sm text-on-surface mt-3">
+        <input v-model="state.showCatTags" type="checkbox" class="w-4 h-4 rounded border-border accent-primary" />
+        {{ $t('recipe.set-categories-and-tags') }}
+      </label>
+
+      <!-- Submit -->
+      <div class="flex flex-col items-center mt-4">
+        <BaseButton
+          :disabled="bulkUrls.length === 0 || lockBulkImport"
+          class="w-64"
+          @click="bulkCreate"
+        >
+          <template #icon>
+            {{ $globals.icons.check }}
+          </template>
+        </BaseButton>
+      </div>
+    </section>
+
+    <!-- Past bulk import reports -->
+    <section class="mt-12">
+      <BaseCardSectionTitle :title="$t('recipe.bulk-imports')" />
+      <ReportTable
+        :items="reports"
+        @delete="deleteReport"
+      />
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { whenever } from "@vueuse/shared";
 import { useUserApi } from "~/composables/api";
 import { alert } from "~/composables/use-toast";
 import RecipeOrganizerSelector from "~/components/Domain/Recipe/RecipeOrganizerSelector.vue";
 import type { ReportSummary } from "~/lib/api/types/reports";
 import RecipeDialogBulkAdd from "~/components/Domain/Recipe/RecipeDialogBulkAdd.vue";
 
+const { $globals } = useNuxtApp();
+
 const state = reactive({
   showCatTags: false,
   bulkDialog: false,
 });
-
-whenever(
-  () => !state.showCatTags,
-  () => {
-    console.log("showCatTags changed");
-  },
-);
 
 const api = useUserApi();
 const i18n = useI18n();
@@ -181,9 +147,7 @@ const bulkUrls = ref([{ url: "", categories: [], tags: [] }]);
 const lockBulkImport = ref(false);
 
 async function bulkCreate() {
-  if (bulkUrls.value.length === 0) {
-    return;
-  }
+  if (bulkUrls.value.length === 0) return;
 
   const { response } = await api.recipes.createManyByUrl({ imports: bulkUrls.value });
 
@@ -198,8 +162,7 @@ async function bulkCreate() {
   fetchReports();
 }
 
-// =========================================================
-// Reports
+// ── Reports ───────────────────────────────────────────────────────────────────
 
 const reports = ref<ReportSummary[]>([]);
 
@@ -209,15 +172,9 @@ async function fetchReports() {
 }
 
 async function deleteReport(id: string) {
-  console.log(id);
   const { response } = await api.groupReports.deleteOne(id);
-
-  if (response?.status === 200) {
-    fetchReports();
-  }
-  else {
-    alert.error(i18n.t("recipe.report-deletion-failed"));
-  }
+  if (response?.status === 200) fetchReports();
+  else alert.error(i18n.t("recipe.report-deletion-failed"));
 }
 
 fetchReports();
